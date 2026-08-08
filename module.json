@@ -1,13 +1,13 @@
 {
   "id": "dm-cockpit",
   "title": "DM Cockpit",
-  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte, Enemy Reserve Bench, Handout Queue, Loot-/Belohnungspakete, Item-Suche und Compendium-Schnellsuche.",
+  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte, Enemy Reserve Bench, Handout Queue, Loot-/Belohnungspakete, Item-Suche, Compendium-Schnellsuche und NPC-Schnellgenerator.",
   "authors": [
     {
       "name": "DM Cockpit"
     }
   ],
-  "version": "0.9.15",
+  "version": "0.9.16",
   "compatibility": {
     "minimum": "14",
     "verified": "14.365"
@@ -17,7 +17,8 @@
     "scripts/handout-queue.js",
     "scripts/loot-packages.js",
     "scripts/loot-item-search.js",
-    "scripts/compendium-search.js"
+    "scripts/compendium-search.js",
+    "scripts/npc-generator.js"
   ],
   "styles": [
     "styles/dm-cockpit.css"
