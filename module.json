@@ -7,7 +7,7 @@
       "name": "DM Cockpit"
     }
   ],
-  "version": "0.9.10",
+  "version": "0.9.11",
   "compatibility": {
     "minimum": "14",
     "verified": "14.365"
