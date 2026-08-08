@@ -1,20 +1,21 @@
 {
   "id": "dm-cockpit",
   "title": "DM Cockpit",
-  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte, Enemy Reserve Bench und Handout Queue.",
+  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte, Enemy Reserve Bench, Handout Queue und Loot-/Belohnungspakete.",
   "authors": [
     {
       "name": "DM Cockpit"
     }
   ],
-  "version": "0.9.12",
+  "version": "0.9.13",
   "compatibility": {
     "minimum": "14",
     "verified": "14.365"
   },
   "esmodules": [
     "scripts/dm-cockpit.js",
-    "scripts/handout-queue.js"
+    "scripts/handout-queue.js",
+    "scripts/loot-packages.js"
   ],
   "styles": [
     "styles/dm-cockpit.css"
