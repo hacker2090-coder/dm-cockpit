@@ -2,7 +2,7 @@
 
 Stand: 09.08.2026
 Aktuelle Version: **V0.9.14**
-Status: **V0.9.12 bestätigt; V0.9.14 bereit zum Test**
+Status: **funktional bestätigt**
 
 ## Fertig / aktiv
 
@@ -13,6 +13,8 @@ Status: **V0.9.12 bestätigt; V0.9.14 bereit zum Test**
 - Gegner-Spawnpunkte
 - Enemy Reserve Bench
 - Handout Queue
+- Loot-/Belohnungspakete
+- Item-Suche für Belohnungspakete
 - GitHub-/Foundry-Update-System
 
 ## Loot-/Belohnungspakete
@@ -25,7 +27,7 @@ Status: **V0.9.12 bestätigt; V0.9.14 bereit zum Test**
 - Pakete und Gegenstände können manuell entfernt werden.
 - Währung, EP und Zufallstabellen werden derzeit nicht automatisch verarbeitet.
 
-## Neu in V0.9.14 – Item-Suche
+## V0.9.14 – Item-Suche
 
 - Live-Suche beim Hinzufügen eines Gegenstands zu einem Belohnungspaket.
 - Durchsucht Welt-Items und Item-Kompendien.
@@ -33,6 +35,7 @@ Status: **V0.9.12 bestätigt; V0.9.14 bereit zum Test**
 - Sucht nach Itemname und Welt-/Kompendiumsbezeichnung.
 - Mehrere Suchbegriffe werden gemeinsam berücksichtigt.
 - Trefferanzahl wird angezeigt.
+- **In Foundry funktional bestätigt.**
 
 ## Handout Queue
 
@@ -46,8 +49,9 @@ Status: **V0.9.12 bestätigt; V0.9.14 bereit zum Test**
 - Stabiles Manifest auf `main/module.json`
 - Stabile Installations-ZIP auf `main/dm-cockpit.zip`
 - Foundry erkennt höhere Versionsnummern über das Manifest.
-- Update V0.9.10 → V0.9.11 erfolgreich getestet.
+- Update-System erfolgreich getestet.
 - V0.9.12 Handout Queue funktional bestätigt.
+- V0.9.14 Loot-/Belohnungspakete + Item-Suche funktional bestätigt.
 
 ## Nächste offene [SPÄTER]-Punkte
 
