@@ -1,8 +1,8 @@
 # DM Cockpit – Projektstand
 
 Stand: 09.08.2026
-Aktuelle Version: **V0.9.17**
-Status: **V0.9.16 bestätigt; V0.9.17 bereit zum Test**
+Aktuelle Version: **V0.9.18**
+Status: **V0.9.16 bestätigt; V0.9.18 bereit zum Test**
 
 ## Fertig / aktiv
 
@@ -19,25 +19,36 @@ Status: **V0.9.16 bestätigt; V0.9.17 bereit zum Test**
 - NPC-Schnellgenerator
 - GitHub-/Foundry-Update-System
 
-## Neu in V0.9.17 – NPC Action Memory
+## Neu in V0.9.18 – Actor-basiertes NPC Memory
 
-- eigener Memory-Bereich direkt unter dem aktuellen Schnell-NPC
-- kurze Aktion/Erinnerung eingeben und mit **Merken** speichern
-- Zeitstempel pro Eintrag
-- Erinnerungen werden pro erzeugtem NPC getrennt gespeichert
-- neueste Einträge erscheinen oben
-- einzelne Einträge können gelöscht werden
-- private Speicherung im Foundry-User-Scope
-- beim Neu-Würfeln wechselt die Memory-Anzeige automatisch zum neuen NPC
+- eigener **NPC Memory**-Bereich im Cockpit
+- verwendet echte World Actors aus Foundrys Actor-Tab
+- Actor-Suche nach Name und Typ
+- ausgewählten Actor direkt öffnen
+- Erinnerungen/Aktionen mit Zeitstempel pro Actor speichern
+- neueste Einträge oben
+- einzelne Erinnerungen löschen
+- Speicherung direkt als `dm-cockpit`-Flag am Actor
+- Schnellgenerator-Profile werden im Memory-Bereich angezeigt
+- V0.9.17 wurde vor Bestätigung durch diese Actor-basierte Variante ersetzt
+
+## V0.9.18 – Schnell-NPC in Actor-Tab übertragen
+
+- **Als Actor anlegen** direkt im NPC-Schnellgenerator
+- bevorzugt den registrierten Actor-Typ `npc`, falls vorhanden
+- verwendet andernfalls einen gültigen registrierten Actor-Typ
+- Schnell-NPC-Daten werden als Actor-Flag übernommen
+- Foundrys generisches Actor-Standardbild wird für Actor und Prototype-Token verwendet
+- neuer Actor wird automatisch im NPC-Memory-Bereich ausgewählt
+- nach erfolgreicher Übertragung steht **Actor öffnen** zur Verfügung
 
 ## V0.9.16 – NPC-Schnellgenerator
 
-- eigener Bereich direkt im DM Cockpit
 - ein Klick erzeugt einen sofort spielbaren NPC
 - systemneutraler Generator ohne Statblock-Abhängigkeit
 - Felder: Name, Rolle, Auftreten, Persönlichkeit, Motivation, Eigenheit, Geheimnis
 - **Neu würfeln** ersetzt den aktuellen NPC sofort
-- letzter NPC bleibt lokal beim GM gespeichert und überlebt Cockpit-Neurender
+- letzter NPC bleibt lokal beim GM gespeichert
 - **In Foundry funktional bestätigt.**
 
 ## V0.9.15 – Compendium-Schnellsuche
@@ -63,4 +74,4 @@ Status: **V0.9.16 bestätigt; V0.9.17 bereit zum Test**
 
 ## Arbeitsregel
 
-Immer nur einen To-do-Punkt gleichzeitig umsetzen. Keine zusätzlichen Funktionen ohne Entscheidung.
+Immer nur einen To-do-Punkt gleichzeitig umsetzen. Im aktuellen Chat möglichst autonom arbeiten und nur bei nicht sinnvoll ableitbaren Produktentscheidungen nachfragen.
