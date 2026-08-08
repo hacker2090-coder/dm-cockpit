@@ -1,0 +1,2 @@
+DM Cockpit Update-Test v0.9.11
+Keine Funktionsänderungen. Diese Datei markiert ausschließlich den Test des Foundry-Update-Mechanismus.
