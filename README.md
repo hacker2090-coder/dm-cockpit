@@ -1,4 +1,4 @@
-# DM Cockpit V0.9.17
+# DM Cockpit V0.9.18
 
 Aktueller Stand:
 
@@ -13,7 +13,7 @@ Aktueller Stand:
 - Item-Suche für Belohnungspakete
 - Compendium-Schnellsuche
 - NPC-Schnellgenerator
-- NPC Action Memory
+- Actor-basiertes NPC Memory
 
 ## NPC-Schnellgenerator
 
@@ -31,22 +31,33 @@ Erzeugte Felder:
 
 Der zuletzt erzeugte NPC bleibt für den GM erhalten. Mit **Neu würfeln** wird sofort ein neuer NPC erzeugt.
 
-**V0.9.16 wurde in Foundry funktional bestätigt.**
+Neu in V0.9.18:
 
-## Neu in V0.9.17 – NPC Action Memory
+- **Als Actor anlegen** überträgt den Schnell-NPC direkt in Foundrys Actor-Verzeichnis.
+- Wenn das aktive System einen `npc`-Actor-Typ anbietet, wird dieser bevorzugt; sonst wird ein gültiger Actor-Typ verwendet.
+- Schnellgenerator-Daten werden als DM-Cockpit-Flag am Actor gespeichert.
+- Actor-Bild und Prototype-Token verwenden Foundrys generisches Standardbild.
+- Nach dem Anlegen wird der neue Actor automatisch im NPC-Memory-Bereich ausgewählt.
 
-Unter dem aktuell erzeugten NPC kann der GM kurze Erinnerungen festhalten, zum Beispiel was der NPC getan, gesagt oder erfahren hat.
+**V0.9.16 mit NPC-Schnellgenerator wurde in Foundry funktional bestätigt.**
 
-- Eingabefeld direkt unter dem NPC
-- **Merken** speichert einen Eintrag
-- jeder Eintrag erhält einen Zeitstempel
-- Erinnerungen werden dem jeweiligen erzeugten NPC zugeordnet
+## Neu in V0.9.18 – NPC Memory
+
+NPC Memory ist jetzt ein eigener Bereich im Cockpit und arbeitet mit den echten World Actors aus Foundrys Actor-Tab.
+
+- alle World Actors aus `game.actors` stehen zur Auswahl
+- Suchfeld nach Name und Actor-Typ
+- ausgewählten Actor direkt öffnen
+- Erinnerungen/Aktionen pro Actor mit Zeitstempel speichern
 - neueste Einträge stehen oben
 - Einträge können einzeln gelöscht werden
-- Daten werden als private benutzerbezogene Foundry-Einstellung gespeichert
-- beim Neu-Würfeln wechselt die Anzeige automatisch zum neuen NPC
+- Erinnerungen werden direkt am Actor als DM-Cockpit-Flag gespeichert
+- bei Schnellgenerator-NPCs werden Rolle, Auftreten, Persönlichkeit, Motivation, Eigenheit und Geheimnis im Memory-Bereich angezeigt
+- neu angelegte Schnell-NPCs werden direkt ausgewählt
 
-V0.9.17 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
+V0.9.17 wurde durch diese Actor-basierte Überarbeitung ersetzt, bevor die alte Memory-Variante bestätigt wurde.
+
+V0.9.18 ist veröffentlicht und muss in Foundry funktional getestet werden.
 
 ## Updates
 
@@ -58,4 +69,4 @@ Manifest:
 Installationspaket:
 `https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
 
-Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. V0.9.16 mit NPC-Schnellgenerator wurde funktional bestätigt.
+Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut.
