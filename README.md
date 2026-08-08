@@ -1,4 +1,4 @@
-# DM Cockpit V0.9.16
+# DM Cockpit V0.9.17
 
 Aktueller Stand:
 
@@ -13,14 +13,9 @@ Aktueller Stand:
 - Item-Suche für Belohnungspakete
 - Compendium-Schnellsuche
 - NPC-Schnellgenerator
+- NPC Action Memory
 
-## Compendium-Schnellsuche
-
-Die globale Suche durchsucht Actor-, Item-, JournalEntry- und RollTable-Kompendien über deren Indizes und öffnet Treffer direkt in Foundry.
-
-**V0.9.15 wurde in Foundry funktional bestätigt.**
-
-## Neu in V0.9.16 – NPC-Schnellgenerator
+## NPC-Schnellgenerator
 
 Direkt im DM Cockpit kann mit einem Klick ein sofort spielbarer, systemneutraler NPC erzeugt werden.
 
@@ -34,9 +29,24 @@ Erzeugte Felder:
 - Eigenheit
 - Geheimnis
 
-Der zuletzt erzeugte NPC bleibt für den GM lokal erhalten. Mit **Neu würfeln** wird sofort ein neuer NPC erzeugt.
+Der zuletzt erzeugte NPC bleibt für den GM erhalten. Mit **Neu würfeln** wird sofort ein neuer NPC erzeugt.
 
-V0.9.16 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
+**V0.9.16 wurde in Foundry funktional bestätigt.**
+
+## Neu in V0.9.17 – NPC Action Memory
+
+Unter dem aktuell erzeugten NPC kann der GM kurze Erinnerungen festhalten, zum Beispiel was der NPC getan, gesagt oder erfahren hat.
+
+- Eingabefeld direkt unter dem NPC
+- **Merken** speichert einen Eintrag
+- jeder Eintrag erhält einen Zeitstempel
+- Erinnerungen werden dem jeweiligen erzeugten NPC zugeordnet
+- neueste Einträge stehen oben
+- Einträge können einzeln gelöscht werden
+- Daten werden als private benutzerbezogene Foundry-Einstellung gespeichert
+- beim Neu-Würfeln wechselt die Anzeige automatisch zum neuen NPC
+
+V0.9.17 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
 
 ## Updates
 
@@ -48,4 +58,4 @@ Manifest:
 Installationspaket:
 `https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
 
-Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. V0.9.15 mit Compendium-Schnellsuche wurde funktional bestätigt.
+Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. V0.9.16 mit NPC-Schnellgenerator wurde funktional bestätigt.
