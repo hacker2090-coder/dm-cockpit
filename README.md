@@ -1,4 +1,4 @@
-# DM Cockpit V0.9.15
+# DM Cockpit V0.9.16
 
 Aktueller Stand:
 
@@ -12,33 +12,31 @@ Aktueller Stand:
 - Loot-/Belohnungspakete
 - Item-Suche für Belohnungspakete
 - Compendium-Schnellsuche
+- NPC-Schnellgenerator
 
-## Handout Queue
+## Compendium-Schnellsuche
 
-Journal-Handouts können vorgemerkt und später über „Spielern zeigen“ geöffnet werden. Nach dem Zeigen bleibt ein Handout in der Queue, bis es manuell entfernt wird.
+Die globale Suche durchsucht Actor-, Item-, JournalEntry- und RollTable-Kompendien über deren Indizes und öffnet Treffer direkt in Foundry.
 
-## Loot-/Belohnungspakete
+**V0.9.15 wurde in Foundry funktional bestätigt.**
 
-Belohnungspakete bestehen aus einem Namen, einer optionalen Notiz und Gegenständen aus der Welt oder Item-Kompendien.
+## Neu in V0.9.16 – NPC-Schnellgenerator
 
-- **Verteilen:** Gegenstände werden an einen ausgewählten Welt-Actor übertragen.
-- **Nur zeigen:** Paketinhalt und Notiz werden im Chat angezeigt, ohne Actor-Daten zu verändern.
-- Mengen werden unterstützt.
-- V0.9.14 mit Item-Suche ist in Foundry funktional bestätigt.
+Direkt im DM Cockpit kann mit einem Klick ein sofort spielbarer, systemneutraler NPC erzeugt werden.
 
-## Neu in V0.9.15 – Compendium-Schnellsuche
+Erzeugte Felder:
 
-Direkt im DM Cockpit steht eine globale Suche über wichtige Kompendiumstypen zur Verfügung.
+- Name
+- Rolle
+- Auftreten
+- Persönlichkeit
+- Motivation
+- Eigenheit
+- Geheimnis
 
-- durchsucht Actor-, Item-, JournalEntry- und RollTable-Kompendien
-- Live-Suche nach Name, Dokumenttyp, Untertyp und Kompendiumsname
-- Filter: Alle, Monster / Actors, Items / Zauber, Journal, Tabellen
-- zeigt Name, Typ und Herkunftskompendium
-- maximal 50 Treffer gleichzeitig, damit die Oberfläche kompakt bleibt
-- Treffer werden erst beim Öffnen vollständig geladen
-- Klick auf **Öffnen** öffnet das Foundry-Dokument direkt
+Der zuletzt erzeugte NPC bleibt für den GM lokal erhalten. Mit **Neu würfeln** wird sofort ein neuer NPC erzeugt.
 
-V0.9.15 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
+V0.9.16 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
 
 ## Updates
 
@@ -50,4 +48,4 @@ Manifest:
 Installationspaket:
 `https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
 
-Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. Das Update-System sowie V0.9.12 Handout Queue und V0.9.14 mit Loot-/Belohnungspaketen und Item-Suche wurden funktional bestätigt.
+Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. V0.9.15 mit Compendium-Schnellsuche wurde funktional bestätigt.
