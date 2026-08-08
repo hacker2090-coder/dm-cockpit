@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "module.json"
       - "dm-cockpit-source.zip"
       - ".github/workflows/release.yml"
   workflow_dispatch:
@@ -26,28 +27,13 @@ jobs:
           mkdir -p src dist/dm-cockpit
           unzip -q dm-cockpit-source.zip -d src
 
-          VERSION=$(jq -r '.version' src/module.json)
+          VERSION=$(jq -r '.version' module.json)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-          cp src/module.json dist/dm-cockpit/module.json
+          cp module.json dist/dm-cockpit/module.json
           cp -R src/scripts src/styles src/templates dist/dm-cockpit/
           if [ -d src/legacy-disabled ]; then cp -R src/legacy-disabled dist/dm-cockpit/; fi
           if [ -f src/README.md ]; then cp src/README.md dist/dm-cockpit/README.md; fi
-
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          repo = 'hacker2090-coder/dm-cockpit'
-          p = Path('dist/dm-cockpit/module.json')
-          data = json.loads(p.read_text(encoding='utf-8'))
-          data['url'] = f'https://github.com/{repo}'
-          data['manifest'] = f'https://raw.githubusercontent.com/{repo}/main/module.json'
-          data['download'] = f'https://raw.githubusercontent.com/{repo}/main/dm-cockpit.zip'
-          text = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
-          p.write_text(text, encoding='utf-8')
-          Path('module.json').write_text(text, encoding='utf-8')
-          PY
 
           cd dist
           zip -qr dm-cockpit.zip dm-cockpit
@@ -60,7 +46,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add module.json dm-cockpit.zip
+          git add dm-cockpit.zip
           if git diff --cached --quiet; then
             echo "No package changes to publish."
           else
