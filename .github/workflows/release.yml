@@ -1,11 +1,10 @@
-name: Release DM Cockpit
+name: Build DM Cockpit
 
 on:
   push:
     branches: [main]
     paths:
       - "dm-cockpit-source.zip"
-      - "module.json"
       - ".github/workflows/release.yml"
   workflow_dispatch:
 
@@ -13,19 +12,20 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Unpack source
+      - name: Build Foundry package
         shell: bash
         run: |
           set -euo pipefail
           rm -rf src dist
           mkdir -p src dist/dm-cockpit
           unzip -q dm-cockpit-source.zip -d src
+
           VERSION=$(jq -r '.version' src/module.json)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
@@ -37,34 +37,33 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
+
+          repo = 'hacker2090-coder/dm-cockpit'
           p = Path('dist/dm-cockpit/module.json')
           data = json.loads(p.read_text(encoding='utf-8'))
-          version = data['version']
-          repo = 'hacker2090-coder/dm-cockpit'
           data['url'] = f'https://github.com/{repo}'
-          data['manifest'] = f'https://github.com/{repo}/releases/latest/download/module.json'
-          data['download'] = f'https://github.com/{repo}/releases/download/v{version}/dm-cockpit.zip'
+          data['manifest'] = f'https://raw.githubusercontent.com/{repo}/main/module.json'
+          data['download'] = f'https://raw.githubusercontent.com/{repo}/main/dm-cockpit.zip'
           text = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
           p.write_text(text, encoding='utf-8')
-          Path('dist/module.json').write_text(text, encoding='utf-8')
+          Path('module.json').write_text(text, encoding='utf-8')
           PY
 
           cd dist
           zip -qr dm-cockpit.zip dm-cockpit
+          cd ..
+          cp dist/dm-cockpit.zip dm-cockpit.zip
 
-      - name: Publish release
+      - name: Publish current package to main
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          TAG="v${VERSION}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/module.json dist/dm-cockpit.zip --clobber
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add module.json dm-cockpit.zip
+          if git diff --cached --quiet; then
+            echo "No package changes to publish."
           else
-            gh release create "$TAG" dist/module.json dist/dm-cockpit.zip \
-              --target "$GITHUB_SHA" \
-              --title "DM Cockpit v${VERSION}" \
-              --notes "Automatisch erstelltes DM-Cockpit-Release."
+            git commit -m "Build DM Cockpit v${VERSION}"
+            git push
           fi
-          gh release edit "$TAG" --latest
