@@ -1,6 +1,6 @@
 # DM Cockpit V0.9.14
 
-Aktueller Stand:
+Aktueller bestätigter Stand:
 
 - LIVE-Dashboard
 - Abenteuer-Flowchart
@@ -27,7 +27,7 @@ Beim Einsatz stehen zwei Aktionen zur Verfügung:
 
 Mengen werden unterstützt. Währungen, EP und Zufallstabellen werden derzeit nicht automatisch verarbeitet; solche Angaben können in der Paketnotiz stehen.
 
-## Neu in V0.9.14 – Item-Suche
+## V0.9.14 – Item-Suche
 
 Beim Hinzufügen eines Gegenstands zu einem Belohnungspaket steht eine Live-Suche zur Verfügung.
 
@@ -37,7 +37,7 @@ Beim Hinzufügen eines Gegenstands zu einem Belohnungspaket steht eine Live-Such
 - unterstützt mehrere Suchbegriffe
 - zeigt die Anzahl der Treffer an
 
-V0.9.14 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
+**V0.9.14 wurde in Foundry funktional bestätigt.**
 
 ## Updates
 
@@ -49,4 +49,4 @@ Manifest:
 Installationspaket:
 `https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
 
-Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. Das Update von V0.9.10 auf V0.9.11 wurde erfolgreich in Foundry getestet; V0.9.12 mit Handout Queue wurde ebenfalls funktional bestätigt.
+Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. Das Update-System sowie V0.9.12 Handout Queue und V0.9.14 mit Loot-/Belohnungspaketen und Item-Suche wurden funktional bestätigt.
