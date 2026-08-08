@@ -1,0 +1,70 @@
+name: Release DM Cockpit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dm-cockpit-source.zip"
+      - "module.json"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unpack source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf src dist
+          mkdir -p src dist/dm-cockpit
+          unzip -q dm-cockpit-source.zip -d src
+          VERSION=$(jq -r '.version' src/module.json)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+          cp src/module.json dist/dm-cockpit/module.json
+          cp -R src/scripts src/styles src/templates dist/dm-cockpit/
+          if [ -d src/legacy-disabled ]; then cp -R src/legacy-disabled dist/dm-cockpit/; fi
+          if [ -f src/README.md ]; then cp src/README.md dist/dm-cockpit/README.md; fi
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('dist/dm-cockpit/module.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          version = data['version']
+          repo = 'hacker2090-coder/dm-cockpit'
+          data['url'] = f'https://github.com/{repo}'
+          data['manifest'] = f'https://github.com/{repo}/releases/latest/download/module.json'
+          data['download'] = f'https://github.com/{repo}/releases/download/v{version}/dm-cockpit.zip'
+          text = json.dumps(data, ensure_ascii=False, indent=2) + '\n'
+          p.write_text(text, encoding='utf-8')
+          Path('dist/module.json').write_text(text, encoding='utf-8')
+          PY
+
+          cd dist
+          zip -qr dm-cockpit.zip dm-cockpit
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/module.json dist/dm-cockpit.zip --clobber
+          else
+            gh release create "$TAG" dist/module.json dist/dm-cockpit.zip \
+              --target "$GITHUB_SHA" \
+              --title "DM Cockpit v${VERSION}" \
+              --notes "Automatisch erstelltes DM-Cockpit-Release."
+          fi
+          gh release edit "$TAG" --latest

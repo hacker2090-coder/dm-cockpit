@@ -1,0 +1,13 @@
+{
+  "id": "dm-cockpit",
+  "title": "DM Cockpit",
+  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte und Enemy Reserve Bench.",
+  "authors": [{"name": "DM Cockpit"}],
+  "version": "0.9.10",
+  "compatibility": {"minimum": "14", "verified": "14.365"},
+  "esmodules": ["scripts/dm-cockpit.js"],
+  "styles": ["styles/dm-cockpit.css"],
+  "url": "https://github.com/hacker2090-coder/dm-cockpit",
+  "manifest": "https://github.com/hacker2090-coder/dm-cockpit/releases/latest/download/module.json",
+  "download": "https://github.com/hacker2090-coder/dm-cockpit/releases/download/v0.9.10/dm-cockpit.zip"
+}
