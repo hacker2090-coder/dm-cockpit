@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - "module.json"
-      - "dm-cockpit-source.zip"
+      - "scripts/**"
+      - "templates/**"
+      - "styles/**"
       - ".github/workflows/release.yml"
   workflow_dispatch:
 
@@ -23,22 +25,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf src dist
-          mkdir -p src dist/dm-cockpit
-          unzip -q dm-cockpit-source.zip -d src
+          rm -rf work
+          mkdir -p work
+          unzip -q dm-cockpit.zip -d work
 
           VERSION=$(jq -r '.version' module.json)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-          cp module.json dist/dm-cockpit/module.json
-          cp -R src/scripts src/styles src/templates dist/dm-cockpit/
-          if [ -d src/legacy-disabled ]; then cp -R src/legacy-disabled dist/dm-cockpit/; fi
-          if [ -f src/README.md ]; then cp src/README.md dist/dm-cockpit/README.md; fi
+          cp module.json work/dm-cockpit/module.json
+          mkdir -p work/dm-cockpit/scripts
+          if [ -d scripts ]; then cp -R scripts/. work/dm-cockpit/scripts/; fi
+          if [ -d templates ]; then mkdir -p work/dm-cockpit/templates && cp -R templates/. work/dm-cockpit/templates/; fi
+          if [ -d styles ]; then mkdir -p work/dm-cockpit/styles && cp -R styles/. work/dm-cockpit/styles/; fi
 
-          cd dist
-          zip -qr dm-cockpit.zip dm-cockpit
+          rm -f dm-cockpit.zip
+          cd work
+          zip -qr ../dm-cockpit.zip dm-cockpit
           cd ..
-          cp dist/dm-cockpit.zip dm-cockpit.zip
 
       - name: Publish current package to main
         shell: bash
