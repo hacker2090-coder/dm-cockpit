@@ -1,6 +1,6 @@
-# DM Cockpit V0.9.10
+# DM Cockpit V0.9.12
 
-Aktiver Grundkern:
+Aktueller bestätigter Stand:
 
 - LIVE-Dashboard
 - Abenteuer-Flowchart
@@ -8,12 +8,20 @@ Aktiver Grundkern:
 - Szenen-Presets
 - Gegner-Spawnpunkte
 - Enemy Reserve Bench
+- Handout Queue
+
+## Handout Queue
+
+Journal-Handouts können vorgemerkt und später über „Spielern zeigen“ geöffnet werden. Nach dem Zeigen bleibt ein Handout in der Queue, bis es manuell entfernt wird.
 
 ## Updates
 
-Dieses Repository stellt DM Cockpit über ein Foundry-kompatibles GitHub-Release bereit.
+DM Cockpit nutzt Foundrys Manifest-/Download-Mechanismus.
 
-Stabile Manifest-URL nach Veröffentlichung:
-`https://github.com/hacker2090-coder/dm-cockpit/releases/latest/download/module.json`
+Manifest:
+`https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/module.json`
 
-Die Release-Dateien werden automatisch durch GitHub Actions gebaut.
+Installationspaket:
+`https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
+
+Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut. Das Update von V0.9.10 auf V0.9.11 wurde erfolgreich in Foundry getestet; V0.9.12 mit Handout Queue wurde ebenfalls vom Nutzer funktional bestätigt.
