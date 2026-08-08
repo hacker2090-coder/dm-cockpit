@@ -1,8 +1,8 @@
 # DM Cockpit – Projektstand
 
 Stand: 09.08.2026
-Aktuelle Version: **V0.9.15**
-Status: **V0.9.14 bestätigt; V0.9.15 bereit zum Test**
+Aktuelle Version: **V0.9.16**
+Status: **V0.9.15 bestätigt; V0.9.16 bereit zum Test**
 
 ## Fertig / aktiv
 
@@ -15,52 +15,39 @@ Status: **V0.9.14 bestätigt; V0.9.15 bereit zum Test**
 - Handout Queue
 - Loot-/Belohnungspakete
 - Item-Suche für Belohnungspakete
+- Compendium-Schnellsuche
 - GitHub-/Foundry-Update-System
 
-## Neu in V0.9.15 – Compendium-Schnellsuche
+## Neu in V0.9.16 – NPC-Schnellgenerator
 
-- eigener Suchbereich direkt im DM Cockpit
+- eigener Bereich direkt im DM Cockpit
+- ein Klick erzeugt einen sofort spielbaren NPC
+- systemneutraler Generator ohne Statblock-Abhängigkeit
+- Felder: Name, Rolle, Auftreten, Persönlichkeit, Motivation, Eigenheit, Geheimnis
+- **Neu würfeln** ersetzt den aktuellen NPC sofort
+- letzter NPC bleibt lokal beim GM gespeichert und überlebt Cockpit-Neurender
+
+## V0.9.15 – Compendium-Schnellsuche
+
 - durchsucht Actor-, Item-, JournalEntry- und RollTable-Kompendien
-- nutzt Foundrys Compendium-Indizes statt alle Dokumente vollständig zu laden
-- Live-Suche nach Name, Untertyp und Kompendiumsname
-- Filter: Alle, Monster / Actors, Items / Zauber, Journal, Tabellen
-- Treffer zeigen Name, Typ und Herkunftskompendium
-- bis zu 50 Treffer gleichzeitig sichtbar
-- **Öffnen** lädt und öffnet den ausgewählten Foundry-Eintrag
-
-## V0.9.14 – Loot-/Belohnungspakete + Item-Suche
-
-- Pakete mit Name und optionaler Notiz anlegen.
-- Gegenstände aus Welt-Items und Item-Kompendien hinzufügen.
-- Mengen pro Gegenstand festlegen.
-- **Verteilen:** Gegenstände an einen ausgewählten Welt-Actor übertragen.
-- **Nur zeigen:** Paket als Chat-Nachricht anzeigen, ohne Actor-Daten zu verändern.
-- Item-Suche filtert Welt-Items und Item-Kompendien während der Eingabe.
+- nutzt Foundrys Compendium-Indizes
+- Filter für Alle, Monster / Actors, Items / Zauber, Journal und Tabellen
+- Treffer lassen sich direkt öffnen
 - **In Foundry funktional bestätigt.**
-
-## Handout Queue
-
-- Journal-Einträge und Journal-Seiten können vorgemerkt werden.
-- „Spielern zeigen“ nutzt Foundrys eigenen Anzeige-Dialog.
-- Nach dem Zeigen bleibt der Eintrag in der Queue.
-- Entfernen erfolgt manuell.
 
 ## Update-System
 
 - Stabiles Manifest auf `main/module.json`
 - Stabile Installations-ZIP auf `main/dm-cockpit.zip`
-- Foundry erkennt höhere Versionsnummern über das Manifest.
 - Update-System erfolgreich getestet.
-- V0.9.12 Handout Queue funktional bestätigt.
-- V0.9.14 Loot-/Belohnungspakete + Item-Suche funktional bestätigt.
+- V0.9.15 Compendium-Schnellsuche funktional bestätigt.
 
 ## Nächste offene [SPÄTER]-Punkte
 
-1. NPC-Schnellgenerator
-2. NPC Action Memory
-3. Spielerfragen-Parkplatz
-4. „Was hat sich geändert?“
-5. Session Recap
+1. NPC Action Memory
+2. Spielerfragen-Parkplatz
+3. „Was hat sich geändert?“
+4. Session Recap
 
 ## Arbeitsregel
 
