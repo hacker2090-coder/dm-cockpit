@@ -1,6 +1,6 @@
-# DM Cockpit V0.9.14
+# DM Cockpit V0.9.15
 
-Aktueller bestätigter Stand:
+Aktueller Stand:
 
 - LIVE-Dashboard
 - Abenteuer-Flowchart
@@ -11,6 +11,7 @@ Aktueller bestätigter Stand:
 - Handout Queue
 - Loot-/Belohnungspakete
 - Item-Suche für Belohnungspakete
+- Compendium-Schnellsuche
 
 ## Handout Queue
 
@@ -20,24 +21,24 @@ Journal-Handouts können vorgemerkt und später über „Spielern zeigen“ geö
 
 Belohnungspakete bestehen aus einem Namen, einer optionalen Notiz und Gegenständen aus der Welt oder Item-Kompendien.
 
-Beim Einsatz stehen zwei Aktionen zur Verfügung:
-
 - **Verteilen:** Gegenstände werden an einen ausgewählten Welt-Actor übertragen.
 - **Nur zeigen:** Paketinhalt und Notiz werden im Chat angezeigt, ohne Actor-Daten zu verändern.
+- Mengen werden unterstützt.
+- V0.9.14 mit Item-Suche ist in Foundry funktional bestätigt.
 
-Mengen werden unterstützt. Währungen, EP und Zufallstabellen werden derzeit nicht automatisch verarbeitet; solche Angaben können in der Paketnotiz stehen.
+## Neu in V0.9.15 – Compendium-Schnellsuche
 
-## V0.9.14 – Item-Suche
+Direkt im DM Cockpit steht eine globale Suche über wichtige Kompendiumstypen zur Verfügung.
 
-Beim Hinzufügen eines Gegenstands zu einem Belohnungspaket steht eine Live-Suche zur Verfügung.
+- durchsucht Actor-, Item-, JournalEntry- und RollTable-Kompendien
+- Live-Suche nach Name, Dokumenttyp, Untertyp und Kompendiumsname
+- Filter: Alle, Monster / Actors, Items / Zauber, Journal, Tabellen
+- zeigt Name, Typ und Herkunftskompendium
+- maximal 50 Treffer gleichzeitig, damit die Oberfläche kompakt bleibt
+- Treffer werden erst beim Öffnen vollständig geladen
+- Klick auf **Öffnen** öffnet das Foundry-Dokument direkt
 
-- durchsucht Welt-Items und Item-Kompendien
-- filtert während der Eingabe
-- sucht nach Itemname sowie Welt-/Kompendiumsbezeichnung
-- unterstützt mehrere Suchbegriffe
-- zeigt die Anzahl der Treffer an
-
-**V0.9.14 wurde in Foundry funktional bestätigt.**
+V0.9.15 ist veröffentlicht und muss noch in Foundry funktional getestet werden.
 
 ## Updates
 
