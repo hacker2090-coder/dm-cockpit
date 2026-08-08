@@ -97,18 +97,16 @@ function dmNpcMemoryRows(npc) {
     </article>`).join("");
 }
 
-function dmNpcMemoryHtml(npc) {
+function dmNpcMemoryBodyHtml(npc) {
   return `
-    <div data-dm-npc-memory-root>
-      <div class="dm-cockpit-card-title" style="margin-top:12px;">
-        <div><h4>NPC Action Memory</h4><p class="card-subtitle">Was dieser NPC getan, gesagt oder erfahren hat</p></div>
-      </div>
-      <form data-dm-npc-memory-form class="dm-section-actions" style="align-items:center;">
-        <input type="text" name="memoryText" placeholder="z. B. versprach der Gruppe einen Schlüssel" autocomplete="off" ${npc ? "" : "disabled"}>
-        <button type="submit" class="dm-button-primary small" ${npc ? "" : "disabled"}><i class="fa-solid fa-plus"></i> Merken</button>
-      </form>
-      <div class="dm-list" data-dm-npc-memory-list>${dmNpcMemoryRows(npc)}</div>
-    </div>`;
+    <div class="dm-cockpit-card-title" style="margin-top:12px;">
+      <div><h4>NPC Action Memory</h4><p class="card-subtitle">Was dieser NPC getan, gesagt oder erfahren hat</p></div>
+    </div>
+    <form data-dm-npc-memory-form class="dm-section-actions" style="align-items:center;">
+      <input type="text" name="memoryText" placeholder="z. B. versprach der Gruppe einen Schlüssel" autocomplete="off" ${npc ? "" : "disabled"}>
+      <button type="submit" class="dm-button-primary small" ${npc ? "" : "disabled"}><i class="fa-solid fa-plus"></i> Merken</button>
+    </form>
+    <div class="dm-list" data-dm-npc-memory-list>${dmNpcMemoryRows(npc)}</div>`;
 }
 
 function dmNpcMemoryIsCockpit(application) {
@@ -125,25 +123,23 @@ function dmNpcMemoryInject(application, element) {
   const npcOutput = npcSection?.querySelector?.("[data-dm-npc-output]");
   if (!npcSection || !npcOutput || npcSection.querySelector("[data-dm-npc-memory-root]")) return;
 
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = dmNpcMemoryHtml(dmNpcMemoryCurrentNpc()).trim();
-  const root = wrapper.firstElementChild;
+  const root = document.createElement("div");
+  root.dataset.dmNpcMemoryRoot = "true";
   npcOutput.after(root);
 
   const refresh = () => {
-    const currentNpc = dmNpcMemoryCurrentNpc();
-    const fresh = document.createElement("div");
-    fresh.innerHTML = dmNpcMemoryHtml(currentNpc).trim();
-    root.replaceWith(fresh.firstElementChild);
-    dmNpcMemoryInject(application, element);
+    root.innerHTML = dmNpcMemoryBodyHtml(dmNpcMemoryCurrentNpc());
   };
 
-  root.querySelector("[data-dm-npc-memory-form]")?.addEventListener("submit", async event => {
+  root.addEventListener("submit", async event => {
+    const form = event.target.closest?.("[data-dm-npc-memory-form]");
+    if (!form) return;
     event.preventDefault();
+
     const npc = dmNpcMemoryCurrentNpc();
     if (!npc) return ui.notifications?.warn("DM Cockpit: Erst einen NPC generieren.");
 
-    const input = event.currentTarget.querySelector('input[name="memoryText"]');
+    const input = form.querySelector('input[name="memoryText"]');
     const text = String(input?.value ?? "").trim();
     if (!text) return;
 
@@ -158,6 +154,7 @@ function dmNpcMemoryInject(application, element) {
   root.addEventListener("click", async event => {
     const button = event.target.closest?.("[data-dm-npc-memory-delete]");
     if (!button) return;
+
     const npc = dmNpcMemoryCurrentNpc();
     if (!npc) return;
 
@@ -169,8 +166,10 @@ function dmNpcMemoryInject(application, element) {
     refresh();
   });
 
-  const observer = new MutationObserver(() => refresh());
+  const observer = new MutationObserver(refresh);
   observer.observe(npcOutput, { childList: true, subtree: true });
+
+  refresh();
 }
 
 Hooks.once("init", () => {
