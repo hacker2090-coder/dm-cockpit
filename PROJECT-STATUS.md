@@ -1,8 +1,8 @@
 # DM Cockpit – Projektstand
 
 Stand: 09.08.2026
-Aktuelle Version: **V0.9.13**
-Status: **V0.9.12 bestätigt; V0.9.13 bereit zum Test**
+Aktuelle Version: **V0.9.14**
+Status: **V0.9.12 bestätigt; V0.9.14 bereit zum Test**
 
 ## Fertig / aktiv
 
@@ -15,7 +15,7 @@ Status: **V0.9.12 bestätigt; V0.9.13 bereit zum Test**
 - Handout Queue
 - GitHub-/Foundry-Update-System
 
-## Neu in V0.9.13 – Loot-/Belohnungspakete
+## Loot-/Belohnungspakete
 
 - Pakete mit Name und optionaler Notiz anlegen.
 - Gegenstände aus Welt-Items und Item-Kompendien hinzufügen.
@@ -23,7 +23,16 @@ Status: **V0.9.12 bestätigt; V0.9.13 bereit zum Test**
 - **Verteilen:** Gegenstände an einen ausgewählten Welt-Actor übertragen.
 - **Nur zeigen:** Paket als Chat-Nachricht anzeigen, ohne Actor-Daten zu verändern.
 - Pakete und Gegenstände können manuell entfernt werden.
-- Währung, EP und Zufallstabellen werden in V0.9.13 nicht automatisch verarbeitet.
+- Währung, EP und Zufallstabellen werden derzeit nicht automatisch verarbeitet.
+
+## Neu in V0.9.14 – Item-Suche
+
+- Live-Suche beim Hinzufügen eines Gegenstands zu einem Belohnungspaket.
+- Durchsucht Welt-Items und Item-Kompendien.
+- Filtert die bestehende Auswahl während der Eingabe.
+- Sucht nach Itemname und Welt-/Kompendiumsbezeichnung.
+- Mehrere Suchbegriffe werden gemeinsam berücksichtigt.
+- Trefferanzahl wird angezeigt.
 
 ## Handout Queue
 
