@@ -40,6 +40,8 @@ let latestVoiceParticipants = {
   participants: []
 };
 let latestNicknameStatus = null;
+let latestSessionControlState = null;
+let latestDiagnosticState = null;
 let latestDiscordOutputState = {
   guildId: OUTPUT_GUILD_ID,
   gatewayReady: false,
@@ -183,6 +185,13 @@ function handleProtocolMessage(ws, message) {
           "health",
           "session.started",
           "session.ended",
+          "session.control.start",
+          "session.control.stop",
+          "session.control.state.request",
+          "session.control.state",
+          "session.control.result",
+          "discord.command.recap.request",
+          "diagnostic.state",
           "speaker.upserted",
           "voice.participants",
           "voice.participants.request",
@@ -227,7 +236,9 @@ function handleProtocolMessage(ws, message) {
         persistentIdentityProfiles: true,
         persistentNicknameRestoreState: true,
         persistentDiscordOutputChannel: true,
-        idempotentDiscordOutputPosts: true
+        idempotentDiscordOutputPosts: true,
+        manualSessionControl: true,
+        reconnectPreservesLogicalSession: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -239,6 +250,8 @@ function handleProtocolMessage(ws, message) {
       send(ws, "voice.participants", latestVoiceParticipants, sessionId);
       send(ws, "identity.profile.state", profileStatePayload(), sessionId);
       send(ws, "discord.output.state", latestDiscordOutputState, sessionId);
+      if (latestSessionControlState) send(ws, "session.control.state", latestSessionControlState, latestSessionControlState.sessionId ?? sessionId);
+      if (latestDiagnosticState) send(ws, "diagnostic.state", latestDiagnosticState, sessionId);
       if (latestNicknameStatus) send(ws, "nickname.status", latestNicknameStatus, sessionId);
       for (const record of listActiveChangeRecords(store, 100)) {
         send(ws, "npc.memory.applied", record, sessionId);
@@ -264,6 +277,33 @@ function handleProtocolMessage(ws, message) {
     case "session.ended":
       store.endSession(sessionId ?? payload.sessionId, payload, receivedAt);
       broadcast("session.ended", payload, sessionId ?? payload.sessionId ?? null);
+      break;
+
+    case "session.control.start":
+    case "session.control.stop":
+    case "session.control.state.request":
+    case "discord.command.recap.request":
+      broadcast(message.type, payload, sessionId);
+      break;
+
+    case "session.control.state":
+      latestSessionControlState = {
+        ...payload,
+        updatedAt: String(payload.updatedAt ?? "").trim() || receivedAt
+      };
+      broadcast("session.control.state", latestSessionControlState, latestSessionControlState.sessionId ?? sessionId);
+      break;
+
+    case "session.control.result":
+      broadcast("session.control.result", payload, sessionId);
+      break;
+
+    case "diagnostic.state":
+      latestDiagnosticState = {
+        ...payload,
+        updatedAt: String(payload.updatedAt ?? "").trim() || receivedAt
+      };
+      broadcast("diagnostic.state", latestDiagnosticState, sessionId);
       break;
 
     case "speaker.upserted":
