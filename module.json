@@ -1,13 +1,13 @@
 {
   "id": "dm-cockpit",
   "title": "DM Cockpit",
-  "description": "DM Cockpit für Foundry VTT V14: kompaktes technisches GM-Dashboard mit Live-UI, Abenteuer-Flowchart, spontanen Szenen, Szenen-Presets, Gegner-Spawnpunkten, Enemy Reserve Bench, Handout Queue, Loot-/Belohnungspaketen, Item- und Compendium-Suche, NPC-Schnellgenerator, Actor-basiertem NPC Memory, Discord-Live-Transkript, manueller KI-Kandidatenprüfung, konfliktgeschütztem NPC-Memory-Undo, Session-Recap mit Discord-Kurzfassung sowie persistenter Discord-Spieler-/Foundry-Charakter-Sprecherzuordnung.",
+  "description": "DM Cockpit für Foundry VTT V14: kompaktes technisches GM-Dashboard mit Live-UI, Abenteuer-Flowchart, spontanen Szenen, Szenen-Presets, Gegner-Spawnpunkten, Enemy Reserve Bench, Handout Queue, Loot-/Belohnungspaketen, Item- und Compendium-Suche, NPC-Schnellgenerator, Actor-basiertem NPC Memory, Discord-Live-Transkript, manueller KI-Kandidatenprüfung, konfliktgeschütztem NPC-Memory-Undo, Session-Recap sowie Discord-Spieler-/Foundry-Charakter-Zuordnung mit aktivierbaren Session-/Kampagnenprofilen und reversiblen Server-Nicknames.",
   "authors": [
     {
       "name": "DM Cockpit"
     }
   ],
-  "version": "0.9.27",
+  "version": "0.9.28",
   "compatibility": {
     "minimum": "14",
     "verified": "14.365"
@@ -22,6 +22,7 @@
     "scripts/npc-action-memory.js",
     "scripts/live-transcript.js",
     "scripts/player-character-mapping.js",
+    "scripts/session-identity-profile.js",
     "scripts/ai-candidate-review.js",
     "scripts/session-recap.js",
     "scripts/npc-context-bridge.js",
@@ -32,6 +33,7 @@
     "styles/dm-cockpit.css",
     "styles/live-transcript.css",
     "styles/player-character-mapping.css",
+    "styles/session-identity-profile.css",
     "styles/ai-candidate-review.css",
     "styles/session-recap.css",
     "styles/ui-layout.css"
