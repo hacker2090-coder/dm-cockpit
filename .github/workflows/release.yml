@@ -26,10 +26,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          jq -e '.id == "dm-cockpit" and (.version | type == "string")' module.json >/dev/null
           while IFS= read -r path; do
             test -f "$path" || { echo "Missing manifest source: $path"; exit 1; }
           done < <(jq -r '.esmodules[], .styles[]' module.json)
           test -f templates/cockpit.hbs
+          find scripts -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
       - name: Build clean Foundry package
         shell: bash
