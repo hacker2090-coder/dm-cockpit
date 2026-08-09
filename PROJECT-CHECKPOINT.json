@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.6",
-  "created_at": "2026-08-09T14:08:00+02:00",
+  "schema_version": "3.7",
+  "created_at": "2026-08-09T14:05:00+02:00",
   "language": "de",
   "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit.",
   "project": {
@@ -14,8 +14,8 @@
     "foundry_version": "0.9.21",
     "foundry_status": "functionally_confirmed",
     "companion_github_version": "0.6.0",
-    "companion_last_fully_user_tested_stage": "0.6.0_isolated_ai_extraction_confirmed",
-    "pause_point": "Companion 0.5.0 vollständig lokal bestätigt. Companion 0.6.0 Syntaxprüfung und lokaler AI-Extraction-Test auf Nutzer-PC erfolgreich. Provider-neutraler Service, deterministischer Mock, NPC-/Session-Kandidaten, Quellenbindung, NPC-Kontext, Final-only und Deduplizierung bestätigt. Noch ausstehend: automatischer End-to-End-Pipeline-Test transcript.segment -> AI extraction -> candidates -> Protocol v1 -> SQLite mit AI_PROVIDER=mock. Kein realer LLM-Provider und keine Actor-Writes.",
+    "companion_last_fully_user_tested_stage": "0.6.0_fully_confirmed",
+    "pause_point": "Companion 0.6.0 vollständig lokal bestätigt. Syntaxprüfung, isolierte provider-neutrale AI-Extraction sowie automatischer End-to-End-Pipeline-Smoke-Test erfolgreich: transcript.segment -> Mock-Extraktion -> npc.memory.candidate + session.event.candidate -> Protocol v1 -> Broadcast -> SQLite. NPC Candidates 1 -> 2, Session Event Candidates 1 -> 2. Nächster Entwicklungsblock: realen AI/LLM-Provider auswählen und anbinden; weiterhin keine Actor-Writes.",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit"
   },
   "working_rules": {
@@ -57,7 +57,7 @@
     "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
     "0.4.0": "Deepgram Nova-3 STT bestätigt",
     "0.5.0": "vollständig lokal bestätigt: Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite",
-    "0.6.0": "Syntax + isolierte AI-Extraction lokal bestätigt; End-to-End-AI-Pipeline-Test noch ausstehend"
+    "0.6.0": "vollständig lokal bestätigt: Syntax, isolierte AI-Extraction und End-to-End Mock-AI-Pipeline bis Protocol v1/Broadcast/SQLite"
   },
   "companion_0_5_confirmed": {
     "health_service_version": "0.5.0",
@@ -77,7 +77,7 @@
     }
   },
   "companion_0_6": {
-    "status": "isolated_user_test_confirmed_pipeline_e2e_pending",
+    "status": "fully_user_confirmed_mock_ai_pipeline",
     "implemented": [
       "AiExtractionService provider-neutral",
       "MockAiExtractionProvider deterministic-v1",
@@ -97,12 +97,6 @@
     "local_validation": {
       "npm_cmd_run_check": "passed",
       "npm_cmd_run_test_ai": "passed",
-      "output": [
-        "[ai] Provider 'mock' bereit.",
-        "[ai] Segment seg_ai_test_001: 2 Kandidaten erzeugt.",
-        "[ai] Segment seg_ai_no_npc: 1 Kandidat erzeugt.",
-        "AI-Extraction-Test erfolgreich."
-      ],
       "confirmed": [
         "provider-neutraler Service",
         "Mock-Provider",
@@ -115,15 +109,25 @@
       ]
     },
     "pipeline_smoke_test": {
-      "status": "prepared_not_user_run",
+      "status": "passed",
       "command": "npm.cmd run test:ai-pipeline",
-      "requires": "Companion 0.6.0 laufend mit AI_PROVIDER=mock",
-      "checks": [
+      "runtime_provider": "mock",
+      "observed_output": [
+        "AI-Pipeline-Test verbunden: ws://127.0.0.1:43170/v1",
+        "NPC-Memory-Kandidat empfangen: promise",
+        "Session-Event-Kandidat empfangen: task",
+        "NPC Candidates: 1 -> 2",
+        "Session Event Candidates: 1 -> 2",
+        "AI-Pipeline-Smoke-Test erfolgreich: transcript.segment -> Mock-Extraktion -> Protocol v1 -> Broadcast -> SQLite bestätigt."
+      ],
+      "confirmed": [
         "npc.context via Protocol v1",
         "final transcript.segment via Protocol v1",
         "automatic npc.memory.candidate",
         "automatic session.event.candidate",
-        "candidate counters increase in SQLite"
+        "Protocol v1 broadcast",
+        "SQLite persistence",
+        "candidate counters increase"
       ]
     },
     "real_llm_provider_implemented": false
@@ -136,16 +140,14 @@
   },
   "roadmap": [
     "1: Companion 0.5.0 vollständig lokal bestätigt",
-    "2a: Companion 0.6.0 AI/Mock-Extraktion implementiert",
-    "2b: 0.6.0 Syntax + isolierter AI-Test lokal bestätigt",
-    "2c: End-to-End AI-Pipeline mit AI_PROVIDER=mock lokal bestätigen",
-    "2d: realen AI/LLM Provider auswählen und anbinden",
-    "3: Kandidaten-UI in Foundry",
-    "4: Undo/Change-Record Runtime",
-    "5: optionale automatische NPC-Memory-Übernahme",
-    "6: dauerhaft durchsuchbares Transkript",
-    "7: Session-Historie, Recap und Discord-Kurzfassung",
-    "8: Skalierungs-/Provider-/Cost-Hardening"
+    "2: Companion 0.6.0 provider-neutrale AI/Mock-Extraktion vollständig lokal bestätigt",
+    "3: realen AI/LLM-Provider auswählen und anbinden; Kandidaten only, keine Actor-Writes",
+    "4: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
+    "5: Undo/Change-Record Runtime",
+    "6: optionale automatische NPC-Memory-Übernahme",
+    "7: dauerhaft durchsuchbares Transkript",
+    "8: Session-Historie, Recap und Discord-Kurzfassung",
+    "9: Skalierungs-/Provider-/Cost-Hardening"
   ],
   "resume_instructions": {
     "source_of_truth": true,
@@ -156,9 +158,11 @@
       "Companion 0.1-0.5 neu bauen/testen",
       "0.6.0 Syntaxprüfung erneut ausführen",
       "0.6.0 isolierten test:ai erneut ausführen",
+      "0.6.0 End-to-End test:ai-pipeline erneut ausführen",
+      "0.6.0 Mock-AI-Pipeline erneut testen",
       "bestätigte Foundry-Grundfunktionen neu implementieren"
     ],
-    "next_single_todo": "Companion 0.6.0 mit AI_PROVIDER=mock starten und in einer zweiten PowerShell npm.cmd run test:ai-pipeline ausführen.",
-    "after_success": "0.6.0 Mock-Pipeline vollständig bestätigen; danach Auswahl und Implementierung eines realen AI/LLM-Providers. Weiterhin keine Actor-Writes."
+    "next_single_todo": "Realen AI/LLM-Provider für Companion auswählen und einen provider-neutralen Adapter implementieren; Outputs bleiben ausschließlich npc.memory.candidate und session.event.candidate.",
+    "after_success": "Mit kontrolliertem realen Provider-Test auf Nutzer-PC verifizieren; danach Foundry-Kandidaten-UI bauen. Weiterhin keine automatischen Actor-Writes."
   }
 }
