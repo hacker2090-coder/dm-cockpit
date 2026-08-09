@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { MockAiExtractionProvider } from "./ai-extraction-mock.js";
 import { OpenAiExtractionProvider } from "./ai-extraction-openai.js";
+import { OllamaExtractionProvider } from "./ai-extraction-ollama.js";
 
 const DEFAULT_MAX_SEEN_SEGMENTS = 2000;
 
@@ -46,7 +47,9 @@ export class AiExtractionService {
       ? new MockAiExtractionProvider()
       : this.providerName === "openai"
         ? new OpenAiExtractionProvider()
-        : null;
+        : this.providerName === "ollama"
+          ? new OllamaExtractionProvider()
+          : null;
     this.seenSegmentIds = new Set();
     this.seenSegmentOrder = [];
     this.completed = 0;
@@ -77,7 +80,7 @@ export class AiExtractionService {
 
   start() {
     if (this.providerName === "none") {
-      console.log("[ai] Extraktion deaktiviert. AI_PROVIDER=mock aktiviert den Testprovider; AI_PROVIDER=openai aktiviert den realen OpenAI-Adapter.");
+      console.log("[ai] Extraktion deaktiviert. AI_PROVIDER=mock aktiviert den Testprovider; AI_PROVIDER=ollama aktiviert lokale KI; AI_PROVIDER=openai aktiviert den optionalen Cloud-Adapter.");
       this.emitStatus();
       return this.snapshot();
     }
