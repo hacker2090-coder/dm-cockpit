@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { CompanionStore } from "./store.js";
+import { PlayerCharacterIdentityRegistry } from "./player-character-identity.js";
 
 const dir = mkdtempSync(join(tmpdir(), "dm-cockpit-identity-"));
 const dbPath = join(dir, "identity.sqlite");
@@ -66,6 +67,43 @@ try {
   );
   assert.deepEqual(store.listPlayerCharacterMappings("world-test"), [mapping]);
 
+  const identity = new PlayerCharacterIdentityRegistry();
+  assert.equal(identity.replace({ worldId: "world-test", mappings: [mapping] }), true);
+  assert.equal(identity.worldId, "world-test");
+  assert.deepEqual(identity.get("discord-42"), {
+    discordUserId: "discord-42",
+    playerName: "Mira",
+    actorId: "actor-7",
+    actorUuid: "Actor.actor-7",
+    characterName: "Ragna"
+  });
+
+  const enriched = identity.enrichTranscript({
+    segmentId: "segment-test",
+    discordUserId: "discord-42",
+    speakerName: "Mira Discord",
+    startedAt: "2026-08-09T16:01:00.000Z",
+    endedAt: "2026-08-09T16:01:03.000Z",
+    text: "Ich öffne die Tür.",
+    final: true,
+    language: "de",
+    provider: "test",
+    confidence: 0.99
+  });
+
+  assert.equal(enriched.playerName, "Mira");
+  assert.equal(enriched.actorId, "actor-7");
+  assert.equal(enriched.actorUuid, "Actor.actor-7");
+  assert.equal(enriched.characterName, "Ragna");
+
+  const unmapped = identity.enrichTranscript({
+    discordUserId: "discord-99",
+    speakerName: "Noah"
+  });
+  assert.equal(unmapped.playerName, "Noah");
+  assert.equal(unmapped.actorId, null);
+  assert.equal(unmapped.characterName, null);
+
   store.upsertSpeaker({
     discordUserId: "discord-42",
     displayName: "Mira",
@@ -74,22 +112,7 @@ try {
     isBot: false
   });
 
-  assert.equal(store.upsertTranscriptSegment("session-test", {
-    segmentId: "segment-test",
-    discordUserId: "discord-42",
-    speakerName: "Mira",
-    playerName: "Mira",
-    actorId: "actor-7",
-    actorUuid: "Actor.actor-7",
-    characterName: "Ragna",
-    startedAt: "2026-08-09T16:01:00.000Z",
-    endedAt: "2026-08-09T16:01:03.000Z",
-    text: "Ich öffne die Tür.",
-    final: true,
-    language: "de",
-    provider: "test",
-    confidence: 0.99
-  }), true);
+  assert.equal(store.upsertTranscriptSegment("session-test", enriched), true);
 
   const transcript = store.db.prepare(`
     SELECT discord_user_id, speaker_name, player_name, actor_id, actor_uuid, character_name
@@ -99,7 +122,7 @@ try {
 
   assert.deepEqual(transcript, {
     discord_user_id: "discord-42",
-    speaker_name: "Mira",
+    speaker_name: "Mira Discord",
     player_name: "Mira",
     actor_id: "actor-7",
     actor_uuid: "Actor.actor-7",
@@ -109,8 +132,12 @@ try {
   assert.equal(store.replacePlayerCharacterMappings("world-test", []), true);
   assert.deepEqual(store.listPlayerCharacterMappings("world-test"), []);
 
+  identity.clear();
+  assert.equal(identity.worldId, null);
+  assert.equal(identity.get("discord-42"), null);
+
   store.close();
-  console.log("Identity-Mapping-Smoke-Test erfolgreich: Legacy-Migration -> Mapping -> Transcript-Attribution -> Clear bestätigt.");
+  console.log("Identity-Mapping-Smoke-Test erfolgreich: Legacy-Migration -> Mapping -> Registry -> Transcript-Attribution -> Clear bestätigt.");
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
