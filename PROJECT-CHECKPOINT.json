@@ -1,27 +1,26 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.32",
-  "created_at": "2026-08-09T22:26:54+02:00",
+  "schema_version": "3.33",
+  "created_at": "2026-08-09T22:53:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
     "repository": "hacker2090-coder/dm-cockpit",
     "branch": "main",
     "source_of_truth": "GitHub main",
-    "latest_checked_main_commit": "05b6342a485ec7ee7ab74029fef303337969d49e",
-    "latest_checked_main_message": "checkpoint: finalize 0.9.30 CI validated session controls",
+    "latest_checked_main_commit_before_canonical_update": "93994b7e385838ce36b2579d763dfe6e178afb5a",
     "foundry_repository_version": "0.9.30",
+    "companion_repository_version": "0.14.0",
     "foundry_last_fully_user_confirmed_version": "0.9.24",
     "foundry_last_visual_user_confirmed_version": "0.9.26",
-    "companion_repository_version": "0.14.0",
     "companion_last_fully_user_confirmed_version": "0.10.0"
   },
   "critical_resume_state": {
-    "status": "session_control_commands_presence_diagnostics_reconnect_ci_validated_runtime_pending",
-    "summary": "0.9.30/0.14.0 ist implementiert, reviewt, automatisiert geprüft, auf main integriert und CI-validiert. Der Codeblock wurde mit 90c63fdf1e299d0c5e092507226a7f72b7a98bc1 validiert; nach Abschlussdokumentation wurde der aktuelle Foundry-Paketstand als e4ae4a5534762bbef4fe9e79c05647cc86b647a9 Build DM Cockpit v0.9.30 neu veröffentlicht. Es gibt keinen bekannten technischen Blocker. Nächste echte Grenze ist der gebündelte Discord-/Foundry-Runtime-Test; local_confirmed und fully_confirmed bleiben false."
+    "status": "session_control_runtime_partially_confirmed_paused_at_recap",
+    "summary": "0.9.30/0.14.0 bleibt implementiert, automatisiert getestet und CI-validiert. Am 2026-08-09 wurde der gebündelte reale Discord-/Foundry-Test begonnen. Sessionstart, einmaliger Aufnahmehinweis, reales STT, Voice-Reconnect, identische Session-ID nach Reconnect, kein doppelter Hinweis und genau ein STT-Segment nach Reconnect wurden real bestätigt. Der Test wurde auf Nutzerwunsch direkt vor /dm recap pausiert. local_confirmed ist deshalb nur partiell; fully_confirmed bleibt false.",
+    "immutable_checkpoint": "checkpoints/2026-08-09T22-53-runtime-reconnect-partially-confirmed-paused.json"
   },
   "repository_health": {
-    "checked_at": "2026-08-09T22:26:54+02:00",
     "module_manifest": "0.9.30",
     "companion_package": "0.14.0",
     "ci_validation_build": "90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30",
@@ -32,10 +31,9 @@
     "github_source_of_truth": true,
     "check_main_before_changes": true,
     "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
-    "user_test_cadence": "Insgesamt ungefähr drei gebündelte reale Discord-/Foundry-Testblöcke für den Discord-Bot-Ausbau; keine Mikrotests nach jedem Commit.",
+    "user_test_cadence": "Gebündelte reale Discord-/Foundry-Testblöcke; keine unnötigen Mikrotests nach jedem Commit.",
     "checkpoint_rule": "Nach sinnvollen Wiederaufnahmepunkten PROJECT-CHECKPOINT.json aktualisieren und historischen Snapshot unter checkpoints/ anlegen.",
-    "staging_rule": "Größere autonome Blöcke auf temporärem Branch bündeln; main erst nach Review möglichst einmalig aktualisieren.",
-    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
+    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden und nur eine nötige Aktion auf einmal verlangen.",
     "powershell_rule": "PowerShell-Befehle getrennt; npm.cmd verwenden; kein &&.",
     "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
     "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
@@ -64,85 +62,62 @@
     ]
   },
   "discord_bot_expansion": {
-    "status": "implementation_ci_complete_runtime_confirmation_pending",
+    "status": "implementation_ci_complete_runtime_partial",
     "scope_document": "docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json",
-    "completed_milestones": [
-      {
-        "name": "discord_identity_core",
-        "foundry": "0.9.27",
-        "companion": "0.11.0",
-        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
-        "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2"
-      },
-      {
-        "name": "campaign_session_identity_and_nickname",
-        "foundry": "0.9.28",
-        "companion": "0.12.0",
-        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
-        "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20"
-      },
-      {
-        "name": "discord_output_channel_notice_and_recap_posting",
-        "foundry": "0.9.29",
-        "companion": "0.13.0",
-        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
-        "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f"
-      },
-      {
-        "name": "session_control_commands_presence_diagnostics_reconnect",
-        "foundry": "0.9.30",
-        "companion": "0.14.0",
-        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
-        "validated_build": "90c63fdf1e299d0c5e092507226a7f72b7a98bc1",
-        "latest_package_build": "e4ae4a5534762bbef4fe9e79c05647cc86b647a9",
-        "implemented": [
-          "manual logical session state separate from Discord Voice join",
-          "idempotent session start/stop",
-          "/dm status/start/stop/recap",
-          "configured GM guards",
-          "bot Presence",
-          "diagnostic.state",
-          "bounded Voice reconnect",
-          "same sessionId after Voice reconnect",
-          "intentional leave suppresses reconnect",
-          "late STT guard and short-lived audio segment dedupe",
-          "Foundry command bridge reuses confirmed recap/output path"
-        ]
-      }
-    ],
-    "current_block": null,
-    "runtime_confirmation_pending": {
-      "bundle": "discord_interventions_and_reconnect",
-      "status": "user_runtime_required",
-      "checks": [
-        "reale Discord-Kanalliste und Zielkanal-Persistenz",
-        "/dm status/start/stop/recap",
-        "genau ein automatischer Aufnahmehinweis pro Session",
-        "reales Transkriptsegment",
-        "Voice-Disconnect/Reconnect",
-        "gleiche sessionId nach Reconnect",
-        "keine doppelte Session",
-        "kein doppelter Aufnahmehinweis",
-        "kein doppeltes Transkriptsegment",
-        "Presence-/Diagnosezustände",
-        "bewusstes Recap-Posting",
-        "gelöschter/unbeschreibbarer Zielkanal falls praktikabel"
-      ]
+    "active_milestone": {
+      "name": "session_control_commands_presence_diagnostics_reconnect",
+      "foundry": "0.9.30",
+      "companion": "0.14.0",
+      "implementation_status": "implemented_automated_tested_ci_validated",
+      "runtime_status": "partially_local_confirmed",
+      "validated_build": "90c63fdf1e299d0c5e092507226a7f72b7a98bc1",
+      "latest_package_build": "e4ae4a5534762bbef4fe9e79c05647cc86b647a9"
     },
-    "deferred_scope_ids": [5, 14],
+    "runtime_confirmed": [
+      "lokaler git pull bis e87c6ef erfolgreich",
+      "Companion 0.14.0 startet; Deepgram und Discord Gateway bereit; initial Capture idle",
+      "Foundry 0.9.30 lädt ohne sichtbaren Fehler",
+      "Discord-Ausgabekanal konnte übernommen werden",
+      "Voice-Join startet keine logische Session automatisch",
+      "/dm start erfolgreich",
+      "Session-ID voice_da888149-64c2-4194-bbde-176b59793bf6 erzeugt",
+      "genau ein automatischer Transkriptionshinweis",
+      "reales Sprachsegment erscheint in Foundry",
+      "manueller Bot-Disconnect führt zu automatischem Voice-Reconnect",
+      "Session-ID bleibt nach Reconnect identisch",
+      "/dm status nach Reconnect: Session aktiv, Capture aktiv, Gateway ready, Voice ready, Reconnect bereit, Ausgabekanal #test-channel",
+      "nach Reconnect weiterhin nur ein Aufnahmehinweis",
+      "zweiter Testsatz nach Reconnect erscheint genau 1x in Foundry"
+    ],
+    "runtime_observation": {
+      "note": "Companion kann nach Voice Ready intern 'Capture-Status: paused' loggen. Das ist derzeit als missverständliche interne Statussemantik einzustufen, nicht als bestätigter Blocker, weil /dm status Capture aktiv meldete und STT nach Reconnect genau 1x funktionierte.",
+      "needs_code_change_now": false
+    },
+    "runtime_pending": [
+      "/dm recap",
+      "/dm stop",
+      "zweites /dm stop / Idempotenz",
+      "Presence-Zustände vollständig beobachten",
+      "diagnostic.state vollständig beobachten",
+      "Ausgabekanal-Persistenz über Neustart",
+      "gelöschter/unbeschreibbarer Zielkanal falls praktikabel",
+      "abschließender Runtime-/E2E-Abschluss"
+    ],
     "deferred_features": [
       "mehrere GMs",
       "eigenes Befehlsberechtigungs-Framework"
     ]
   },
   "runtime_test_strategy": {
-    "user_tests_should_remain_rare": true,
-    "planned_bundled_blocks": [
-      "Spieler <-> Charakter <-> Sprecher",
-      "Discord-Eingriffe: Nicknames, Zielkanal, Hinweis/Recap, Reconnect",
-      "finaler End-to-End-Test"
+    "current_bundle": "discord_interventions_and_reconnect",
+    "status": "paused_by_user_after_successful_reconnect_and_stt",
+    "do_not_repeat_without_regression": [
+      "Reconnect-Grundfunktion",
+      "gleiche Session-ID über Reconnect",
+      "einmaliger Aufnahmehinweis",
+      "STT vor und nach Reconnect"
     ],
-    "current_instruction": "Der aktuelle 0.9.30-Block hat die echte externe Runtime-Grenze erreicht. Als Nächstes den Discord-Eingriffe/Reconnect-Test gebündelt durchführen; keine weiteren Mikrotests davor verlangen."
+    "resume_note": "Falls Programme geschlossen wurden, nur minimale Voraussetzungen neu starten. Bereits bestätigten Reconnect-Test nicht komplett wiederholen."
   },
   "important_design_semantics": {
     "speaker_truth": "Discord User ID aus der getrennten Voice-Audiospur.",
@@ -153,11 +128,12 @@
     "notice_rule": "Aufnahme-/Transkriptionshinweis ersetzt keine rechtliche Einwilligungs-/Datenschutzklärung."
   },
   "next_actions_exact_order": [
-    "Aktuellen main vor lokalem Test per git pull holen.",
-    "Companion 0.14.0 und Foundry 0.9.30 starten.",
-    "Gebündelten realen Discord-/Foundry-Test für Zielkanal, Session-Commands, Hinweis, Reconnect, Duplikatschutz, Presence und Recap durchführen.",
-    "Nur konkrete Runtime-Regressionen beheben; bestätigte Baseline nicht unnötig erneut testen.",
-    "Nach erfolgreichem Runtime-Bundle local_confirmed entsprechend aktualisieren.",
-    "Danach finalen End-to-End-Test bzw. nächsten ausdrücklich gewählten Scope-Block planen."
+    "Bei Wiederaufnahme aktuellen main prüfen/pullen.",
+    "Falls nötig Companion 0.14.0, Foundry 0.9.30 und Discord-Voice mit minimalen Voraussetzungen starten.",
+    "Als nächsten fachlichen Runtime-Test /dm recap ausführen; Ergebnis in Discord/Foundry beobachten.",
+    "Danach /dm stop und ein zweites /dm stop für Idempotenz testen.",
+    "Presence/diagnostic.state und ggf. Ausgabekanal-Persistenz prüfen.",
+    "Nur konkrete Runtime-Regressionen beheben; bestätigte Reconnect-/STT-Baseline nicht unnötig wiederholen.",
+    "Danach local_confirmed/fully_confirmed ausschließlich anhand tatsächlich beobachteter Punkte aktualisieren."
   ]
 }
