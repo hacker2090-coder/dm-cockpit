@@ -6,7 +6,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.8.0";
+const SERVICE_VERSION = "0.9.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
@@ -92,11 +92,16 @@ function handleProtocolMessage(ws, message) {
           "npc.context",
           "npc.memory.candidate",
           "session.event.candidate",
+          "candidate.review",
+          "candidate.reviewed",
+          "candidates.list.request",
+          "candidates.list.result",
           "sqlite"
         ],
         database: "sqlite",
         persistentTranscript: true,
-        persistentCandidates: true
+        persistentCandidates: true,
+        persistentCandidateReviews: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -158,6 +163,39 @@ function handleProtocolMessage(ws, message) {
       }
       broadcast("session.event.candidate", payload, sessionId);
       break;
+
+    case "candidate.review": {
+      const candidateType = String(payload.candidateType ?? "");
+      const candidateId = String(payload.candidateId ?? "");
+      const status = String(payload.status ?? "").toLowerCase();
+      if (!store.reviewCandidate(candidateType, candidateId, status)) {
+        sendError(ws, "Kandidat konnte nicht geprüft oder aktualisiert werden.", "invalid_candidate_review", sessionId);
+        break;
+      }
+      broadcast("candidate.reviewed", {
+        candidateType,
+        candidateId,
+        status,
+        reviewedAt: receivedAt
+      }, sessionId);
+      break;
+    }
+
+    case "candidates.list.request": {
+      const requestedStatus = String(payload.status ?? "pending").toLowerCase();
+      const requestedSessionId = payload.sessionId ?? sessionId ?? null;
+      const result = store.listCandidates({
+        sessionId: requestedSessionId,
+        status: requestedStatus,
+        limit: payload.limit ?? 100
+      });
+      send(ws, "candidates.list.result", {
+        status: requestedStatus,
+        sessionId: requestedSessionId,
+        ...result
+      }, sessionId);
+      break;
+    }
 
     case "capture.status":
       broadcast("capture.status", payload, sessionId);
