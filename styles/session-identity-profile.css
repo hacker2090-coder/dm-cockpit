@@ -1,0 +1,99 @@
+#dm-session-identity-profile .dm-profile-statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+
+#dm-session-identity-profile .dm-profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--color-border-light-tertiary, rgba(255,255,255,0.12));
+  border-radius: 999px;
+  font-size: 0.78rem;
+  opacity: 0.82;
+}
+
+#dm-session-identity-profile .dm-profile-status.is-online,
+#dm-session-identity-profile .dm-profile-status.is-active {
+  opacity: 1;
+  font-weight: 600;
+}
+
+#dm-session-identity-profile .dm-profile-status.is-warning {
+  opacity: 1;
+  font-weight: 600;
+}
+
+#dm-session-identity-profile .dm-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(13rem, 1.1fr) minmax(14rem, 1.5fr) minmax(9rem, 0.7fr);
+  gap: 0.65rem;
+  align-items: end;
+}
+
+#dm-session-identity-profile .dm-profile-grid label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+#dm-session-identity-profile .dm-profile-grid label > span {
+  font-size: 0.76rem;
+  opacity: 0.76;
+}
+
+#dm-session-identity-profile .dm-profile-grid input,
+#dm-session-identity-profile .dm-profile-grid select {
+  width: 100%;
+}
+
+#dm-session-identity-profile .dm-profile-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin: 0.65rem 0;
+  font-size: 0.8rem;
+  opacity: 0.86;
+}
+
+#dm-session-identity-profile .dm-profile-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+#dm-session-identity-profile .dm-profile-actions {
+  margin-top: 0.35rem;
+}
+
+#dm-session-identity-profile .dm-profile-notice {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin-top: 0.7rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border-light-tertiary, rgba(255,255,255,0.12));
+  border-radius: 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.88;
+}
+
+#dm-session-identity-profile .dm-profile-error {
+  display: flex;
+  gap: 0.45rem;
+  align-items: flex-start;
+  margin-top: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  #dm-session-identity-profile .dm-profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
