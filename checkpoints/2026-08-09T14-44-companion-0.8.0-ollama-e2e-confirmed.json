@@ -1,0 +1,161 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.14",
+  "created_at": "2026-08-09T14:44:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "foundry_version": "0.9.21",
+    "foundry_status": "functionally_confirmed",
+    "companion_github_version": "0.8.0",
+    "companion_last_fully_user_tested_stage": "0.8.0_ollama_e2e_confirmed",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "pause_point": "Companion 0.8.0 ist auf dem Nutzer-PC bis zur echten lokalen Ollama-End-to-End-Pipeline bestätigt. Ollama ist erreichbar, qwen3:4b lokal vorhanden (4.0B, Q4_K_M, 2.5 GB), und npm.cmd run test:ai-pipeline-ollama war erfolgreich: NPC promise, Session decision, NPC Candidates 2 -> 3, Session Event Candidates 2 -> 3. Damit ist transcript.segment -> qwen3:4b -> Kandidaten -> Protocol v1 -> Broadcast -> SQLite lokal bestätigt. Noch ausstehend: 12-Fälle-Qualitätsbenchmark qwen3:4b; danach bei Bedarf Vergleich mit qwen3:8b. Keine automatischen Actor-Writes."
+  },
+  "working_rules": {
+    "one_todo_at_a_time": true,
+    "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur bei echten externen Tests, Zugängen, Secrets oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
+    "do_not_reask_known_answers": true,
+    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten über HTML-Dateien mit kopierbarer Antwort führen.",
+    "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen; PROJECT-CHECKPOINT.json kanonisch pflegen und historische Checkpoints unter checkpoints/ sichern.",
+    "checkpoint_dual_storage": "Jeder reguläre Checkpoint wird in GitHub und in ChatGPT Library /DM Cockpit/ gespeichert.",
+    "user_action_rule": "Wenn etwas vom Nutzer benötigt wird, Abschnitt 'Ich möchte von dir' mit exakter Anweisung verwenden.",
+    "local_command_rule": "Lokale Companion-Arbeit unter $HOME\\Desktop\\dm-cockpit; npm.cmd statt npm verwenden.",
+    "secret_rule": "Tokens/API-Keys/Passwörter niemals in Chat, GitHub oder Checkpoints speichern.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung; nur temporäre RAM-Verarbeitung.",
+    "change_rule": "Keine automatischen Welt-/Actor-Änderungen ohne Undo/Change-Record oder klare GM-Bestätigung."
+  },
+  "confirmed_foundry": {
+    "version": "0.9.21",
+    "features": [
+      "LIVE-Dashboard",
+      "Abenteuer-Flowchart",
+      "Spontane Szenen",
+      "Szenen-Presets",
+      "Gegner-Spawnpunkte",
+      "Enemy Reserve Bench",
+      "Handout Queue",
+      "Loot-/Belohnungspakete",
+      "Item-Suche",
+      "Compendium-Schnellsuche",
+      "NPC-Schnellgenerator",
+      "Actor-basiertes NPC Memory",
+      "Discord Live-Transkript",
+      "NPC-Kontext",
+      "Foundry/GitHub Update-System"
+    ]
+  },
+  "companion_history": {
+    "0.1.0": "Foundry <-> WebSocket <-> Companion <-> SQLite bestätigt",
+    "0.2.0": "Discord Voice/DAVE/GM Follow bestätigt",
+    "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
+    "0.4.0": "Deepgram Nova-3 STT bestätigt",
+    "0.5.0": "Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite vollständig lokal bestätigt",
+    "0.6.0": "provider-neutrale AI/Mock-Extraktion und End-to-End Candidate-Pipeline vollständig lokal bestätigt",
+    "0.7.0": "OpenAI-Adapter lokal mit Fake-HTTP bestätigt; kein echter OpenAI-Aufruf",
+    "0.8.0": "Syntax, Ollama-Adapter, Preflight und echter lokaler qwen3:4b End-to-End-Lauf bis Protocol v1/Broadcast/SQLite bestätigt; Qualitätsbenchmark noch ausstehend"
+  },
+  "companion_0_8": {
+    "status": "ollama_e2e_user_confirmed_quality_pending",
+    "provider": "ollama",
+    "default_model": "qwen3:4b",
+    "default_endpoint": "http://127.0.0.1:11434/api/chat",
+    "api_key_required": false,
+    "local_validation": {
+      "npm_cmd_run_check": "passed",
+      "npm_cmd_run_test_ai_ollama": "passed",
+      "npm_cmd_run_test_ollama_preflight": "passed",
+      "npm_cmd_run_test_ai_pipeline_ollama": "passed"
+    },
+    "preflight": {
+      "endpoint_reachable": true,
+      "model_present": true,
+      "model": "qwen3:4b",
+      "parameters": "4.0B",
+      "quantization": "Q4_K_M",
+      "size": "2.5 GB"
+    },
+    "implemented": [
+      "OllamaExtractionProvider",
+      "AI_PROVIDER=ollama routing",
+      "Structured Output via JSON Schema",
+      "stream=false",
+      "think=false",
+      "temperature=0",
+      "seed=42",
+      "OLLAMA_AI_NUM_CTX default 8192",
+      "OLLAMA_AI_KEEP_ALIVE default 10m",
+      "NPC actorId only from Foundry npc.context",
+      "NPC suppression without npc.context",
+      "local post-validation",
+      "test:ai-ollama",
+      "test:ollama-preflight",
+      "test:ai-pipeline-ollama",
+      "12-case German TTRPG quality benchmark",
+      "test:ollama-quality"
+    ],
+    "next_tests": [
+      "npm.cmd run test:ollama-quality"
+    ],
+    "e2e_pipeline": {
+      "status": "passed",
+      "provider": "ollama",
+      "model": "qwen3:4b",
+      "observed_output": [
+        "AI-Pipeline-Test verbunden: ws://127.0.0.1:43170/v1",
+        "Erwarteter AI-Provider: ollama",
+        "NPC-Memory-Kandidat empfangen: promise",
+        "Session-Event-Kandidat empfangen: decision",
+        "NPC Candidates: 2 -> 3",
+        "Session Event Candidates: 2 -> 3",
+        "AI-Pipeline-Smoke-Test erfolgreich (ollama): transcript.segment -> Extraktion -> Protocol v1 -> Broadcast -> SQLite bestätigt."
+      ],
+      "confirmed": [
+        "real local Ollama inference",
+        "qwen3:4b extraction",
+        "npc.memory.candidate broadcast",
+        "session.event.candidate broadcast",
+        "Protocol v1 transport",
+        "SQLite persistence"
+      ]
+    }
+  },
+  "cost_strategy": {
+    "llm_extraction": "Ollama/qwen3:4b lokal; keine nutzungsabhängigen LLM-API-Gebühren.",
+    "openai": "Nur optionaler Fallback; bisher kein echter bezahlter API-Aufruf.",
+    "speech_to_text": "Aktuell weiterhin Deepgram in der bestätigten Pipeline; lokales STT noch nicht implementiert."
+  },
+  "roadmap": [
+    "1: Companion 0.5.0 vollständig lokal bestätigt",
+    "2: Companion 0.6.0 Mock-AI-Pipeline vollständig lokal bestätigt",
+    "3: Companion 0.7.0 OpenAI-Adapter lokal ohne echten API-Aufruf bestätigt",
+    "4a: Companion 0.8.0 Ollama-Adapter + Syntax lokal bestätigt",
+    "4b: Ollama-Runtime + qwen3:4b + Preflight lokal bestätigt",
+    "4c: echter Ollama-End-to-End-Test lokal bestätigt",
+    "4d: 12-Fälle-Qualitätsbenchmark qwen3:4b",
+    "4e: bei Bedarf qwen3:8b vergleichen und Standard festlegen",
+    "5: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
+    "6: Undo/Change-Record Runtime",
+    "7: optionale automatische NPC-Memory-Übernahme",
+    "8: dauerhaft durchsuchbares Transkript",
+    "9: Session-Historie, Recap und Discord-Kurzfassung",
+    "10: optional lokales STT und Skalierungs-/Performance-Hardening"
+  ],
+  "resume_instructions": {
+    "source_of_truth": true,
+    "next_single_external_test": "Im Ordner companion npm.cmd run test:ollama-quality ausführen. Danach anhand Trefferquote, Fehlalarmen, Durchschnitts- und P95-Latenz entscheiden, ob qwen3:4b als Standard reicht oder qwen3:8b verglichen werden soll.",
+    "do_not_repeat": [
+      "Discord-Bot neu anlegen",
+      "Deepgram-Konto neu einrichten",
+      "Keys erneut anfordern",
+      "Companion 0.1-0.6 neu bauen/testen",
+      "0.6.0 End-to-End erneut ausführen",
+      "0.8.0 npm.cmd run check erneut ausführen, außer neue Codeänderungen erfordern Regression",
+      "0.8.0 npm.cmd run test:ai-ollama erneut ausführen",
+      "0.8.0 Ollama-Preflight erneut ausführen",
+      "0.8.0 npm.cmd run test:ai-pipeline-ollama erneut ausführen"
+    ]
+  }
+}
