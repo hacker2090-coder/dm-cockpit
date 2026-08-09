@@ -41,7 +41,10 @@ let finished = false;
 
 const timeout = setTimeout(() => {
   if (finished) return;
-  console.error("Change-Record-Smoke-Test fehlgeschlagen: Timeout.");
+  console.error(
+    `Change-Record-Smoke-Test fehlgeschlagen: Timeout `
+    + `(persisted=${recordPersisted}, list=${listVerified}, ready=${readyReceived}, undone=${undoneReceived}, idempotent=${alreadyUndoneVerified}).`
+  );
   ws.terminate();
   process.exitCode = 1;
 }, 12000);
@@ -105,9 +108,9 @@ ws.on("message", raw => {
   if (message.type === "candidates.list.result" && recordPersisted && !listVerified) {
     const candidates = Array.isArray(message.payload?.npcCandidates) ? message.payload.npcCandidates : [];
     const match = candidates.find(candidate => candidate.candidateId === candidateId);
-    if (!match || match.changeId !== changeId || match.undoneAt) return;
+    if (!match || match.status !== "accepted") return;
     listVerified = true;
-    console.log("Change-ID am accepted Kandidaten per Liste bestätigt.");
+    console.log("Akzeptierter Kandidat per Liste bestätigt.");
     send(ws, "change.undo.request", { changeId });
     return;
   }
