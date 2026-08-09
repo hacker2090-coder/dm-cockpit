@@ -24,6 +24,10 @@ Maschinenlesbares Schema:
 - der globale Discord-Benutzername wird niemals verändert
 - vor jeder Session-Nickname-Änderung muss der vorherige Server-Nickname persistent gesichert sein
 - Restore darf eine unerwartete manuelle Namensänderung nicht blind überschreiben
+- der Discord-Ausgabe-Textkanal ist eine persistente, jederzeit änderbare GM-Konfiguration
+- Discord-Ausgaben prüfen den realen `View Channel`-/`Send Messages`-Zugriff vor Verwendung
+- direkte Recaps werden ausschließlich nach bewusster GM-Aktion gesendet
+- Discord-Erwähnungen werden bei DM-Cockpit-Ausgaben deaktiviert
 - keine automatische Foundry-Weltänderung ohne sicheren Undo/Change-Record oder ausdrückliche GM-Bestätigung
 
 ## Envelope
@@ -51,7 +55,7 @@ Kernnachrichten:
 - `capture.status`
 - `speaker.upserted`
 
-`hello.ack` veröffentlicht die tatsächlich vom Companion unterstützten Features. Seit Companion 0.12.0 gehören persistente Identity-Profile und persistenter Nickname-Restore-Zustand dazu.
+`hello.ack` veröffentlicht die tatsächlich vom Companion unterstützten Features. Seit Companion 0.13.0 gehören persistente Identity-Profile, persistenter Nickname-Restore-Zustand sowie persistenter Discord-Ausgabe-Textkanal und idempotente Discord-Ausgaben dazu.
 
 ## Voice-Teilnehmer
 
@@ -77,93 +81,38 @@ Der Companion veröffentlicht den beobachteten Zustand des Voice-Channels, dem e
 }
 ```
 
-Bots dürfen im Payload enthalten sein; Mapping- und Nickname-Logik ignorieren sie für Spielerzuordnungen.
+Weitere Nachricht:
 
-### `voice.participants.request`
-
-Foundry kann den zuletzt bekannten Teilnehmer-Snapshot erneut anfordern. Dies ist keine Teilnehmerhistorie.
+- `voice.participants.request`
 
 ## Spieler-/Charakterzuordnung
 
 Die Zuordnung ist bewusst **keine KI-Aufgabe**. Foundry zeigt Discord-Spieler und vorhandene Actors; der GM wählt die Zuordnung selbst.
 
-### `player.character.mapping.set`
+Nachrichten:
 
-Foundry sendet den vollständigen aktuellen Mapping-Snapshot seiner Welt.
-
-```json
-{
-  "worldId": "world_01",
-  "worldName": "Meine Kampagne",
-  "mappings": [
-    {
-      "discordUserId": "1234567890",
-      "playerName": "Mira",
-      "actorId": "actor_01",
-      "actorUuid": "Actor.actor_01",
-      "characterName": "Ragna",
-      "updatedAt": "2026-08-09T16:21:00.000Z"
-    }
-  ]
-}
-```
-
-Regeln:
-
-- `worldId + discordUserId` ist der persistente Schlüssel im Companion-Mirror.
-- der Array-Inhalt ersetzt für diese Welt den bisherigen Mirror vollständig
-- ein leerer Array löscht die Mirror-Zuordnungen der Welt
-- Foundry bleibt die autoritative GM-Konfiguration
-
-Weitere Nachrichten:
-
+- `player.character.mapping.set`
 - `player.character.mapping.request`
 - `player.character.mapping.result`
 
+Regeln:
+
+- `worldId + discordUserId` ist der persistente Schlüssel im Companion-Mirror
+- Foundry bleibt die autoritative GM-Konfiguration
+- ein vollständiger Mapping-Snapshot ersetzt für die Welt den bisherigen Mirror
+- ein leerer Snapshot löscht die Mirror-Zuordnungen der Welt
+
 ## Session-/Kampagnen-Identity-Profile
 
-Ein Identity-Profil ist ein persistenter Snapshot einer konkreten Spielidentität. Unterstützte Typen:
+Unterstützte Typen:
 
 - `campaign`
 - `oneshot`
 - `session`
 
-Ein Profil enthält:
+Nachrichten:
 
-- `profileId`
-- `worldId`
-- Anzeigename
-- Typ
-- Aktivstatus
-- Snapshot der bestätigten Discord-Spieler-/Foundry-Charakterzuordnungen
-
-Es kann Companion-weit immer nur **ein** Profil gleichzeitig aktiv sein.
-
-### `identity.profile.save`
-
-Speichert oder aktualisiert ein Profil. Das Speichern allein aktiviert **keine** Nickname-Automatik.
-
-```json
-{
-  "profileId": "profile_01",
-  "worldId": "world_01",
-  "worldName": "Meine Kampagne",
-  "name": "Auktion der verbotenen Dinge",
-  "kind": "oneshot",
-  "mappings": [
-    {
-      "discordUserId": "1234567890",
-      "playerName": "Mira",
-      "actorId": "actor_01",
-      "actorUuid": "Actor.actor_01",
-      "characterName": "Ragna"
-    }
-  ]
-}
-```
-
-### Profilnachrichten
-
+- `identity.profile.save`
 - `identity.profile.list.request`
 - `identity.profile.list.result`
 - `identity.profile.activate`
@@ -171,11 +120,7 @@ Speichert oder aktualisiert ein Profil. Das Speichern allein aktiviert **keine**
 - `identity.profile.state.request`
 - `identity.profile.state`
 
-### Aktivierungsregel
-
-Nur `identity.profile.activate` schaltet ein Profil scharf. Danach darf der Nickname-Manager ausschließlich für im aktiven Profil zugeordnete Mitglieder des relevanten Voice-Calls arbeiten.
-
-`identity.profile.deactivate` beendet diesen Zustand. Aktive DM-Cockpit-Nickname-Leases werden danach restauriert, soweit Discord-Berechtigungen und Konfliktschutz dies erlauben.
+Ein Profil ist ein persistenter Snapshot der bestätigten Discord-Spieler-/Foundry-Charakterzuordnungen. Es kann Companion-weit immer nur **ein** Profil aktiv sein. Speichern allein aktiviert keine Nickname-Automatik.
 
 ## Discord-Session-Nickname
 
@@ -185,88 +130,159 @@ Standardformat:
 
 Regeln:
 
-1. Der Charaktername steht zuerst.
-2. Der Nickname wird auf maximal 32 Unicode-Zeichen begrenzt.
-3. Der Charaktername hat bei Platzmangel Priorität; der Spielername wird zuerst gekürzt bzw. weggelassen.
-4. Für den Spieleranteil wird der aktuell beobachtete Discord-Anzeigename bevorzugt; ein älterer gespeicherter Mapping-Name ist nur Fallback.
-5. Ziel ist ausschließlich der serverbezogene Discord-Nickname.
-6. Vor dem ersten Write wird `originalNickname` persistent gespeichert.
-7. `Manage Nicknames` und Discord-Rollenhierarchie müssen die Änderung erlauben.
-8. Ein identischer gewünschter Nickname verursacht keinen unnötigen weiteren Write.
+1. Charaktername steht zuerst.
+2. Maximal 32 Unicode-Zeichen.
+3. Charaktername hat bei Platzmangel Priorität.
+4. Aktuell beobachteter Discord-Anzeigename wird als Spieleranteil bevorzugt.
+5. Nur serverbezogener Discord-Nickname wird verändert.
+6. Originalzustand wird vor Mutation persistent gespeichert.
+7. `Manage Nicknames` und Rollen-Hierarchie müssen die Änderung erlauben.
+8. Identischer Zielnickname verursacht keinen unnötigen Write.
 
-## Persistenter Nickname-Lease
-
-Tabelle:
+Persistenter Lease:
 
 `discord_nickname_overrides`
 
-Ein Lease enthält mindestens:
+Restore wird u. a. ausgelöst bei Call-Leave, Profilwechsel, Deaktivierung, geordnetem Shutdown und Restart-Recovery. Eine externe manuelle Namensänderung führt zu `restore_conflict` und wird nicht blind überschrieben.
+
+Diagnose:
+
+- `nickname.status`
+
+## Discord-Ausgabe-Textkanal
+
+Seit Foundry 0.9.29 / Companion 0.13.0 besitzt DM Cockpit einen eigenen Discord-Ausgabepfad.
+
+### Persistenz
+
+Tabelle:
+
+`discord_output_settings`
+
+Gespeichert werden nur:
 
 - Guild-ID
-- Discord-User-ID
-- Profil-ID
-- ursprünglichen Nickname
-- von DM Cockpit gesetzten Nickname
-- Zustand
-- Fehler-/Zeitstempel
+- Kanal-ID
+- letzter bekannter Kanalname
+- Änderungszeitpunkt
 
-Relevante persistente Zustände:
+Der GM kann den Zielkanal im Cockpit jederzeit neu auswählen oder vollständig entfernen.
 
-- `prepared`
-- `applied`
-- `apply_failed`
-- `restore_failed`
-- `restore_conflict`
-- `restored`
+### Verfügbare Kanäle
 
-### Apply
+Request:
 
-Ablauf:
+`discord.output.channels.request`
 
-1. Mitglied und Discord-Berechtigungen prüfen.
-2. aktuellen Server-Nickname lesen.
-3. Lease mit Originalzustand **vor** Discord-Mutation persistieren.
-4. Session-Nickname setzen.
-5. Lease als `applied` markieren.
+Result:
 
-Nach einem früheren `restore_conflict` wird beim nächsten bewussten Apply der aktuelle manuelle Nickname im selben persistierenden Prepare-Schritt atomar zur neuen Restore-Basis. Es gibt dafür keinen Recovery-blinden Zwischenzustand.
+`discord.output.channels.result`
 
-### Restore
+Der Companion liefert ausschließlich unterstützte Server-Textkanäle, in denen der Bot aktuell mindestens besitzt:
 
-Restore wird ausgelöst, wenn z. B.:
+- `View Channel`
+- `Send Messages`
 
-- ein zugeordnetes Mitglied den relevanten Call verlässt
-- ein Profil deaktiviert oder gewechselt wird
-- eine Zuordnung im aktiven Profil nicht mehr gilt
-- der Companion sauber herunterfährt
-- nach einem Restart ein persistierter Lease nicht mehr zu einem aktiven Call-Zustand gehört
+Voice-, Kategorie-, Forum- oder nicht beschreibbare Kanäle werden nicht als Ziel angeboten.
 
-Sicherheitslogik:
+### Zielkanal ändern
 
-- aktueller Nickname entspricht bereits `originalNickname` → Restore als No-op erfolgreich markieren
-- aktueller Nickname entspricht dem von DM Cockpit gesetzten `appliedNickname` → Original wiederherstellen
-- aktueller Nickname entspricht **weder** Original noch DM-Cockpit-Nickname → `restore_conflict`; manuelle Änderung nicht überschreiben
+Request:
 
-## `nickname.status`
+`discord.output.channel.set`
 
-Der Companion veröffentlicht Diagnose-/Lifecycle-Zustände des Nickname-Managers, z. B.:
+```json
+{
+  "channelId": "1234567890"
+}
+```
 
-- `nickname_applied`
-- `nickname_restored`
-- `nickname_restore_conflict`
-- `nickname_apply_blocked`
-- `nickname_apply_failed`
-- `nickname_restore_failed`
+`channelId: null` entfernt den gespeicherten Zielkanal.
 
-Foundry zeigt diese Informationen in der Karte `Session-Identität` an.
+Status:
+
+- `discord.output.state.request`
+- `discord.output.state`
+
+Vor jedem tatsächlichen Versand wird der gespeicherte Kanal erneut gegen Discord und die aktuellen Bot-Rechte geprüft. Eine alte gespeicherte Kanal-ID gilt daher nicht automatisch als sendbar.
+
+## Discord-Nachrichten
+
+Request:
+
+`discord.output.message.request`
+
+Erlaubte Arten:
+
+- `capture_notice`
+- `recap`
+
+Result:
+
+`discord.output.message.result`
+
+Der Result-Payload enthält Versandstatus, Zielkanal, Discord-Message-ID soweit vorhanden, Textlänge und einen möglichen Fehler. Nachrichtentext wird **nicht** als Versand-Audit in SQLite gespeichert.
+
+### Idempotenz / Audit
+
+Tabelle:
+
+`discord_output_posts`
+
+Gespeichert werden Metadaten wie:
+
+- Request-ID
+- Art
+- Session-ID
+- Guild-/Kanal-ID
+- Discord-Message-ID
+- Status
+- Textlänge
+- Fehler
+- Zeitstempel
+
+Der eigentliche Nachrichtentext wird dort nicht persistiert.
+
+Eine bereits erfolgreich versandte identische Request-ID wird nicht erneut an Discord gesendet. Dies verhindert insbesondere doppelte automatische Aufnahmehinweise durch Reconnect-/Retry-Pfade.
+
+### Aufnahme-/Transkriptionshinweis
+
+Bei neu gestarteter Voice-Session versucht der Companion automatisch genau einen erfolgreichen Hinweis für diese Session in den aktuell konfigurierten Zielkanal zu senden.
+
+Standardinhalt informiert darüber, dass:
+
+- die aktuelle Pen-&-Paper-Session live transkribiert wird
+- DM Cockpit Roh-Audio nicht dauerhaft speichert
+- ein aktiver Profilname, falls vorhanden, als Rundenname angezeigt werden kann
+
+Falls kein Ausgabekanal gewählt oder der Kanal nicht beschreibbar ist, gilt `capture.status.noticeShown` weiterhin als `false`.
+
+Der GM kann den Hinweis über die Cockpit-Karte `Discord-Ausgabe` zusätzlich bewusst erneut anfordern.
+
+### Session-Recap
+
+Die bestehende Discord-Kurzfassung bleibt lokal aus **manuell angenommenen** `session.event.candidate` erzeugt.
+
+Die Recap-Karte bietet weiterhin:
+
+- vollständiges Recap kopieren
+- Discord-Kurzfassung kopieren
+
+Neu kommt hinzu:
+
+- `An Discord senden`
+
+Dieser Button ist eine ausdrückliche GM-Aktion. Es gibt **kein automatisches Recap-Posting**.
+
+Discord-Nachrichten sind auf 2000 Zeichen begrenzt; die bestehende Recap-Kurzfassung bleibt vorsorglich auf 1800 Zeichen begrenzt.
+
+Bei allen DM-Cockpit-Ausgaben wird `allowedMentions.parse = []` verwendet, sodass Text aus Recap/KI-Kontext keine unbeabsichtigten `@everyone`, `@here` oder Rollen-/User-Pings auslöst.
 
 ## Transkript
 
 `transcript.segment`
 
-Persistiert werden nur finale Segmente. Partials dürfen für Live-Feedback übertragen werden, werden aber nicht dauerhaft archiviert.
-
-Ein finales Segment kann zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakteridentität enthalten:
+Persistiert werden nur finale Segmente. Ein finales Segment kann zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakteridentität enthalten:
 
 ```json
 {
@@ -290,22 +306,22 @@ Ein finales Segment kann zusätzlich die zum Segmentzeitpunkt bestätigte Spiele
 Regeln:
 
 1. `discordUserId` bleibt die technische Sprecheridentität.
-2. `speakerName` ist der Discord-Anzeigename der sprechenden Person.
+2. `speakerName` ist der Discord-Anzeigename.
 3. Actor-/Charakterfelder stammen ausschließlich aus bestätigtem Mapping.
 4. Ohne Mapping bleiben Actor-/Charakterfelder `null`.
-5. Alte persistierte Segmente werden durch spätere Mapping-Änderungen nicht still umgeschrieben.
+5. Alte Segmente werden durch spätere Mapping-Änderungen nicht still umgeschrieben.
 6. Die KI erhält Spieler-/Charakterkontext, aber keine Freiheit zur Actor-Zuordnung.
 
 ## NPC-Kontext / KI-Kandidaten / Undo
 
-Die bestehenden Regeln bleiben unverändert:
+Bestehende Regeln bleiben unverändert:
 
 - `npc.context` priorisiert expliziten Cockpit-Actor, dann ausgewählten Token, sonst keinen NPC
 - NPC-Kandidaten dürfen nur dem von Foundry vorgegebenen Actor zugeordnet werden
 - `npc.memory.candidate` und `session.event.candidate` bleiben manuell prüfbare Vorschläge
 - `candidate.review` / `candidate.reviewed` persistieren Annahme/Ablehnung
 - `npc.memory.applied`, `change.undo.request`, `change.undo.result` bilden den sicheren Change-/Undo-Pfad
-- keine automatische Foundry-Actor-Mutation durch die neue Discord-Identity-Logik
+- keine automatische Foundry-Actor-Mutation durch Discord-Identity-/Output-Logik
 
 ## Provider-Abstraktion
 
@@ -350,9 +366,11 @@ Roh-Audio bleibt nur temporär für Verarbeitung/Retry im RAM bzw. kurzfristigen
 - idempotente SQLite-Schreibvorgänge für finale Segmente/Kandidaten
 - Mapping-Snapshot pro Welt wird transaktional ersetzt
 - Profile und Nickname-Leases sind persistent
-- Reconnect darf gespeicherte Daten nicht duplizieren
+- Discord-Ausgabekanal ist persistent
+- erfolgreiche Discord-Ausgabe-Request-IDs sind idempotent
+- Reconnect darf gespeicherte Daten und automatische Hinweise nicht duplizieren
 - Candidate-Review bleibt persistent
-- Providerfehler müssen sichtbar werden
+- Provider-/Discord-Fehler müssen sichtbar werden
 - Backpressure/Queue ist Segmentverlust vorzuziehen
 - geordneter Companion-Shutdown führt Nickname-Restore vor Discord-/SQLite-Ende aus
 - Restore-Konflikte werden sichtbar gehalten statt externe manuelle Änderungen zu überschreiben
@@ -377,29 +395,23 @@ Bereits früher vollständig bestätigt und nicht ohne konkrete Regression zu wi
 
 ### Session Identity 0.9.28 / Companion 0.12.0
 
-Implementiert:
+- implementiert
+- isolierter Smoke-Test bestanden
+- CI-validiert mit `Build DM Cockpit v0.9.28`
+- echter Discord-/Foundry-Runtime-Test noch offen
 
-- persistente Profile
-- Foundry-Karte `Session-Identität`
-- reversible Nickname-Leases
-- Join/Leave/Profilewechsel/Deactivate/Shutdown-Lifecycle
-- Rollen-/Berechtigungsprüfung
-- Restore-Konfliktschutz
-- Restart-/Crash-Recovery
+### Discord Output 0.9.29 / Companion 0.13.0
 
-Automatisiert ohne echten Discord-Server erfolgreich geprüft:
+Auf dem Staging-Branch implementiert:
 
-- Profil-Persistenz
-- ein aktives Profil
-- Nickname-Längenbegrenzung
-- Join Apply
-- Leave Restore
-- doppelte Snapshot-Idempotenz
-- aktueller Discord-Anzeigename vor altem gespeicherten Spielernamen
-- manuelle Änderung → Restore-Konflikt
-- atomarer Rejoin nach Konflikt
-- Profilwechsel
-- Deaktivierung
-- Restart-Recovery
+- persistenter frei wechselbarer Zielkanal
+- reale Kanal-/Berechtigungsprüfung
+- Ausgabe-Karte in Foundry
+- automatischer idempotenter Aufnahmehinweis je Session
+- manuell erneut sendbarer Aufnahmehinweis
+- bewusstes direktes Recap-Posting
+- `allowedMentions.parse = []`
+- Versand-Audit ohne Nachrichtentext
+- isolierter `discord-output-smoke-test.js`
 
-Bis zum gebündelten Nutzertest gilt dieser Block **nicht** als lokal oder vollständig bestätigt.
+Bis zum Merge und erfolgreichen Main-CI/Paketbuild gilt dieser Block **noch nicht als CI-validiert**. Echter Discord-/Foundry-Runtime-Test bleibt danach zusätzlich offen.
