@@ -92,6 +92,14 @@ function dmDiscordCommandInstallBridge() {
   return true;
 }
 
+function dmDiscordCommandGmSend(type, payload = {}, sessionId = null) {
+  if (!game.user?.isGM) {
+    ui.notifications?.warn("DM Cockpit: Session-Steuerung ist dem GM vorbehalten.");
+    return false;
+  }
+  return dmDiscordCommandTransport()?.send?.(type, payload, sessionId) ?? false;
+}
+
 Hooks.once("ready", () => {
   dmDiscordCommandInstallBridge();
   globalThis.DMCockpitSessionControl = {
@@ -100,8 +108,8 @@ Hooks.once("ready", () => {
       diagnostic: dmDiscordCommandState.diagnostic ? { ...dmDiscordCommandState.diagnostic } : null
     }),
     requestState: () => dmDiscordCommandTransport()?.send?.("session.control.state.request", {}, null) ?? false,
-    start: () => dmDiscordCommandTransport()?.send?.("session.control.start", { source: "foundry" }, null) ?? false,
-    stop: () => dmDiscordCommandTransport()?.send?.("session.control.stop", { source: "foundry" }, dmDiscordCommandState.session?.sessionId ?? null) ?? false
+    start: () => dmDiscordCommandGmSend("session.control.start", { source: "foundry" }, null),
+    stop: () => dmDiscordCommandGmSend("session.control.stop", { source: "foundry" }, dmDiscordCommandState.session?.sessionId ?? null)
   };
 });
 
