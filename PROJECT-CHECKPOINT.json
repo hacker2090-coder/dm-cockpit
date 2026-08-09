@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.7",
-  "created_at": "2026-08-09T14:05:00+02:00",
+  "schema_version": "3.8",
+  "created_at": "2026-08-09T14:12:00+02:00",
   "language": "de",
   "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit.",
   "project": {
@@ -13,9 +13,9 @@
     "module_id": "dm-cockpit",
     "foundry_version": "0.9.21",
     "foundry_status": "functionally_confirmed",
-    "companion_github_version": "0.6.0",
+    "companion_github_version": "0.7.0",
     "companion_last_fully_user_tested_stage": "0.6.0_fully_confirmed",
-    "pause_point": "Companion 0.6.0 vollständig lokal bestätigt. Syntaxprüfung, isolierte provider-neutrale AI-Extraction sowie automatischer End-to-End-Pipeline-Smoke-Test erfolgreich: transcript.segment -> Mock-Extraktion -> npc.memory.candidate + session.event.candidate -> Protocol v1 -> Broadcast -> SQLite. NPC Candidates 1 -> 2, Session Event Candidates 1 -> 2. Nächster Entwicklungsblock: realen AI/LLM-Provider auswählen und anbinden; weiterhin keine Actor-Writes.",
+    "pause_point": "Companion 0.6.0 vollständig lokal bestätigt. Companion 0.7.0 ist auf GitHub implementiert: realer provider-neutral eingebundener OpenAI-Adapter über Responses API mit Standardmodell gpt-5.4-nano, Strict Structured Output, store=false, lokaler Nachvalidierung und Actor-Zuordnung ausschließlich aus Foundry npc.context. Isolierter Adaptertest mit Fake-HTTP-Response erfolgreich; Nutzer-PC-Syntax- und Adaptertest stehen aus. Noch kein echter OpenAI-API-Aufruf erfolgt; keine Actor-Writes.",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit"
   },
   "working_rules": {
@@ -57,7 +57,8 @@
     "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
     "0.4.0": "Deepgram Nova-3 STT bestätigt",
     "0.5.0": "vollständig lokal bestätigt: Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite",
-    "0.6.0": "vollständig lokal bestätigt: Syntax, isolierte AI-Extraction und End-to-End Mock-AI-Pipeline bis Protocol v1/Broadcast/SQLite"
+    "0.6.0": "vollständig lokal bestätigt: Syntax, isolierte AI-Extraction und End-to-End Mock-AI-Pipeline bis Protocol v1/Broadcast/SQLite",
+    "0.7.0": "OpenAI-Extraktionsadapter auf GitHub implementiert und isoliert mit Fake-HTTP-Response getestet; lokaler Nutzer-PC-Test und echter API-Aufruf ausstehend"
   },
   "companion_0_5_confirmed": {
     "health_service_version": "0.5.0",
@@ -78,59 +79,60 @@
   },
   "companion_0_6": {
     "status": "fully_user_confirmed_mock_ai_pipeline",
-    "implemented": [
-      "AiExtractionService provider-neutral",
-      "MockAiExtractionProvider deterministic-v1",
-      "AI_PROVIDER safe default none",
-      "final transcript.segment -> extraction",
-      "per-session npc.context + latest-context fallback",
-      "npc.memory.candidate",
-      "session.event.candidate",
-      "sourceSegmentIds provenance",
-      "provider/model/confidence/status metadata",
-      "duplicate segment suppression",
-      "partial transcript suppression",
-      "no automatic Actor writes",
-      "npm test:ai",
-      "npm test:ai-pipeline"
-    ],
-    "local_validation": {
-      "npm_cmd_run_check": "passed",
-      "npm_cmd_run_test_ai": "passed",
-      "confirmed": [
-        "provider-neutraler Service",
-        "Mock-Provider",
-        "NPC-Kandidaten",
-        "Session-Kandidaten",
-        "Quellenbindung",
-        "NPC-Kontext",
-        "Final-only",
-        "Deduplizierung"
-      ]
-    },
     "pipeline_smoke_test": {
       "status": "passed",
       "command": "npm.cmd run test:ai-pipeline",
       "runtime_provider": "mock",
-      "observed_output": [
-        "AI-Pipeline-Test verbunden: ws://127.0.0.1:43170/v1",
-        "NPC-Memory-Kandidat empfangen: promise",
-        "Session-Event-Kandidat empfangen: task",
-        "NPC Candidates: 1 -> 2",
-        "Session Event Candidates: 1 -> 2",
-        "AI-Pipeline-Smoke-Test erfolgreich: transcript.segment -> Mock-Extraktion -> Protocol v1 -> Broadcast -> SQLite bestätigt."
-      ],
+      "npc_candidate_kind": "promise",
+      "session_candidate_kind": "task",
+      "npc_candidates": {"before": 1, "after": 2},
+      "session_event_candidates": {"before": 1, "after": 2},
+      "protocol_v1": true,
+      "sqlite_persistence": true
+    },
+    "automatic_actor_writes": false
+  },
+  "companion_0_7": {
+    "status": "implemented_isolated_adapter_test_passed_user_test_pending",
+    "provider": "openai",
+    "default_model": "gpt-5.4-nano",
+    "endpoint": "https://api.openai.com/v1/responses",
+    "safe_default_ai_provider": "none",
+    "implemented": [
+      "OpenAiExtractionProvider",
+      "AI_PROVIDER=openai routing",
+      "Responses API request",
+      "store=false",
+      "Strict Structured Output via JSON Schema",
+      "NPC/session kind enums constrained",
+      "max 8 candidates per type per segment",
+      "local post-validation",
+      "NPC actorId supplied only from Foundry npc.context",
+      "NPC candidates suppressed without npc.context",
+      "20s configurable timeout",
+      "npm.cmd run test:ai-openai",
+      "package/server version 0.7.0"
+    ],
+    "isolated_validation": {
+      "status": "passed",
+      "real_api_call": false,
+      "api_key_required": false,
       "confirmed": [
-        "npc.context via Protocol v1",
-        "final transcript.segment via Protocol v1",
-        "automatic npc.memory.candidate",
-        "automatic session.event.candidate",
-        "Protocol v1 broadcast",
-        "SQLite persistence",
-        "candidate counters increase"
+        "Responses API payload shape",
+        "Authorization header wiring with fake key",
+        "store=false",
+        "json_schema strict=true",
+        "gpt-5.4-nano default",
+        "actor assignment from Foundry context",
+        "NPC suppression without context",
+        "missing OPENAI_API_KEY detection"
       ]
     },
-    "real_llm_provider_implemented": false
+    "real_provider_test": {
+      "status": "not_run",
+      "requires_local_secret": "OPENAI_API_KEY",
+      "secret_must_not_be_sent_to_chat": true
+    }
   },
   "protocol_v1": {
     "endpoint": "ws://127.0.0.1:43170/v1",
@@ -141,7 +143,9 @@
   "roadmap": [
     "1: Companion 0.5.0 vollständig lokal bestätigt",
     "2: Companion 0.6.0 provider-neutrale AI/Mock-Extraktion vollständig lokal bestätigt",
-    "3: realen AI/LLM-Provider auswählen und anbinden; Kandidaten only, keine Actor-Writes",
+    "3a: Companion 0.7.0 OpenAI-Adapter implementiert und isoliert getestet",
+    "3b: Nutzer-PC Syntax + npm.cmd run test:ai-openai bestätigen",
+    "3c: OpenAI API-Key ausschließlich lokal setzen und echten Pipeline-Test durchführen",
     "4: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
     "5: Undo/Change-Record Runtime",
     "6: optionale automatische NPC-Memory-Übernahme",
@@ -155,14 +159,11 @@
       "Discord-Bot neu anlegen",
       "Deepgram-Konto neu einrichten",
       "Keys erneut anfordern",
-      "Companion 0.1-0.5 neu bauen/testen",
-      "0.6.0 Syntaxprüfung erneut ausführen",
-      "0.6.0 isolierten test:ai erneut ausführen",
+      "Companion 0.1-0.6 neu bauen/testen",
       "0.6.0 End-to-End test:ai-pipeline erneut ausführen",
-      "0.6.0 Mock-AI-Pipeline erneut testen",
       "bestätigte Foundry-Grundfunktionen neu implementieren"
     ],
-    "next_single_todo": "Realen AI/LLM-Provider für Companion auswählen und einen provider-neutralen Adapter implementieren; Outputs bleiben ausschließlich npc.memory.candidate und session.event.candidate.",
-    "after_success": "Mit kontrolliertem realen Provider-Test auf Nutzer-PC verifizieren; danach Foundry-Kandidaten-UI bauen. Weiterhin keine automatischen Actor-Writes."
+    "next_single_todo": "Companion 0.7.0 auf dem Nutzer-PC aktualisieren und zunächst ohne echten API-Key npm.cmd run check sowie npm.cmd run test:ai-openai ausführen.",
+    "after_success": "Dann OPENAI_API_KEY ausschließlich lokal in companion/.env setzen, AI_PROVIDER=openai aktivieren und kontrollierten echten test:ai-pipeline durchführen; API-Key niemals im Chat posten."
   }
 }
