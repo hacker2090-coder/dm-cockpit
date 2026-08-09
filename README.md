@@ -1,22 +1,21 @@
-# DM Cockpit V0.9.22
+# DM Cockpit V0.9.26
 
-Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext, strukturierte KI-Kandidaten und sicheren Change-Record/Undo-Unterbau.
+Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext, strukturierte KI-Kandidaten, sicheren Change-Record/Undo und Session-Recaps.
 
 ## Für neue Chats / andere KIs
 
 Zuerst lesen:
 
-1. `PROJECT-HANDOFF.md` – vollständiger Projektüberblick von Architektur und Historie bis zum aktuellen Pausepunkt.
+1. `PROJECT-HANDOFF.md` – Architektur und Projektüberblick.
 2. `PROJECT-CHECKPOINT.json` – kanonischer maschinenlesbarer Status.
 3. `checkpoints/` – historische Snapshots.
+4. `docs/UI-REDESIGN-SCOPE-V1.json` – verbindlicher Scope des aktuellen UI-Umbaus.
 
-Bei einem Widerspruch zwischen Dokumentation und Code ist der Repository-Code die technische Quelle der Wahrheit; der Checkpoint muss anschließend korrigiert werden.
+Bei einem Widerspruch zwischen Dokumentation und Code ist der aktuelle Repository-Code auf `main` die technische Quelle der Wahrheit; der Checkpoint muss anschließend korrigiert werden.
 
-## Aktueller Stand
+## Foundry 0.9.26
 
-### Foundry 0.9.22 – Candidate Review real bestätigt
-
-Bestätigt:
+### Bestätigter Funktionskern aus 0.9.24
 
 - LIVE-Dashboard
 - Abenteuer-Flowchart
@@ -27,78 +26,87 @@ Bestätigt:
 - Compendium-Schnellsuche
 - NPC-Schnellgenerator
 - Actor-basiertes NPC Memory
-- Discord Live-Transkript UI/Transport
+- Discord Live-Transkript
 - NPC-Kontext aus Cockpit-Actor bzw. ausgewähltem Foundry-Token
 - KI-Kandidatenkarte
-- realer Ollama-Kandidat mit echtem Foundry-Actor-Kontext
+- realer Ollama/Qwen3-Kandidat mit echtem Foundry-Actor-Kontext
 - manuelles Annehmen/Verwerfen
-- Annehmen → bestehendes NPC Memory
-- keine automatische Actor-Änderung ohne GM-Aktion
+- NPC-Memory-Übernahme nur nach GM-Aktion
+- persistenter Change-Record + konfliktgeschütztes Rückgängig
 - Foundry/GitHub Update-System
 
-### Companion 0.8.0 – lokale KI vollständig bestätigt
+### 0.9.25 – Session-Recap
 
-Lokaler Standard:
+Implementiert, Runtime-Test weiterhin vom Nutzer auf später verschoben:
 
-- Ollama
-- `qwen3:4b`
-- kein LLM-API-Key
-- Structured Output
-- echter End-to-End-Lauf bestätigt
-- Qualitätsbenchmark 11/12 = 91,7 %
-- Ø 1066 ms, P95 1935 ms
+- Recap nur aus angenommenen `session.event.candidate`
+- Entscheidungen, Quests/Aufgaben, Loot/Belohnungen, Kämpfe, offene Fragen, wichtige Ereignisse
+- Discord-Kurzfassung aus denselben bestätigten Punkten
+- Recap kopieren
+- Discord-Kurzfassung kopieren
+- kein automatisches Discord-Posting
 
-OpenAI bleibt nur optionaler Fallback; kein echter bezahlter OpenAI-Aufruf wurde durchgeführt.
+### 0.9.26 – UI-/Layout-Umbau
 
-### Companion 0.9.0 – Candidate Review vollständig bestätigt
+Implementiert und als sauberes Paket gebaut; Foundry-Runtime-Bestätigung steht noch aus:
 
-Bestätigt:
+- technische Dashboard-Optik mit klarer visueller Hierarchie
+- Zonen `Live`, `Spielleitung`, `Werkzeuge`, `Nachbereitung`
+- Live-Funktionen oben priorisiert
+- bessere Haupt-/Seitenspalten und weniger gleichförmiges Kartenraster
+- kompaktere Karten, Listen und Statusanzeigen
+- einheitliche Typografie, Abstände, Icons, Buttons, Eingabefelder und Flächenebenen
+- schnelle Bereichsnavigation als fixe Leiste
+- einklappbare Bereiche mit lokal gespeichertem Zustand
+- zuletzt aktiver Tab wird lokal gemerkt
+- persönliche Reihenfolge innerhalb einer Zone per Drag-Handle
+- Kartenhöhe vertikal anpassbar und lokal gespeichert
+- automatische Bereichssuche bei größeren Listen
+- Tooltips aus vorhandenen Beschriftungen
+- sichtbare Working-/Error-Zustände auf Kartenebene
+- Alt+1 = Live, Alt+2 = Abenteuer, Alt+Pfeil hoch/runter = Karten-Navigation
+- dezente Zustandsanimationen mit `prefers-reduced-motion`-Fallback
 
-- `pending -> accepted/rejected`
-- SQLite-Persistenz der Review-Status
-- `candidates.list.request/result`
-- Reload persistierter Kandidaten
-- Candidate-Review-Smoke-Test
+Nicht Teil dieses Umbaus:
 
-### Companion 0.10.0 – Change-Record/Undo implementiert, Nutzer-Test ausstehend
+- Fokusmodus für einzelne Bereiche
+- zusätzlicher Scroll-Verhaltens-Umbau über die bestehende Bereichsnavigation hinaus
 
-Im Repository vorhanden:
+## Source of Truth / Packaging
 
-- `companion/src/change-record-runtime.js`
-- persistente `change_records`
-- `npc.memory.applied`
-- `change.undo.request`
-- `change.undo.result`
-- aktiver Change-Record-Reload beim Verbindungsaufbau
-- idempotentes Undo
-- `npm.cmd run test:change-record`
+Die frühere Paketlogik, die das vorhandene `dm-cockpit.zip` entpackte und Dateien darüberkopierte, ist entfernt.
 
-Wichtig: Der 0.10.0-Backend-Code ist noch nicht auf dem Nutzer-PC bestätigt. Der Companion liefert Vorher/Nachher-Zustände und persistiert den Undo-Status; die tatsächliche Wiederherstellung des Foundry-Actor-Flags muss Foundry ausführen.
+Aktueller Stand:
 
-## Kostenstrategie
+- `scripts/dm-cockpit.js`, `styles/dm-cockpit.css` und `templates/cockpit.hbs` sind wieder normale versionierte Repository-Quellen.
+- Der Release-Workflow startet aus einem leeren Build-Verzeichnis.
+- Das alte ZIP ist kein Build-Eingang mehr.
+- Manifest-referenzierte Skripte und Styles werden vor dem Build auf Existenz geprüft.
+- Alle Foundry-JavaScript-Dateien laufen im Workflow vor dem Packaging durch `node --check`.
+- Erst danach wird `dm-cockpit.zip` vollständig neu erzeugt.
 
-- LLM-Auswertung: lokal über Ollama/Qwen3, keine nutzungsabhängigen LLM-API-Gebühren
-- OpenAI: optionaler Fallback
-- STT: aktuell real bestätigt über Deepgram Nova-3
-- lokales STT: spätere Stufe
+Damit ist GitHub `main` wieder strukturell Source of Truth für den ausgelieferten Foundry-Code.
+
+## Companion 0.10.0
+
+Vollständig lokal bestätigt:
+
+- Discord Voice / DAVE / GM Follow
+- speaker-getrennte Audioverarbeitung
+- Deepgram Nova-3 Deutsch
+- lokales Ollama `qwen3:4b`
+- Candidate Review + SQLite-Persistenz
+- Change-Record/Undo-Protokoll
+
+OpenAI bleibt optionaler Fallback; kein echter bezahlter OpenAI-Aufruf wurde bestätigt.
 
 ## Datenschutz / Sicherheitsregeln
 
 - Discord Bot Token niemals in GitHub oder Chat speichern.
-- Deepgram API Key niemals in GitHub oder Chat speichern.
-- OpenAI/API Keys ausschließlich lokal halten.
-- Secrets bleiben in `companion/.env`.
+- Deepgram/API Keys niemals in GitHub oder Chat speichern.
+- Secrets bleiben ausschließlich lokal in `companion/.env`.
 - Roh-Audio wird nicht dauerhaft gespeichert.
 - Actor-/Weltänderungen nicht automatisch ohne Change-Record/Undo oder klare GM-Bestätigung ausführen.
-
-## Nächster Arbeitsblock
-
-1. Companion 0.10.0 lokal per `git pull` holen.
-2. `npm.cmd run check`.
-3. Companion starten.
-4. In zweiter PowerShell `npm.cmd run test:change-record`.
-5. Bei Erfolg Backend als bestätigt checkpointen.
-6. Danach Foundry-seitigen Restore/Undo-Pfad fertigstellen und mit Test-Actor prüfen.
 
 ## Installation / Updates
 
