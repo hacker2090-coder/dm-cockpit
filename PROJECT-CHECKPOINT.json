@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.23",
-  "created_at": "2026-08-09T16:28:00+02:00",
+  "schema_version": "3.24",
+  "created_at": "2026-08-09T16:34:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -12,7 +12,7 @@
     "companion_repository_version": "0.10.0",
     "companion_last_user_confirmed_version": "0.10.0",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
-    "pause_point": "Foundry 0.9.25 Session-Recap + Discord-Kurzfassung ist auf main implementiert und als dm-cockpit.zip gebaut. Die neue Cockpit-Karte leitet beide Texte ausschließlich aus manuell angenommenen session.event.candidate-Einträgen ab. Statische Syntaxprüfung von scripts/session-recap.js ist bestanden; echter Foundry-Runtime-Test steht noch aus."
+    "pause_point": "Foundry 0.9.25 Session-Recap + Discord-Kurzfassung ist auf main implementiert und als dm-cockpit.zip gebaut. Die Recap-Karte ist im Cockpit sichtbar; der eigentliche Runtime-Test mit einem angenommenen Session-Kandidaten sowie die beiden Kopierfunktionen wurde vom Nutzer auf später verschoben. 0.9.25 bleibt daher implementiert, aber nicht vollständig runtime-bestätigt."
   },
   "working_rules": {
     "github_source_of_truth": true,
@@ -35,7 +35,7 @@
   },
   "implemented_unconfirmed": {
     "foundry_0_9_25_session_recap": {
-      "status": "implemented_static_check_passed_runtime_unconfirmed",
+      "status": "implemented_static_check_passed_ui_visible_runtime_test_deferred_by_user",
       "source_files": [
         "scripts/session-recap.js",
         "styles/session-recap.css",
@@ -71,7 +71,9 @@
         "kein Session-Historien-Browser",
         "keine Änderung an Companion 0.10.0"
       ],
-      "static_validation": "node --check scripts/session-recap.js passed before commit"
+      "static_validation": "node --check scripts/session-recap.js passed before commit",
+      "user_observation": "Session-Recap-Karte ist in Foundry sichtbar; Inhalt noch leer, weil noch kein angenommener Session-Kandidat für den Test erzeugt wurde.",
+      "runtime_test": "deferred_by_user"
     }
   },
   "packaging_note": {
@@ -87,16 +89,17 @@
   ],
   "roadmap": [
     "6: Change-Record/Undo für NPC Memory abgeschlossen und real bestätigt",
-    "9a: Session-Recap + Discord-Kurzfassung V1 implementiert; Runtime-Test ausstehend",
-    "9b: nach erfolgreichem Runtime-Test 0.9.25 als bestätigt checkpointen",
+    "9a: Session-Recap + Discord-Kurzfassung V1 implementiert; Karte sichtbar; vollständiger Runtime-Test vom Nutzer auf später verschoben",
+    "9b: späterer Runtime-Test: angenommenen Session-Kandidaten -> Recap-Inhalt -> Discord-Kurzfassung -> beide Kopierbuttons; danach 0.9.25 final bestätigen",
     "8: dauerhaft durchsuchbares Transkript",
     "7: optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
     "10: optional lokales STT und Performance-/Skalierungs-Hardening"
   ],
   "resume_instructions": {
-    "status": "awaiting_single_bundled_foundry_test",
-    "next_external_test": "Foundry auf 0.9.25 aktualisieren, Cockpit öffnen, Session-Recap-Karte prüfen, mindestens einen echten vorhandenen Session-Kandidaten annehmen und anschließend Recap- sowie Discord-Kopierfunktion in einem zusammenhängenden Test bestätigen.",
+    "status": "session_recap_runtime_test_deferred_by_user",
+    "deferred_test": "Foundry 0.9.25: einen echten Session-Kandidaten über den normalen Discord/Ollama-Ablauf erzeugen und annehmen; prüfen, dass er im Session-Recap erscheint; Discord-Kurzfassung prüfen; Recap kopieren und Discord kopieren prüfen.",
     "current_block_requires_more_user_testing": true,
-    "after_success": "0.9.25 final bestätigen, Checkpoint/Handoff synchronisieren und den Block beenden; nicht automatisch mit einem anderen Roadmap-Punkt fortfahren."
+    "blocking_next_development": false,
+    "rule": "Den aufgeschobenen Test nicht automatisch erneut verlangen. Erst wieder aufnehmen, wenn der Nutzer ihn ausdrücklich testen möchte oder bevor 0.9.25 als vollständig bestätigt markiert werden soll."
   }
 }
