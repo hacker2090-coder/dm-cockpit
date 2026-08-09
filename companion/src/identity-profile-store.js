@@ -244,7 +244,8 @@ export class IdentityProfileStore {
     if (!guildId || !discordUserId || !profileId || !appliedNickname) return false;
 
     const existing = this.getNicknameOverride(guildId, discordUserId);
-    const keepOriginal = existing && UNRESTORED_STATES.has(existing.state);
+    const replaceOriginal = Boolean(payload.replaceOriginal);
+    const keepOriginal = existing && UNRESTORED_STATES.has(existing.state) && !replaceOriginal;
     const originalNickname = keepOriginal ? existing.originalNickname : (payload.originalNickname ?? null);
     const createdAt = keepOriginal ? existing.createdAt : timestamp;
 
@@ -354,8 +355,10 @@ export class IdentityProfileStore {
     const profiles = Number(this.db.prepare("SELECT COUNT(*) AS count FROM identity_profiles").get().count);
     const activeProfiles = Number(this.db.prepare("SELECT COUNT(*) AS count FROM identity_profiles WHERE active = 1").get().count);
     const nicknameOverrides = Number(this.db.prepare("SELECT COUNT(*) AS count FROM discord_nickname_overrides").get().count);
+    const states = [...UNRESTORED_STATES];
+    const placeholders = states.map(() => "?").join(", ");
     const unrestoredNicknameOverrides = Number(
-      this.db.prepare("SELECT COUNT(*) AS count FROM discord_nickname_overrides WHERE state != 'restored'").get().count
+      this.db.prepare(`SELECT COUNT(*) AS count FROM discord_nickname_overrides WHERE state IN (${placeholders})`).get(...states).count
     );
     return { profiles, activeProfiles, nicknameOverrides, unrestoredNicknameOverrides };
   }
