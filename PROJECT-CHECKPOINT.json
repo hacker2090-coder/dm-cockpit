@@ -1,89 +1,149 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "1.4",
-  "created_at": "2026-08-09T11:37:00+02:00",
+  "schema_version": "1.5",
+  "created_at": "2026-08-09T11:48:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
-    "type": "Foundry VTT Modul",
+    "type": "Foundry VTT Modul plus lokaler Companion Service",
     "foundry_version": "V14",
     "module_id": "dm-cockpit",
     "repository": "hacker2090-coder/dm-cockpit",
     "default_branch": "main",
-    "current_version": "0.9.21",
-    "current_version_status": "published_needs_single_npc_context_retest",
-    "last_fully_confirmed_version": "0.9.18"
+    "current_foundry_version": "0.9.21",
+    "current_foundry_version_status": "functionally_confirmed_in_foundry",
+    "companion_version": "0.1.0",
+    "companion_status": "implemented_needs_local_integration_test"
   },
   "working_rules": {
     "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur bei echten externen Tests, Zugängen oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
     "one_todo_at_a_time": true,
-    "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Runtime-/Release-Änderungen mit Manifest, Installationspaket und Projektstatus synchronisieren.",
+    "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Foundry-Runtime-/Release-Änderungen zusätzlich mit Manifest, Installationspaket und Projektstatus synchronisieren.",
     "checkpoint_rule": "In sinnvollen Abständen GitHub-Checkpoint plus JSON-Checkpoint im Chat bereitstellen."
   },
-  "discord_audio_ai": {
-    "protocol_version": "1.0",
-    "architecture_contract_complete": true,
-    "foundry_live_transcript": {
-      "status": "implemented_and_partially_runtime_confirmed",
-      "initial_version": "0.9.19",
-      "latest_fix_version": "0.9.21",
-      "confirmed_in_foundry": {
-        "section_visible": true,
-        "mock_capture_status": true,
-        "mock_segments": true,
-        "clear_feed": true,
-        "npc_context": false
-      },
-      "npc_context_history": [
-        "V0.9.20 führte eine Bridge zur Synchronisierung von NPC-Memory-Auswahl und Live-Transkript ein.",
-        "Der Retest blieb für den Nutzer nicht eindeutig erfolgreich.",
-        "V0.9.21 übernimmt beim Button-Klick den aktuell sichtbaren Actor direkt aus dem NPC-Memory-Dropdown, schreibt ihn in den Transport und zeigt eine eindeutige Benachrichtigung."
-      ],
-      "v0_9_21_expected_result": {
-        "status_bar": "<Actorname> · Cockpit",
-        "notification": "DM Cockpit: NPC-Kontext aktiv: <Actorname>"
-      },
-      "files": [
-        "scripts/live-transcript.js",
-        "styles/live-transcript.css",
-        "scripts/npc-context-bridge.js"
-      ]
+  "confirmed_foundry_features": [
+    "LIVE-Dashboard",
+    "Abenteuer-Flowchart",
+    "Spontane Szenen",
+    "Szenen-Presets",
+    "Gegner-Spawnpunkte",
+    "Enemy Reserve Bench",
+    "Handout Queue",
+    "Loot-/Belohnungspakete",
+    "Item-Suche für Loot-/Belohnungspakete",
+    "Compendium-Schnellsuche",
+    "NPC-Schnellgenerator",
+    "Actor-basiertes NPC Memory",
+    "Discord Live-Transkript Mock/Transport-Client",
+    "NPC-Kontext aus sichtbarer NPC-Memory-Auswahl",
+    "Foundry/GitHub Update-System"
+  ],
+  "foundry_live_transcript": {
+    "status": "confirmed_working",
+    "version": "0.9.21",
+    "confirmed_in_foundry": {
+      "section_visible": true,
+      "mock_capture_status": true,
+      "mock_segments": true,
+      "clear_feed": true,
+      "npc_context": true
     },
-    "not_yet_implemented": [
-      "Companion Service runtime",
-      "SQLite runtime persistence",
-      "Discord Voice Bot",
-      "DAVE/E2EE Voice integration",
-      "Speech-to-Text provider",
-      "AI extraction",
-      "automatic NPC-memory persistence from speech",
-      "Undo runtime",
-      "transcript search",
-      "session recap",
-      "Discord short summary"
+    "npc_context_expected_and_confirmed": "Actorname wird oben angezeigt und als Cockpit-Kontext übernommen.",
+    "files": [
+      "scripts/live-transcript.js",
+      "styles/live-transcript.css",
+      "scripts/npc-context-bridge.js"
     ]
   },
+  "companion_service": {
+    "version": "0.1.0",
+    "status": "implemented_needs_user_pc_integration_test",
+    "path": "companion/",
+    "runtime": "Node.js >=22.16.0",
+    "dependency": "ws 8.21.1",
+    "default_host": "127.0.0.1",
+    "default_port": 43170,
+    "websocket_url": "ws://127.0.0.1:43170/v1",
+    "health_url": "http://127.0.0.1:43170/health",
+    "sqlite_default": "companion/data/dm-cockpit.sqlite",
+    "implemented": [
+      "lokaler HTTP/WebSocket-Server",
+      "Protocol-v1 hello/hello.ack Handshake",
+      "capture.status Transport",
+      "session.started und session.ended",
+      "speaker.upserted",
+      "finale transcript.segment Persistenz",
+      "npc.context Persistenz",
+      "SQLite Tabellen für Sessions, Sprecher, Segmente, NPC-Kontext und Change-Records",
+      "idempotente Segment-Upserts",
+      "Health-Endpunkt mit SQLite-Statistik",
+      "lokaler npm run mock End-to-End-Mock"
+    ],
+    "local_validation": {
+      "sqlite_database_open": true,
+      "wal": true,
+      "table_create": true,
+      "upsert": true,
+      "read": true,
+      "note": "SQLite-Basis wurde lokal mit Node 22.16 validiert. Voller WebSocket-End-to-End-Test benötigt npm install/ws und wird auf dem Nutzer-PC durchgeführt."
+    },
+    "files": [
+      "companion/package.json",
+      "companion/src/server.js",
+      "companion/src/store.js",
+      "companion/src/mock-client.js",
+      "companion/README.md",
+      "companion/.gitignore"
+    ]
+  },
+  "discord_audio_ai_architecture": {
+    "protocol_version": "1.0",
+    "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
+    "schema": "schemas/discord-audio-ai-v1.schema.json",
+    "participant_target": "more_than_10",
+    "latency_target": "5-15_seconds",
+    "provider_strategy": "provider_neutral_compare_later",
+    "transcript_storage": "local_SQLite",
+    "raw_audio_retention_future": "delete_after_successful_transcription",
+    "capture_policy_preference": "notice_only_technical_setting",
+    "direct_ai_save_future": true,
+    "undo_required_future": true
+  },
+  "not_yet_implemented": [
+    "Discord Voice Bot",
+    "DAVE/E2EE Voice integration",
+    "Audio-Buffering",
+    "Speech-to-Text Provider",
+    "AI extraction",
+    "automatic NPC-memory persistence from speech",
+    "Undo runtime",
+    "transcript search",
+    "session recap",
+    "Discord short summary"
+  ],
   "current_user_assistance_needed": {
     "required_now": true,
-    "task": "Nur NPC-Kontext in V0.9.21 erneut testen",
+    "task": "Companion Service auf dem eigenen PC installieren/starten und echten WebSocket+SQLite-Mock gegen Foundry testen",
     "steps": [
-      "V0.9.21 aktualisieren",
-      "Actor im NPC Memory auswählen",
-      "NPC-Kontext im Live-Transkript klicken",
-      "oben Actorname plus Cockpit prüfen",
-      "Benachrichtigung NPC-Kontext aktiv plus Actorname prüfen"
+      "Repository lokal verfügbar machen bzw. companion Ordner öffnen",
+      "cd companion",
+      "node --version prüfen: mindestens 22.16.0",
+      "npm install",
+      "npm run check",
+      "npm start in Terminal 1",
+      "Foundry DM Cockpit Live-Transkript mit ws://127.0.0.1:43170/v1 verbinden",
+      "npm run mock in Terminal 2",
+      "prüfen, ob Companion Mock im Foundry-Transkript erscheint",
+      "http://127.0.0.1:43170/health öffnen und stats prüfen"
     ],
     "secrets_needed": false,
     "discord_needed": false,
-    "api_key_needed": false
+    "api_key_needed": false,
+    "cloud_cost": 0
   },
-  "next_single_todo_after_successful_retest": {
-    "task": "Lokalen Companion-Service-Skeleton mit WebSocket und SQLite-Basis implementieren",
-    "constraints": [
-      "noch kein echter Discord Voice Bot",
-      "noch kein kostenpflichtiger Cloud Provider",
-      "Contract v1 unverändert verwenden"
-    ]
+  "next_single_todo_after_successful_test": {
+    "task": "Discord Voice Bot Skeleton mit Auto-Join beim konfigurierten GM vorbereiten",
+    "constraint": "DAVE/E2EE-Unterstützung zuerst sauber lösen; noch keinen STT-Provider fest verdrahten."
   },
-  "handoff_instruction_for_next_ai": "V0.9.21 ist der zweite gezielte NPC-Kontext-Fix. Nur dieser Pfad muss noch getestet werden. Erwartet werden oben '<Actorname> · Cockpit' und die Benachrichtigung 'NPC-Kontext aktiv: <Actorname>'. Nach Erfolg Foundry-Live-Transkript bestätigen und Companion-Service-Skeleton mit WebSocket und SQLite beginnen."
+  "handoff_instruction_for_next_ai": "DM Cockpit V0.9.21 inklusive Live-Transkript und NPC-Kontext ist in Foundry bestätigt. Companion Service 0.1.0 mit lokalem WebSocket und SQLite-Basis ist implementiert. Als nächstes den Companion lokal gegen Foundry mit npm start + npm run mock testen. Erst nach diesem Erfolg Discord Voice/DAVE angehen."
 }
