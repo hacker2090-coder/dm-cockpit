@@ -35,6 +35,7 @@ export class DeepgramSttProvider {
       endpoint: this.endpoint,
       model: this.model,
       language: this.language,
+      modelImprovementOptOut: true,
       audio: {
         encoding: "opus",
         sampleRate: 48_000,
@@ -52,6 +53,9 @@ export class DeepgramSttProvider {
     url.searchParams.set("channels", "2");
     url.searchParams.set("smart_format", "true");
     url.searchParams.set("interim_results", "false");
+    // Privacy-sicherer Standard: Kundenaudio niemals für das freiwillige
+    // Deepgram Model Improvement Partnership Program freigeben.
+    url.searchParams.set("mip_opt_out", "true");
     return url.toString();
   }
 
