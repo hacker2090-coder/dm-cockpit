@@ -1,4 +1,4 @@
-# DM Cockpit V0.9.19
+# DM Cockpit V0.9.20
 
 Aktueller Stand:
 
@@ -20,21 +20,19 @@ Aktueller Stand:
 
 **V0.9.18 ist in Foundry funktional bestätigt.**
 
-V0.9.19 ergänzt erstmals Runtime-Code für Discord Audio & KI und muss deshalb noch in einer Foundry-V14-Testwelt funktional geprüft werden.
+Der Live-Transkript-Test von V0.9.19 wurde am 09.08.2026 teilweise erfolgreich durchgeführt:
+
+- Bereich sichtbar: bestätigt
+- Mock-Status: bestätigt
+- Mock-Segmente: bestätigt
+- Leeren: bestätigt
+- NPC-Kontext: Fehler gefunden – sichtbare NPC-Memory-Auswahl konnte vom gespeicherten Actor-Kontext abweichen
+
+V0.9.20 behebt gezielt diese NPC-Kontext-Synchronisierung und muss nur noch für diesen Pfad erneut getestet werden.
 
 ## NPC-Schnellgenerator
 
 Direkt im DM Cockpit kann mit einem Klick ein sofort spielbarer, systemneutraler NPC erzeugt werden.
-
-Erzeugte Felder:
-
-- Name
-- Rolle
-- Auftreten
-- Persönlichkeit
-- Motivation
-- Eigenheit
-- Geheimnis
 
 Mit **Als Actor anlegen** wird der Schnell-NPC in Foundrys Actor-Verzeichnis übertragen. Schnellgenerator-Daten werden als DM-Cockpit-Flag am Actor gespeichert und der neue Actor wird automatisch im NPC-Memory-Bereich ausgewählt.
 
@@ -49,34 +47,42 @@ NPC Memory arbeitet mit echten World Actors aus Foundrys Actor-Tab.
 - Speicherung direkt am Actor als DM-Cockpit-Flag
 - Schnellgenerator-Profil anzeigen
 
-## Neu in V0.9.19 – Discord Live-Transkript V1
-
-Der erste Runtime-Teil der Discord-Audio/KI-Erweiterung ist implementiert.
+## Discord Live-Transkript V1
 
 Dateien:
 
 - `scripts/live-transcript.js`
 - `styles/live-transcript.css`
+- `scripts/npc-context-bridge.js`
 
 Funktionen:
 
 - eigener Bereich **Discord Live-Transkript** im DM Cockpit
 - WebSocket-Transport-Client nach Contract v1
-- lokaler Standard-Endpunkt `ws://127.0.0.1:43170/v1`, im Cockpit änderbar
+- lokaler Standard-Endpunkt `ws://127.0.0.1:43170/v1`
 - Verarbeitung von `transcript.segment`
 - Verarbeitung und Anzeige von `capture.status`
 - Sprechername, Zeitstempel und optionale Confidence im Feed
 - deduplizierte Segmente über `segmentId`
 - bis zu 120 Segmente im flüchtigen UI-Puffer
 - NPC-Kontext aus Cockpit-Actor oder ausgewähltem Foundry-Token
-- `npc.context` wird bei aktiver Verbindung automatisch an den Companion Service übertragen
-- Handshake `hello` beim WebSocket-Connect
 - Mock-Capture-Status ohne Discord
 - Mock-Transkriptsegmente ohne Cloud-STT
 - sichtbarer Hinweis auf die konfigurierte Capture-Policy
 - Debug-/Integrations-API unter `globalThis.DMCockpitLiveTranscript`
 
-Noch **nicht** enthalten:
+### Neu in V0.9.20 – NPC-Kontext-Bridge
+
+Die sichtbare Actor-Auswahl im NPC-Memory-Bereich wird jetzt explizit mit `npcMemorySelectedActorId` synchronisiert.
+
+Damit gilt:
+
+1. Der im NPC-Memory-Dropdown sichtbare Actor ist die primäre Cockpit-Auswahl.
+2. Diese Auswahl wird auch dann persistiert, wenn sie automatisch als erster verfügbarer Actor angezeigt wurde.
+3. Der Live-Transkript-Status zeigt die synchronisierte Auswahl an.
+4. Der bestehende Token-Fallback bleibt erhalten, wenn kein Cockpit-Actor aktiv ist.
+
+## Noch nicht enthalten
 
 - echter Discord Voice Bot
 - DAVE/E2EE-Voice-Integration
@@ -96,42 +102,23 @@ Maschinenlesbares Schema:
 
 `schemas/discord-audio-ai-v1.schema.json`
 
-## Test für V0.9.19
+## Test für V0.9.20
 
-In einer separaten Foundry-V14-Testwelt:
+Nur der reparierte Pfad muss erneut geprüft werden:
 
-1. DM Cockpit auf V0.9.19 aktualisieren und aktivieren.
-2. DM Cockpit öffnen.
-3. Prüfen, ob **Discord Live-Transkript** sichtbar ist.
-4. **Mock-Status** klicken – Status soll zwischen `Live` und `Inaktiv` wechseln.
-5. Mehrfach **Mock-Segment** klicken – Sprecher, Uhrzeit, Text und Confidence sollen erscheinen.
-6. Einen Actor im NPC Memory auswählen und **NPC-Kontext** klicken – der Actorname soll oben im Transkriptbereich erscheinen.
-7. Optional einen Token auswählen und testen, wenn kein Cockpit-Actor aktiv ist.
-8. **Leeren** klicken – der Feed soll geleert werden.
-
-Für diesen Mock-Test wird weder ein Discord-Bot noch ein API-Key benötigt. Der Button **Verbinden** darf ohne laufenden Companion Service einen Verbindungsfehler zeigen; das ist zu diesem Zeitpunkt erwartetes Verhalten.
-
-## Discord Audio & KI – Architektur v1
-
-Festgelegt:
-
-- Companion Service getrennt vom Foundry-Modul
-- WebSocket zwischen Foundry und Companion Service
-- Sprechertrennung über Discord User IDs
-- Ziel-Latenz 5–15 Sekunden
-- Ziel auch für >10 Teilnehmer
-- lokales SQLite für dauerhafte Transkripte
-- Roh-Audio nur bis zur erfolgreichen Transkription
-- austauschbare STT-/KI-Provider
-- NPC-Kontext über Cockpit oder ausgewählten Token
-- automatisches KI-Speichern später nur mit Undo-/Change-Datenmodell
-- Capture-Policy wird technisch dokumentiert und nicht mit einer rechtlichen Freigabe gleichgesetzt
+1. DM Cockpit auf V0.9.20 aktualisieren.
+2. Im NPC-Memory-Bereich einen Actor sichtbar auswählen.
+3. Im Live-Transkript auf **NPC-Kontext** klicken.
+4. Oben im Live-Transkript muss der Actorname mit `· Cockpit` erscheinen.
+5. Die Benachrichtigung muss ebenfalls den Actorname nennen.
 
 ## Nächster einzelner TODO
 
-**V0.9.19 in einer Foundry-V14-Testwelt funktional bestätigen.**
+Nach erfolgreichem NPC-Kontext-Retest:
 
-Nach erfolgreichem Mock-Test folgt als nächster Entwicklungsschritt der lokale Companion-Service-Skeleton mit WebSocket und SQLite-Basis – weiterhin zunächst ohne Discord Voice und ohne kostenpflichtigen Cloud-Provider.
+**Lokalen Companion-Service-Skeleton mit WebSocket und SQLite-Basis implementieren.**
+
+Dabei weiterhin noch kein echter Discord Voice Bot und kein kostenpflichtiger Cloud-Provider.
 
 ## Updates
 
