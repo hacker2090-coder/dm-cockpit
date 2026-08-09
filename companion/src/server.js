@@ -6,7 +6,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.7.0";
+const SERVICE_VERSION = "0.8.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
