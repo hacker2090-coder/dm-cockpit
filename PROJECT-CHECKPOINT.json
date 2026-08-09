@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.12",
-  "created_at": "2026-08-09T14:38:00+02:00",
+  "schema_version": "3.13",
+  "created_at": "2026-08-09T14:40:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -10,15 +10,15 @@
     "foundry_version": "0.9.21",
     "foundry_status": "functionally_confirmed",
     "companion_github_version": "0.8.0",
-    "companion_last_fully_user_tested_stage": "0.8.0_ollama_adapter_local_test_confirmed",
+    "companion_last_fully_user_tested_stage": "0.8.0_ollama_preflight_confirmed",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
-    "pause_point": "Companion 0.8.0 Syntaxprüfung und lokaler Ollama-Adaptertest sind auf dem Nutzer-PC bestätigt. Ollama ist jetzt installiert/erreichbar und 'ollama list' zeigt qwen3:4b lokal mit 2.5 GB. Zusätzlich ist gpt-oss:latest mit 13 GB vorhanden, wird für DM Cockpit vorerst nicht verwendet. Nächster Test: npm.cmd run test:ollama-preflight erneut ausführen; danach echter Ollama-End-to-End-Test und Qualitätsbenchmark. Keine automatischen Actor-Writes."
+    "pause_point": "Companion 0.8.0 Syntaxprüfung, lokaler Ollama-Adaptertest und echter Ollama-Preflight sind auf dem Nutzer-PC bestätigt. Ollama ist unter http://127.0.0.1:11434 erreichbar; qwen3:4b ist lokal vorhanden (4.0B, Q4_K_M, 2.5 GB). Noch ausstehend: echter End-to-End-Lauf Companion -> Ollama -> Kandidaten -> Protocol v1 -> SQLite und danach der 12-Fälle-Qualitätsbenchmark. Keine automatischen Actor-Writes."
   },
   "working_rules": {
     "one_todo_at_a_time": true,
     "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur bei echten externen Tests, Zugängen, Secrets oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
     "do_not_reask_known_answers": true,
-    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten werden über HTML-Dateien mit kopierbarer Antwort geführt.",
+    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten über HTML-Dateien mit kopierbarer Antwort führen.",
     "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen; PROJECT-CHECKPOINT.json kanonisch pflegen und historische Checkpoints unter checkpoints/ sichern.",
     "checkpoint_dual_storage": "Jeder reguläre Checkpoint wird in GitHub und in ChatGPT Library /DM Cockpit/ gespeichert.",
     "user_action_rule": "Wenn etwas vom Nutzer benötigt wird, Abschnitt 'Ich möchte von dir' mit exakter Anweisung verwenden.",
@@ -36,47 +36,36 @@
     "0.2.0": "Discord Voice/DAVE/GM Follow bestätigt",
     "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
     "0.4.0": "Deepgram Nova-3 STT bestätigt",
-    "0.5.0": "vollständig lokal bestätigt: Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite",
-    "0.6.0": "vollständig lokal bestätigt: provider-neutrale AI/Mock-Extraktion und End-to-End Candidate-Pipeline",
-    "0.7.0": "Nutzer-PC: Syntax + OpenAI-Adaptertest mit Fake-HTTP-Response bestätigt; kein echter API-Aufruf",
-    "0.8.0": "Syntax + Ollama-Adapter lokal bestätigt; Ollama-Runtime und qwen3:4b jetzt vorhanden; echter End-to-End-Lauf noch ausstehend"
-  },
-  "companion_0_7": {
-    "status": "local_user_adapter_test_confirmed_no_real_api_call",
-    "provider": "openai",
-    "default_model_current": "gpt-5-nano",
-    "real_api_call": false,
-    "real_api_cost_incurred": false
+    "0.5.0": "Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite vollständig lokal bestätigt",
+    "0.6.0": "provider-neutrale AI/Mock-Extraktion und End-to-End Candidate-Pipeline vollständig lokal bestätigt",
+    "0.7.0": "OpenAI-Adapter lokal mit Fake-HTTP bestätigt; kein echter OpenAI-Aufruf",
+    "0.8.0": "Syntax, Ollama-Adapter und echter Ollama/qwen3:4b Preflight lokal bestätigt; End-to-End noch ausstehend"
   },
   "companion_0_8": {
-    "status": "ollama_runtime_and_qwen3_4b_present_preflight_retest_pending",
+    "status": "ollama_preflight_user_confirmed_e2e_pending",
     "provider": "ollama",
     "default_model": "qwen3:4b",
     "default_endpoint": "http://127.0.0.1:11434/api/chat",
     "api_key_required": false,
     "local_validation": {
       "npm_cmd_run_check": "passed",
-      "npm_cmd_run_test_ai_ollama": "passed"
+      "npm_cmd_run_test_ai_ollama": "passed",
+      "npm_cmd_run_test_ollama_preflight": "passed"
+    },
+    "preflight": {
+      "endpoint_reachable": true,
+      "model_present": true,
+      "model": "qwen3:4b",
+      "parameters": "4.0B",
+      "quantization": "Q4_K_M",
+      "size": "2.5 GB"
     },
     "implemented": ["OllamaExtractionProvider","AI_PROVIDER=ollama routing","Structured Output via JSON Schema","stream=false","think=false","temperature=0","seed=42","OLLAMA_AI_NUM_CTX default 8192","OLLAMA_AI_KEEP_ALIVE default 10m","NPC actorId only from Foundry npc.context","NPC suppression without npc.context","local post-validation","test:ai-ollama","test:ollama-preflight","test:ai-pipeline-ollama","12-case German TTRPG quality benchmark","test:ollama-quality"],
-    "real_local_test": {
-      "status": "ollama_runtime_and_qwen3_4b_present_preflight_retest_pending",
-      "previous_preflight": "failed because Ollama runtime was not reachable",
-      "ollama_list": {
-        "qwen3:4b": {"id":"359d7dd4bcda","size":"2.5 GB","present":true,"selected_for_dm_cockpit":true},
-        "gpt-oss:latest": {"id":"17052f91a42e","size":"13 GB","present":true,"selected_for_dm_cockpit":false}
-      }
-    },
-    "quality_benchmark": {
-      "cases": 12,
-      "default_minimum_percent": 80,
-      "measures": ["required candidate kinds","smalltalk false positives","NPC guard without context","average latency","P95 latency"],
-      "planned_comparison": ["qwen3:4b","qwen3:8b"]
-    }
+    "next_tests": ["Companion with AI_PROVIDER=ollama","npm.cmd run test:ai-pipeline-ollama","npm.cmd run test:ollama-quality"]
   },
   "cost_strategy": {
-    "llm_extraction": "Lokale Ollama/Qwen3-Auswertung kann ohne nutzungsabhängige LLM-API-Gebühren laufen, wenn der Qualitätsbenchmark besteht.",
-    "openai": "Nur optionaler Fallback; kein echter bezahlter API-Aufruf erfolgt.",
+    "llm_extraction": "Ollama/qwen3:4b lokal; keine nutzungsabhängigen LLM-API-Gebühren.",
+    "openai": "Nur optionaler Fallback; bisher kein echter bezahlter API-Aufruf.",
     "speech_to_text": "Aktuell weiterhin Deepgram in der bestätigten Pipeline; lokales STT noch nicht implementiert."
   },
   "roadmap": [
@@ -84,11 +73,10 @@
     "2: Companion 0.6.0 Mock-AI-Pipeline vollständig lokal bestätigt",
     "3: Companion 0.7.0 OpenAI-Adapter lokal ohne echten API-Aufruf bestätigt",
     "4a: Companion 0.8.0 Ollama-Adapter + Syntax lokal bestätigt",
-    "4b: Ollama-Runtime + qwen3:4b lokal vorhanden",
-    "4c: Ollama-Preflight erneut bestätigen",
-    "4d: echter Ollama-End-to-End-Test",
-    "4e: 12-Fälle-Qualitätsbenchmark qwen3:4b",
-    "4f: bei Bedarf qwen3:8b vergleichen und Standard festlegen",
+    "4b: Ollama-Runtime + qwen3:4b + Preflight lokal bestätigt",
+    "4c: echter Ollama-End-to-End-Test",
+    "4d: 12-Fälle-Qualitätsbenchmark qwen3:4b",
+    "4e: bei Bedarf qwen3:8b vergleichen und Standard festlegen",
     "5: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
     "6: Undo/Change-Record Runtime",
     "7: optionale automatische NPC-Memory-Übernahme",
@@ -98,7 +86,7 @@
   ],
   "resume_instructions": {
     "source_of_truth": true,
-    "next_single_external_test": "Im Ordner companion npm.cmd run test:ollama-preflight erneut ausführen. Wenn grün, Companion mit AI_PROVIDER=ollama starten und anschließend npm.cmd run test:ai-pipeline-ollama.",
-    "do_not_repeat": ["Discord-Bot neu anlegen","Deepgram-Konto neu einrichten","Keys erneut anfordern","Companion 0.1-0.6 neu bauen/testen","0.6.0 End-to-End erneut ausführen","0.8.0 npm.cmd run check erneut ausführen, außer neue Codeänderungen erfordern Regression","0.8.0 npm.cmd run test:ai-ollama erneut ausführen"]
+    "next_single_external_test": "Companion in PowerShell 1 mit AI_PROVIDER=ollama starten und laufen lassen; in PowerShell 2 npm.cmd run test:ai-pipeline-ollama ausführen.",
+    "do_not_repeat": ["Discord-Bot neu anlegen","Deepgram-Konto neu einrichten","Keys erneut anfordern","Companion 0.1-0.6 neu bauen/testen","0.6.0 End-to-End erneut ausführen","0.8.0 npm.cmd run check erneut ausführen, außer neue Codeänderungen erfordern Regression","0.8.0 npm.cmd run test:ai-ollama erneut ausführen","0.8.0 Ollama-Preflight erneut ausführen"]
   }
 }
