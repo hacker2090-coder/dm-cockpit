@@ -39,11 +39,9 @@ Neu in V0.9.18:
 - Actor-Bild und Prototype-Token verwenden Foundrys generisches Standardbild.
 - Nach dem Anlegen wird der neue Actor automatisch im NPC-Memory-Bereich ausgewählt.
 
-**V0.9.16 mit NPC-Schnellgenerator wurde in Foundry funktional bestätigt.**
+## NPC Memory
 
-## Neu in V0.9.18 – NPC Memory
-
-NPC Memory ist jetzt ein eigener Bereich im Cockpit und arbeitet mit den echten World Actors aus Foundrys Actor-Tab.
+NPC Memory ist ein eigener Bereich im Cockpit und arbeitet mit den echten World Actors aus Foundrys Actor-Tab.
 
 - alle World Actors aus `game.actors` stehen zur Auswahl
 - Suchfeld nach Name und Actor-Typ
@@ -55,9 +53,41 @@ NPC Memory ist jetzt ein eigener Bereich im Cockpit und arbeitet mit den echten 
 - bei Schnellgenerator-NPCs werden Rolle, Auftreten, Persönlichkeit, Motivation, Eigenheit und Geheimnis im Memory-Bereich angezeigt
 - neu angelegte Schnell-NPCs werden direkt ausgewählt
 
-V0.9.17 wurde durch diese Actor-basierte Überarbeitung ersetzt, bevor die alte Memory-Variante bestätigt wurde.
+**V0.9.18 ist in Foundry funktional bestätigt.**
 
-V0.9.18 ist veröffentlicht und muss in Foundry funktional getestet werden.
+## Discord Audio & KI – Architektur v1
+
+Der nächste große Ausbau ist Discord Voice + Transkription + KI-gestütztes NPC Memory.
+
+Der erste Architektur-TODO ist abgeschlossen:
+
+- provider-neutraler Nachrichtenvertrag zwischen Foundry und einem separaten Companion Service
+- WebSocket-Transport vorgesehen
+- Sprecher werden über Discord User IDs getrennt
+- Ziel-Latenz 5–15 Sekunden
+- keine feste Teilnehmerobergrenze im Protokoll; Ziel auch >10 Teilnehmer
+- lokale SQLite-Datenhaltung für Transkripte
+- Roh-Audio nur temporär bis zur erfolgreichen Transkription
+- austauschbare STT- und KI-Provider
+- aktiver NPC über Cockpit oder ausgewählten Token
+- direktes KI-Speichern mit verpflichtendem Undo-/Change-Datenmodell
+- Capture-Policy wird technisch protokolliert und nicht mit einer rechtlichen Freigabe gleichgesetzt
+
+Technischer Contract:
+
+`docs/DISCORD-AUDIO-AI-CONTRACT-V1.md`
+
+Maschinenlesbares Schema:
+
+`schemas/discord-audio-ai-v1.schema.json`
+
+Noch nicht implementiert sind Discord Bot, DAVE Voice, echtes STT, Live-Transkript-UI, SQLite-Code und KI-Extraktion.
+
+### Nächster einzelner TODO
+
+**Foundry Live-Transkript V1 als Mock/Transport-Client implementieren.**
+
+Zuerst soll Foundry simulierte `transcript.segment`- und `capture.status`-Nachrichten verarbeiten können. Discord Voice und ein kostenpflichtiger Cloud-Provider kommen erst danach.
 
 ## Updates
 
@@ -70,3 +100,5 @@ Installationspaket:
 `https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
 
 Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut.
+
+Die aktuelle Architekturänderung ist dokumentations-/schema-seitig und ändert noch keinen Foundry-Runtime-Code; deshalb bleibt die Modulversion bei V0.9.18.
