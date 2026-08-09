@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "module.json"
+      - "README.md"
       - "scripts/**"
       - "templates/**"
       - "styles/**"
@@ -21,38 +22,74 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Foundry package
+      - name: One-time source recovery if needed
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf work
-          mkdir -p work
-          unzip -q dm-cockpit.zip -d work
+          RECOVERED=0
+          if [ ! -f scripts/dm-cockpit.js ] || [ ! -f styles/dm-cockpit.css ] || [ ! -f templates/cockpit.hbs ]; then
+            test -f dm-cockpit.zip
+            rm -rf recover
+            mkdir -p recover
+            unzip -q dm-cockpit.zip -d recover
+            test -f recover/dm-cockpit/scripts/dm-cockpit.js
+            test -f recover/dm-cockpit/styles/dm-cockpit.css
+            test -f recover/dm-cockpit/templates/cockpit.hbs
+            mkdir -p scripts styles templates
+            cp recover/dm-cockpit/scripts/dm-cockpit.js scripts/dm-cockpit.js
+            cp recover/dm-cockpit/styles/dm-cockpit.css styles/dm-cockpit.css
+            cp recover/dm-cockpit/templates/cockpit.hbs templates/cockpit.hbs
+            rm -rf recover
+            RECOVERED=1
+          fi
+          echo "RECOVERED=$RECOVERED" >> "$GITHUB_ENV"
 
+      - name: Validate versioned runtime sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f scripts/dm-cockpit.js
+          test -f styles/dm-cockpit.css
+          test -f templates/cockpit.hbs
+          while IFS= read -r path; do
+            test -f "$path" || { echo "Missing manifest source: $path"; exit 1; }
+          done < <(jq -r '.esmodules[], .styles[]' module.json)
+
+      - name: Build clean Foundry package
+        shell: bash
+        run: |
+          set -euo pipefail
           VERSION=$(jq -r '.version' module.json)
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-          cp module.json work/dm-cockpit/module.json
-          mkdir -p work/dm-cockpit/scripts
-          if [ -d scripts ]; then cp -R scripts/. work/dm-cockpit/scripts/; fi
-          if [ -d templates ]; then mkdir -p work/dm-cockpit/templates && cp -R templates/. work/dm-cockpit/templates/; fi
-          if [ -d styles ]; then mkdir -p work/dm-cockpit/styles && cp -R styles/. work/dm-cockpit/styles/; fi
+          rm -rf build
+          mkdir -p build/dm-cockpit
+          cp module.json build/dm-cockpit/module.json
+          if [ -f README.md ]; then cp README.md build/dm-cockpit/README.md; fi
+          cp -R scripts build/dm-cockpit/scripts
+          cp -R templates build/dm-cockpit/templates
+          cp -R styles build/dm-cockpit/styles
 
           rm -f dm-cockpit.zip
-          cd work
+          cd build
           zip -qr ../dm-cockpit.zip dm-cockpit
           cd ..
+          rm -rf build
 
-      - name: Publish current package to main
+      - name: Publish recovered sources and package
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dm-cockpit.zip
+          git add scripts/dm-cockpit.js styles/dm-cockpit.css templates/cockpit.hbs dm-cockpit.zip
           if git diff --cached --quiet; then
             echo "No package changes to publish."
           else
-            git commit -m "Build DM Cockpit v${VERSION}"
+            if [ "${RECOVERED}" = "1" ]; then
+              git commit -m "Recover core sources and build DM Cockpit v${VERSION}"
+            else
+              git commit -m "Build DM Cockpit v${VERSION}"
+            fi
             git push
           fi
