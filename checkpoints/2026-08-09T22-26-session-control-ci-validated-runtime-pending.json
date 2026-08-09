@@ -1,0 +1,100 @@
+{
+  "checkpoint_type": "dm_cockpit_release_handoff",
+  "schema_version": "1.0",
+  "created_at": "2026-08-09T22:26:54+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "branch": "main",
+  "source_of_truth": "GitHub main",
+  "release": {
+    "foundry": "0.9.30",
+    "companion": "0.14.0",
+    "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+    "ci_validation_build": "90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30",
+    "final_packaged_build": "e4ae4a5534762bbef4fe9e79c05647cc86b647a9 Build DM Cockpit v0.9.30",
+    "final_package_blob_before_handoff_docs": "updated_by_actions"
+  },
+  "completed_block": {
+    "name": "session_control_commands_presence_diagnostics_reconnect",
+    "implemented": [
+      "manual logical session state independent from Discord Voice join",
+      "idempotent session start/stop",
+      "/dm status",
+      "/dm start",
+      "/dm stop",
+      "/dm recap",
+      "configured GM guard for Discord commands",
+      "GM guard for Foundry start/stop bridge",
+      "bot presence",
+      "diagnostic.state",
+      "bounded Voice reconnect with backoff",
+      "same logical sessionId after Voice reconnect",
+      "intentional Voice leave disables reconnect before destroy",
+      "capture receiver only while session active and Voice ready",
+      "late STT result guard",
+      "short-lived audio segment dedupe",
+      "existing confirmed recap/output path reused for /dm recap",
+      "Foundry module manifest loads discord-command-bridge.js"
+    ],
+    "automated_validation": [
+      "Foundry JavaScript syntax",
+      "Companion JavaScript syntax",
+      "Protocol-/Scope-JSON parsing",
+      "identity mapping smoke",
+      "identity profile smoke",
+      "Discord output smoke",
+      "session control smoke",
+      "Discord command registration/routing/GM/presence/cleanup smoke",
+      "Voice reconnect intentional-leave/unexpected-destroy smoke",
+      "Foundry package build"
+    ],
+    "review_fixes": [
+      "intentional leave reconnect race removed",
+      "Foundry session control GM guard added",
+      "output readiness now requires positive channel validation",
+      "Discord command smoke expanded to registration lifecycle"
+    ],
+    "known_blockers": []
+  },
+  "status_semantics": {
+    "implemented": true,
+    "automated_tested": true,
+    "ci_validated": true,
+    "local_confirmed": false,
+    "fully_confirmed": false
+  },
+  "next_boundary": {
+    "type": "bundled_external_runtime_test",
+    "user_action_required": true,
+    "do_not_repeat_confirmed_baseline_without_regression": true,
+    "test_scope": [
+      "real Discord output channel list and persistence",
+      "/dm status/start/stop/recap",
+      "one automatic capture notice",
+      "one transcript segment",
+      "real Voice disconnect/reconnect",
+      "same sessionId after reconnect",
+      "no duplicate session",
+      "no duplicate capture notice",
+      "no duplicate transcript segment",
+      "Presence/status transitions",
+      "deliberate recap posting",
+      "deleted/unwritable output channel error if practical"
+    ]
+  },
+  "deferred": [
+    "multiple GMs",
+    "general command permission framework"
+  ],
+  "safety_invariants": [
+    "no secrets in repository/checkpoints/chat",
+    "no permanent raw audio storage",
+    "Discord User ID remains speaker source of truth",
+    "Foundry character mapping remains GM-confirmed only",
+    "mapping does not imply automatic IC/OOC",
+    "global Discord username is never changed",
+    "recap posting requires deliberate GM action",
+    "recording notice does not replace legal/privacy consent",
+    "no automatic Foundry actor/world mutation without change-record/undo or explicit GM confirmation"
+  ]
+}
