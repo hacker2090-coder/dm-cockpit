@@ -9,10 +9,49 @@ import { SttService } from "./stt-service.js";
 let activeSessionId = null;
 let publisher = null;
 const npcContextBySession = new Map();
+const playerCharacterMappings = new Map();
+let activeMappingWorldId = null;
 const LATEST_NPC_CONTEXT_KEY = "__latest_npc_context__";
 
 function contextKey(sessionId) {
   return String(sessionId ?? activeSessionId ?? "__no_session__");
+}
+
+function replaceActiveMappings(payload = {}) {
+  const worldId = String(payload.worldId ?? "").trim();
+  if (!worldId || !Array.isArray(payload.mappings)) return false;
+
+  playerCharacterMappings.clear();
+  for (const raw of payload.mappings) {
+    const discordUserId = String(raw?.discordUserId ?? "").trim();
+    const actorId = String(raw?.actorId ?? "").trim();
+    const characterName = String(raw?.characterName ?? "").trim();
+    if (!discordUserId || !actorId || !characterName) continue;
+    playerCharacterMappings.set(discordUserId, {
+      discordUserId,
+      playerName: String(raw?.playerName ?? "").trim() || null,
+      actorId,
+      actorUuid: String(raw?.actorUuid ?? "").trim() || null,
+      characterName
+    });
+  }
+  activeMappingWorldId = worldId;
+  if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
+    console.log(`[identity] ${playerCharacterMappings.size} Spieler-/Charakterzuordnung(en) für Welt ${worldId} aktiv.`);
+  }
+  return true;
+}
+
+function enrichTranscriptIdentity(payload = {}) {
+  const discordUserId = String(payload.discordUserId ?? "").trim();
+  const mapping = discordUserId ? playerCharacterMappings.get(discordUserId) : null;
+  return {
+    ...payload,
+    playerName: mapping?.playerName ?? String(payload.speakerName ?? "").trim() || null,
+    actorId: mapping?.actorId ?? null,
+    actorUuid: mapping?.actorUuid ?? null,
+    characterName: mapping?.characterName ?? null
+  };
 }
 
 const aiExtraction = new AiExtractionService({
@@ -29,6 +68,11 @@ aiExtraction.start();
 
 function handleProtocolBroadcast(message) {
   const sessionId = message?.sessionId ?? activeSessionId ?? null;
+
+  if (message?.type === "player.character.mapping.result") {
+    replaceActiveMappings(message.payload);
+    return;
+  }
 
   if (message?.type === "npc.context") {
     const payload = message.payload ?? null;
@@ -50,7 +94,11 @@ function handleProtocolBroadcast(message) {
     ? npcContextBySession.get(key)
     : (npcContextBySession.get(LATEST_NPC_CONTEXT_KEY) ?? null);
 
-  void aiExtraction.submit(message.payload, { sessionId, npcContext }).catch(error => {
+  void aiExtraction.submit(message.payload, {
+    sessionId,
+    npcContext,
+    mappingWorldId: activeMappingWorldId
+  }).catch(error => {
     console.warn("[ai] Protocol-Segment konnte nicht verarbeitet werden:", error?.message ?? error);
   });
 }
@@ -67,7 +115,11 @@ publisher.start();
 
 const stt = new SttService({
   onTranscript: async (payload, context) => {
-    publisher.send("transcript.segment", payload, context.sessionId ?? activeSessionId);
+    publisher.send(
+      "transcript.segment",
+      enrichTranscriptIdentity(payload),
+      context.sessionId ?? activeSessionId
+    );
   },
   onStatus: status => {
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
@@ -81,10 +133,13 @@ async function resolveSpeaker(discordUserId) {
   try {
     const user = await discordVoice.client?.users.fetch(discordUserId);
     if (user) {
+      const guild = discordVoice.client?.guilds?.cache?.get(discordVoice.guildId) ?? null;
+      const voiceMember = guild?.voiceStates?.cache?.get(String(discordUserId))?.member ?? null;
       const identity = {
         discordUserId: String(discordUserId),
         displayName: user.globalName ?? user.username ?? String(discordUserId),
         globalName: user.globalName ?? null,
+        serverNickname: voiceMember?.nickname ?? null,
         isBot: Boolean(user.bot)
       };
       publisher.send("speaker.upserted", identity, activeSessionId);
@@ -98,6 +153,7 @@ async function resolveSpeaker(discordUserId) {
     discordUserId: String(discordUserId),
     displayName: String(discordUserId),
     globalName: null,
+    serverNickname: null,
     isBot: false
   };
 }
@@ -140,6 +196,9 @@ const discordVoice = new DiscordVoiceController({
       noticeShown: false,
       legalAuthorizationConfirmedExternally: false
     }, activeSessionId);
+  },
+  onParticipants: payload => {
+    publisher.send("voice.participants", payload, activeSessionId);
   },
   onStatus: status => {
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
