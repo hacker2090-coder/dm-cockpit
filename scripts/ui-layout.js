@@ -143,11 +143,15 @@ function dmUiInstallDrag(card) {
     event.stopPropagation();
     allowed = true;
     card.classList.add("dm-ui-drag-ready");
+    document.addEventListener("pointerup", () => {
+      allowed = false;
+      card.classList.remove("dm-ui-drag-ready");
+    }, { once: true });
   });
-  document.addEventListener("pointerup", () => {
-    allowed = false;
-    card.classList.remove("dm-ui-drag-ready");
-  }, { once: true });
+  handle.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
 
   card.addEventListener("dragstart", event => {
     if (!allowed) {
@@ -160,7 +164,8 @@ function dmUiInstallDrag(card) {
   });
 
   card.addEventListener("dragend", () => {
-    card.classList.remove("dm-ui-dragging");
+    allowed = false;
+    card.classList.remove("dm-ui-drag-ready", "dm-ui-dragging");
     const grid = card.closest(".dm-ui-zone-grid");
     if (grid) dmUiSaveZoneOrder(grid);
   });
@@ -199,7 +204,11 @@ function dmUiInstallDetailsPersistence(card, state) {
   if (!card.matches("details") || card.dataset.dmUiDetailsBound === "1") return;
   card.dataset.dmUiDetailsBound = "1";
   const key = dmUiCardKey(card);
-  if (typeof state.open?.[key] === "boolean") card.open = state.open[key];
+  if (typeof state.open?.[key] === "boolean") {
+    card.open = state.open[key];
+  } else if (["tools", "after"].includes(card.dataset.dmUiZoneTarget) && !dmUiCardTitle(card).toLocaleLowerCase().includes("session-recap")) {
+    card.open = false;
+  }
   card.addEventListener("toggle", () => {
     const next = dmUiReadState();
     next.open ??= {};
@@ -370,6 +379,24 @@ function dmUiEnhanceCore(application, element) {
 
   shell.dataset.dmUiVersion = DM_COCKPIT_UI_VERSION;
   const state = dmUiReadState();
+
+  root.querySelectorAll("[data-tab]").forEach(button => {
+    if (button.dataset.dmUiTabBound === "1") return;
+    button.dataset.dmUiTabBound = "1";
+    button.addEventListener("click", () => {
+      const next = dmUiReadState();
+      next.activeTab = button.dataset.tab;
+      dmUiWriteState(next);
+    });
+  });
+  const activeButton = root.querySelector("[data-tab].active");
+  if (state.activeTab && activeButton?.dataset.tab !== state.activeTab) {
+    const desired = root.querySelector(`[data-tab="${state.activeTab}"]`);
+    if (desired) {
+      queueMicrotask(() => desired.click());
+      return;
+    }
+  }
 
   const grid = content.querySelector(".dm-cockpit-grid");
   if (grid) dmUiBuildZones(grid, state);
