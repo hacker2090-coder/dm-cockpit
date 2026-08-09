@@ -89,6 +89,8 @@ jobs:
           node companion/src/identity-mapping-smoke-test.js
           node companion/src/identity-profile-smoke-test.js
           node companion/src/discord-output-smoke-test.js
+          node companion/src/session-control-smoke-test.js
+          node companion/src/discord-command-controller-smoke-test.js
 
       - name: Build clean Foundry package
         if: steps.changes.outputs.foundry == 'true'
