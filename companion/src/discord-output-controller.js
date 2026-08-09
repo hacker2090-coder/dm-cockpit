@@ -17,6 +17,22 @@ function channelLabel(channel) {
   return parent ? `${parent} / #${name}` : `#${name}`;
 }
 
+function publicPostResult(record, { duplicate = false } = {}) {
+  return {
+    requestId: clean(record?.requestId),
+    kind: clean(record?.kind),
+    sessionId: clean(record?.sessionId) || null,
+    guildId: clean(record?.guildId) || null,
+    channelId: clean(record?.channelId) || null,
+    channelName: clean(record?.channelName) || null,
+    discordMessageId: clean(record?.discordMessageId) || null,
+    status: clean(record?.status),
+    textLength: Math.max(0, Math.min(MESSAGE_LIMIT, Number(record?.textLength) || 0)),
+    error: clean(record?.error) || null,
+    ...(duplicate ? { duplicate: true } : {})
+  };
+}
+
 export class DiscordOutputController {
   constructor({ voice, store, onState = () => {}, onResult = () => {} } = {}) {
     if (!voice) throw new TypeError("DiscordOutputController benötigt den Discord-Controller.");
@@ -174,7 +190,7 @@ export class DiscordOutputController {
 
     const previous = this.store.getPost(normalizedRequestId);
     if (previous?.status === "sent") {
-      const duplicate = { ...previous, duplicate: true };
+      const duplicate = publicPostResult(previous, { duplicate: true });
       this.onResult(duplicate);
       return duplicate;
     }
@@ -185,52 +201,52 @@ export class DiscordOutputController {
       : clean(text);
 
     if (!selection?.channelId) {
-      const result = {
+      const result = publicPostResult({
         requestId: normalizedRequestId,
         kind: normalizedKind,
-        sessionId: clean(sessionId) || null,
+        sessionId,
         guildId: this.guildId,
         channelId: null,
         discordMessageId: null,
         status: "failed",
         textLength: content.length,
         error: "Kein Discord-Ausgabe-Textkanal ausgewählt."
-      };
-      this.store.recordPost(result);
+      });
+      this.store.recordPost({ ...result, textLength: content.length });
       this.onResult(result);
       return result;
     }
 
     if (!content) {
-      const result = {
+      const result = publicPostResult({
         requestId: normalizedRequestId,
         kind: normalizedKind,
-        sessionId: clean(sessionId) || null,
+        sessionId,
         guildId: this.guildId,
         channelId: selection.channelId,
         discordMessageId: null,
         status: "failed",
         textLength: 0,
         error: "Discord-Nachricht ist leer."
-      };
+      });
       this.store.recordPost(result);
       this.onResult(result);
       return result;
     }
 
     if (content.length > MESSAGE_LIMIT) {
-      const result = {
+      const result = publicPostResult({
         requestId: normalizedRequestId,
         kind: normalizedKind,
-        sessionId: clean(sessionId) || null,
+        sessionId,
         guildId: this.guildId,
         channelId: selection.channelId,
         discordMessageId: null,
         status: "failed",
         textLength: content.length,
         error: `Discord-Nachricht überschreitet ${MESSAGE_LIMIT} Zeichen.`
-      };
-      this.store.recordPost(result);
+      });
+      this.store.recordPost({ ...result, textLength: content.length });
       this.onResult(result);
       return result;
     }
@@ -241,10 +257,10 @@ export class DiscordOutputController {
         content,
         allowedMentions: { parse: [] }
       });
-      const result = {
+      const result = publicPostResult({
         requestId: normalizedRequestId,
         kind: normalizedKind,
-        sessionId: clean(sessionId) || null,
+        sessionId,
         guildId: this.guildId,
         channelId: String(channel.id),
         channelName: clean(channel.name) || null,
@@ -252,15 +268,15 @@ export class DiscordOutputController {
         status: "sent",
         textLength: content.length,
         error: null
-      };
+      });
       this.store.recordPost(result);
       this.onResult(result);
       return result;
     } catch (error) {
-      const result = {
+      const result = publicPostResult({
         requestId: normalizedRequestId,
         kind: normalizedKind,
-        sessionId: clean(sessionId) || null,
+        sessionId,
         guildId: this.guildId,
         channelId: selection.channelId,
         channelName: selection.channelName ?? null,
@@ -268,8 +284,8 @@ export class DiscordOutputController {
         status: "failed",
         textLength: content.length,
         error: errorText(error)
-      };
-      this.store.recordPost(result);
+      });
+      this.store.recordPost({ ...result, textLength: content.length });
       this.onResult(result);
       return result;
     }
