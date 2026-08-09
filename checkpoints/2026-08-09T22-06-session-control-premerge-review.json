@@ -1,0 +1,76 @@
+{
+  "checkpoint_type": "dm_cockpit_staging_premerge_review",
+  "schema_version": "1.0",
+  "created_at": "2026-08-09T22:06:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "source_of_truth": "GitHub main for released state; staging branch for this reviewed candidate",
+  "released_main": {
+    "commit": "9af9172b3b220eb2782e34cccee5d1611645f718",
+    "foundry": "0.9.29",
+    "companion": "0.13.0",
+    "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29"
+  },
+  "candidate": {
+    "branch": "session_control_commands_presence_diagnostics_reconnect",
+    "pre_checkpoint_head": "7ff3abeb4c9144c49d16daa30a4e237670f6a90a",
+    "foundry": "0.9.30",
+    "companion": "0.14.0",
+    "status": "implemented_reviewed_ci_pending_runtime_not_user_confirmed",
+    "main_relation_before_checkpoint": "ahead_27_behind_0"
+  },
+  "implemented": [
+    "manuelle idempotente SessionControl-State-Machine getrennt vom Discord-Voice-Join",
+    "Voice-Verlust pausiert Capture, beendet aber nicht die logische Session",
+    "Voice-Reconnect behält dieselbe sessionId",
+    "Slash Commands /dm status, /dm start, /dm stop, /dm recap",
+    "Discord Commands auf konfigurierte GM-User-ID begrenzt",
+    "Foundry-Session-Control-Bridge zusätzlich GM-guarded",
+    "Bot-Presence für bereit, Voice bereit, Session aktiv, pausiert und Diagnose",
+    "diagnostic.state mit Gateway-/Voice-/Output-Zuständen",
+    "Voice-Reconnect mit begrenztem Backoff",
+    "Intentional leave deaktiviert Reconnect vor connection.destroy",
+    "kurzlebige Audiosegment-Deduplizierung und Guards gegen späte STT-Ergebnisse",
+    "Recap-Command verwendet ausschließlich bestehenden bestätigten Foundry-Recap-/Discord-Ausgabepfad",
+    "Foundry module.json lädt discord-command-bridge.js",
+    "Protocol-Schema und Contract enthalten die neuen Nachrichtentypen",
+    "Foundry-Zielversion 0.9.30 und Companion-Version 0.14.0 konsistent vorbereitet"
+  ],
+  "review_fixes": [
+    "bekannten intentional-leave-vs-destroy Reconnect-Race behoben",
+    "Voice-Reconnect-Smoke für intentional leave versus unerwartetes Destroyed ergänzt",
+    "Foundry start/stop explizit auf GM begrenzt",
+    "Discord outputReady erfordert positive Kanalvalidierung",
+    "Discord-Command-Smoke um reale Guild-Command-Registrierung und Listener-Cleanup erweitert"
+  ],
+  "automated_validation": {
+    "status": "authored_not_yet_executed_for_candidate",
+    "workflow_contains": [
+      "JavaScript syntax checks",
+      "Protocol-/Scope-JSON parse",
+      "identity-mapping-smoke-test",
+      "identity-profile-smoke-test",
+      "discord-output-smoke-test",
+      "session-control-smoke-test",
+      "discord-command-controller-smoke-test",
+      "discord-voice-reconnect-smoke-test"
+    ],
+    "important": "Nicht als automated_tested oder ci_validated markieren, bevor der Main-Workflow erfolgreich gelaufen ist."
+  },
+  "review_result": {
+    "known_blockers": [],
+    "deferred_not_blocking": [
+      "mehrere GMs",
+      "allgemeines rollenbasiertes Befehlsberechtigungs-Framework"
+    ],
+    "runtime_test": "noch nicht anfordern; zuerst Main-CI/Paketbuild"
+  },
+  "next_exact": [
+    "main unmittelbar vor Integration erneut gegen 9af9172b3b220eb2782e34cccee5d1611645f718 prüfen",
+    "Staging nur bei Fast-Forward-Fähigkeit nach main integrieren",
+    "Main-CI und erwarteten Build DM Cockpit v0.9.30 prüfen",
+    "bei CI-Fehler ausschließlich den konkreten Fehler beheben",
+    "bei erfolgreicher CI PROJECT-CHECKPOINT, PROJECT-HANDOFF, Scope und immutable Snapshot auf CI-validiert aktualisieren",
+    "erst danach gebündelten realen Discord-/Foundry-Test einplanen"
+  ]
+}
