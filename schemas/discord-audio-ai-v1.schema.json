@@ -28,6 +28,13 @@
         "identity.profile.state.request",
         "identity.profile.state",
         "nickname.status",
+        "discord.output.channels.request",
+        "discord.output.channels.result",
+        "discord.output.channel.set",
+        "discord.output.state.request",
+        "discord.output.state",
+        "discord.output.message.request",
+        "discord.output.message.result",
         "capture.status",
         "transcript.segment",
         "npc.context",
@@ -208,6 +215,104 @@
       "additionalProperties": false
     },
     "nicknameStatus": { "type": "object" },
+    "discordOutputSelection": {
+      "type": "object",
+      "required": ["guildId", "channelId", "updatedAt"],
+      "properties": {
+        "guildId": { "type": "string", "minLength": 1 },
+        "channelId": { "type": "string", "minLength": 1 },
+        "channelName": { "type": ["string", "null"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "discordOutputChannel": {
+      "type": "object",
+      "required": ["channelId", "name", "label", "canView", "canSend", "selectable"],
+      "properties": {
+        "channelId": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "parentId": { "type": ["string", "null"] },
+        "parentName": { "type": ["string", "null"] },
+        "canView": { "type": "boolean" },
+        "canSend": { "type": "boolean" },
+        "selectable": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "discordOutputChannelsResult": {
+      "type": "object",
+      "required": ["guildId", "channels", "observedAt"],
+      "properties": {
+        "guildId": { "type": ["string", "null"] },
+        "channels": { "type": "array", "items": { "$ref": "#/$defs/discordOutputChannel" }, "maxItems": 500 },
+        "selectedChannel": { "oneOf": [{ "$ref": "#/$defs/discordOutputSelection" }, { "type": "null" }] },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "error": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "discordOutputChannelSet": {
+      "type": "object",
+      "required": ["channelId"],
+      "properties": { "channelId": { "type": ["string", "null"] } },
+      "additionalProperties": false
+    },
+    "discordOutputValidation": {
+      "type": "object",
+      "required": ["valid", "channelId", "channelName", "label", "error"],
+      "properties": {
+        "valid": { "type": "boolean" },
+        "channelId": { "type": ["string", "null"] },
+        "channelName": { "type": ["string", "null"] },
+        "label": { "type": ["string", "null"] },
+        "error": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "discordOutputState": {
+      "type": "object",
+      "required": ["guildId", "gatewayReady", "selectedChannel", "validation", "updatedAt"],
+      "properties": {
+        "guildId": { "type": ["string", "null"] },
+        "gatewayReady": { "type": "boolean" },
+        "selectedChannel": { "oneOf": [{ "$ref": "#/$defs/discordOutputSelection" }, { "type": "null" }] },
+        "validation": { "oneOf": [{ "$ref": "#/$defs/discordOutputValidation" }, { "type": "null" }] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "discordOutputMessageRequest": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["capture_notice", "recap"] },
+        "text": { "type": "string", "maxLength": 2000 },
+        "sessionId": { "type": ["string", "null"] },
+        "profileName": { "type": ["string", "null"], "maxLength": 80 }
+      },
+      "additionalProperties": false
+    },
+    "discordOutputMessageResult": {
+      "type": "object",
+      "required": ["requestId", "kind", "sessionId", "guildId", "channelId", "discordMessageId", "status", "textLength", "error"],
+      "properties": {
+        "requestId": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["capture_notice", "recap"] },
+        "sessionId": { "type": ["string", "null"] },
+        "guildId": { "type": ["string", "null"] },
+        "channelId": { "type": ["string", "null"] },
+        "channelName": { "type": ["string", "null"] },
+        "discordMessageId": { "type": ["string", "null"] },
+        "status": { "enum": ["sent", "failed"] },
+        "textLength": { "type": "integer", "minimum": 0, "maximum": 2000 },
+        "error": { "type": ["string", "null"] },
+        "duplicate": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
     "transcriptSegment": {
       "type": "object",
       "required": ["segmentId", "discordUserId", "speakerName", "startedAt", "endedAt", "text", "final"],
@@ -361,6 +466,13 @@
     { "if": { "properties": { "type": { "const": "identity.profile.state.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } } },
     { "if": { "properties": { "type": { "const": "identity.profile.state" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileState" } } } },
     { "if": { "properties": { "type": { "const": "nickname.status" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/nicknameStatus" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.channels.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.channels.result" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/discordOutputChannelsResult" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.channel.set" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/discordOutputChannelSet" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.state.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.state" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/discordOutputState" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.message.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/discordOutputMessageRequest" } } } },
+    { "if": { "properties": { "type": { "const": "discord.output.message.result" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/discordOutputMessageResult" } } } },
     { "if": { "properties": { "type": { "const": "npc.context" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/npcContext" } } } },
     { "if": { "properties": { "type": { "const": "npc.memory.candidate" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/npcMemoryCandidate" } } } },
     { "if": { "properties": { "type": { "const": "session.event.candidate" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sessionEventCandidate" } } } },
