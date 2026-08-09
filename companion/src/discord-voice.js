@@ -326,7 +326,9 @@ export class DiscordVoiceController {
         guildId: this.guildId,
         adapterCreator: guild.voiceAdapterCreator,
         selfDeaf: false,
-        selfMute: true
+        selfMute: true,
+        daveEncryption: true,
+        debug: this.debug
       });
     }
 
@@ -341,6 +343,7 @@ export class DiscordVoiceController {
     this.emitStatus();
     await this.emitParticipants(channelId);
 
+    // Audio-Capture ist implementiert; der Receiver setzt den Status nach dem Anbinden auf listening.
     this.setCaptureState("paused");
   }
 
