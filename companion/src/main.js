@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { identityProfileStore, registerShutdownHandler } from "./server.js";
+import { discordOutputStore, identityProfileStore, registerShutdownHandler } from "./server.js";
 import { AiExtractionService } from "./ai-extraction-service.js";
 import { DiscordAudioReceiver } from "./audio-receive.js";
 import { CompanionPublisher } from "./companion-publisher.js";
 import { DiscordNicknameManager } from "./discord-nickname-manager.js";
+import { DiscordOutputController } from "./discord-output-controller.js";
 import { DiscordVoiceController } from "./discord-voice.js";
 import { PlayerCharacterIdentityRegistry } from "./player-character-identity.js";
 import { SttService } from "./stt-service.js";
@@ -11,12 +12,23 @@ import { SttService } from "./stt-service.js";
 let activeSessionId = null;
 let publisher = null;
 let nicknameManager = null;
+let discordOutput = null;
 const npcContextBySession = new Map();
 const playerIdentity = new PlayerCharacterIdentityRegistry();
 const LATEST_NPC_CONTEXT_KEY = "__latest_npc_context__";
 
 function contextKey(sessionId) {
   return String(sessionId ?? activeSessionId ?? "__no_session__");
+}
+
+function sendCaptureStatus(state, sessionId = activeSessionId) {
+  publisher?.send("capture.status", {
+    state,
+    policy: "notice_only",
+    rawAudioRetention: "until_successful_transcription",
+    noticeShown: Boolean(sessionId && discordOutput?.captureNoticeShown(sessionId)),
+    legalAuthorizationConfirmedExternally: false
+  }, sessionId ?? null);
 }
 
 const aiExtraction = new AiExtractionService({
@@ -31,8 +43,75 @@ const aiExtraction = new AiExtractionService({
 });
 aiExtraction.start();
 
+function handleDiscordOutputRequest(message, sessionId) {
+  if (!discordOutput) return false;
+
+  if (message?.type === "discord.output.channels.request") {
+    void discordOutput.listChannels()
+      .then(payload => publisher?.send("discord.output.channels.result", payload, sessionId))
+      .catch(error => {
+        publisher?.send("discord.output.channels.result", {
+          guildId: discordOutput.guildId,
+          channels: [],
+          selectedChannel: discordOutput.persistedSelection(),
+          observedAt: new Date().toISOString(),
+          error: String(error?.message ?? error)
+        }, sessionId);
+      });
+    return true;
+  }
+
+  if (message?.type === "discord.output.channel.set") {
+    void discordOutput.selectChannel(message.payload?.channelId ?? null).catch(error => {
+      publisher?.send("discord.output.state", {
+        guildId: discordOutput.guildId,
+        gatewayReady: discordOutput.gatewayReady(),
+        selectedChannel: discordOutput.persistedSelection(),
+        validation: {
+          valid: false,
+          channelId: message.payload?.channelId ?? null,
+          channelName: null,
+          label: null,
+          error: String(error?.message ?? error)
+        },
+        updatedAt: new Date().toISOString()
+      }, sessionId);
+    });
+    return true;
+  }
+
+  if (message?.type === "discord.output.state.request") {
+    void discordOutput.emitState().catch(error => {
+      console.warn("[discord-output] Status konnte nicht aktualisiert werden:", error?.message ?? error);
+    });
+    return true;
+  }
+
+  if (message?.type === "discord.output.message.request") {
+    const profile = identityProfileStore.activeProfile();
+    void discordOutput.sendRequestedMessage({
+      requestId: message.id,
+      kind: message.payload?.kind,
+      text: message.payload?.text ?? "",
+      sessionId: message.payload?.sessionId ?? sessionId ?? activeSessionId,
+      profileName: message.payload?.profileName ?? profile?.name ?? null
+    }).then(result => {
+      if (result?.kind === "capture_notice" && result?.status === "sent") {
+        sendCaptureStatus(discordVoice?.voiceState === "ready" ? "listening" : "paused", result.sessionId ?? sessionId);
+      }
+    }).catch(error => {
+      console.warn("[discord-output] Nachricht konnte nicht verarbeitet werden:", error?.message ?? error);
+    });
+    return true;
+  }
+
+  return false;
+}
+
 function handleProtocolBroadcast(message) {
   const sessionId = message?.sessionId ?? activeSessionId ?? null;
+
+  if (handleDiscordOutputRequest(message, sessionId)) return;
 
   if (message?.type === "player.character.mapping.result") {
     if (playerIdentity.replace(message.payload) && process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
@@ -166,13 +245,7 @@ const audioReceiver = new DiscordAudioReceiver({
 const discordVoice = new DiscordVoiceController({
   onCaptureState: state => {
     console.log(`[discord-voice] Capture-Status: ${state}`);
-    publisher.send("capture.status", {
-      state,
-      policy: "notice_only",
-      rawAudioRetention: "until_successful_transcription",
-      noticeShown: false,
-      legalAuthorizationConfirmedExternally: false
-    }, activeSessionId);
+    sendCaptureStatus(state, activeSessionId);
   },
   onParticipants: payload => {
     publisher.send("voice.participants", payload, activeSessionId);
@@ -183,6 +256,11 @@ const discordVoice = new DiscordVoiceController({
     }
   },
   onStatus: status => {
+    if (status?.gatewayState === "ready" && discordOutput) {
+      void discordOutput.emitState().catch(error => {
+        console.warn("[discord-output] Status nach Discord-Ready fehlgeschlagen:", error?.message ?? error);
+      });
+    }
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       console.log("[discord-voice] Status:", JSON.stringify(status));
     }
@@ -204,14 +282,36 @@ nicknameManager = new DiscordNicknameManager({
 });
 nicknameManager.start();
 
+discordOutput = new DiscordOutputController({
+  voice: discordVoice,
+  store: discordOutputStore,
+  onState: state => {
+    publisher.send("discord.output.state", state, activeSessionId);
+    if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
+      console.log("[discord-output] Status:", JSON.stringify(state));
+    }
+  },
+  onResult: result => {
+    publisher.send("discord.output.message.result", {
+      ...result,
+      updatedAt: new Date().toISOString()
+    }, result?.sessionId ?? activeSessionId);
+    if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
+      console.log("[discord-output] Ergebnis:", JSON.stringify(result));
+    }
+  }
+});
+
 let attachedVoiceConnection = null;
 const receiverWatch = setInterval(() => {
   const connection = discordVoice.connection;
 
   if (connection && connection !== attachedVoiceConnection && connection.receiver) {
     try {
-      if (!activeSessionId) {
+      const newSession = !activeSessionId;
+      if (newSession) {
         activeSessionId = `voice_${randomUUID()}`;
+        const activeProfile = identityProfileStore.activeProfile();
         publisher.send("session.started", {
           sessionId: activeSessionId,
           startedAt: new Date().toISOString(),
@@ -223,19 +323,24 @@ const receiverWatch = setInterval(() => {
             stt: stt.snapshot().provider,
             ai: aiExtraction.snapshot().provider
           },
-          identityProfileId: identityProfileStore.activeProfile()?.profileId ?? null
+          identityProfileId: activeProfile?.profileId ?? null
         }, activeSessionId);
+
+        void discordOutput.sendRequestedMessage({
+          requestId: `auto-capture-notice:${activeSessionId}`,
+          kind: "capture_notice",
+          sessionId: activeSessionId,
+          profileName: activeProfile?.name ?? null
+        }).then(result => {
+          if (result?.status === "sent") sendCaptureStatus("listening", activeSessionId);
+        }).catch(error => {
+          console.warn("[discord-output] Automatischer Aufnahmehinweis fehlgeschlagen:", error?.message ?? error);
+        });
       }
 
       audioReceiver.attach(connection, { botUserId: discordVoice.botUserId });
       attachedVoiceConnection = connection;
-      publisher.send("capture.status", {
-        state: "listening",
-        policy: "notice_only",
-        rawAudioRetention: "until_successful_transcription",
-        noticeShown: false,
-        legalAuthorizationConfirmedExternally: false
-      }, activeSessionId);
+      sendCaptureStatus("listening", activeSessionId);
     } catch (error) {
       console.warn("[audio-receive] Konnte Receiver nicht anbinden:", error?.message ?? error);
     }
@@ -248,13 +353,7 @@ const receiverWatch = setInterval(() => {
 
     if (activeSessionId) {
       const endedSessionId = activeSessionId;
-      publisher.send("capture.status", {
-        state: "idle",
-        policy: "notice_only",
-        rawAudioRetention: "until_successful_transcription",
-        noticeShown: false,
-        legalAuthorizationConfirmedExternally: false
-      }, endedSessionId);
+      sendCaptureStatus("idle", endedSessionId);
       publisher.send("session.ended", {
         sessionId: endedSessionId,
         endedAt: new Date().toISOString()
