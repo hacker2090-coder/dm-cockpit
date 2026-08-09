@@ -1,4 +1,4 @@
-# DM Cockpit V0.9.20
+# DM Cockpit V0.9.21
 
 Aktueller Stand:
 
@@ -26,9 +26,9 @@ Der Live-Transkript-Test von V0.9.19 wurde am 09.08.2026 teilweise erfolgreich d
 - Mock-Status: bestätigt
 - Mock-Segmente: bestätigt
 - Leeren: bestätigt
-- NPC-Kontext: Fehler gefunden – sichtbare NPC-Memory-Auswahl konnte vom gespeicherten Actor-Kontext abweichen
+- NPC-Kontext: noch nicht eindeutig bestätigt
 
-V0.9.20 behebt gezielt diese NPC-Kontext-Synchronisierung und muss nur noch für diesen Pfad erneut getestet werden.
+V0.9.20 synchronisierte die sichtbare NPC-Memory-Auswahl erstmals separat. V0.9.21 macht den Button-Pfad selbst eindeutig und übernimmt den aktuell sichtbaren Actor direkt aus dem Dropdown.
 
 ## NPC-Schnellgenerator
 
@@ -71,16 +71,18 @@ Funktionen:
 - sichtbarer Hinweis auf die konfigurierte Capture-Policy
 - Debug-/Integrations-API unter `globalThis.DMCockpitLiveTranscript`
 
-### Neu in V0.9.20 – NPC-Kontext-Bridge
+### Neu in V0.9.21 – eindeutiger NPC-Kontext-Button
 
-Die sichtbare Actor-Auswahl im NPC-Memory-Bereich wird jetzt explizit mit `npcMemorySelectedActorId` synchronisiert.
+Beim Klick auf **NPC-Kontext** passiert jetzt direkt:
 
-Damit gilt:
+1. Die Bridge liest den aktuell sichtbaren Actor aus dem NPC-Memory-Dropdown.
+2. Dieser Actor wird als `npcMemorySelectedActorId` gespeichert.
+3. Der Live-Transcript-Transport erhält denselben Actor unmittelbar als `npc.context`.
+4. Oben im Live-Transkript erscheint `<Actorname> · Cockpit`.
+5. Die Benachrichtigung lautet eindeutig `NPC-Kontext aktiv: <Actorname>`.
+6. Der ältere Button-Handler wird für diesen Klick bewusst nicht zusätzlich ausgeführt.
 
-1. Der im NPC-Memory-Dropdown sichtbare Actor ist die primäre Cockpit-Auswahl.
-2. Diese Auswahl wird auch dann persistiert, wenn sie automatisch als erster verfügbarer Actor angezeigt wurde.
-3. Der Live-Transkript-Status zeigt die synchronisierte Auswahl an.
-4. Der bestehende Token-Fallback bleibt erhalten, wenn kein Cockpit-Actor aktiv ist.
+Damit hängt dieser Test nicht mehr davon ab, ob eine vorherige automatische Dropdown-Auswahl bereits gespeichert wurde.
 
 ## Noch nicht enthalten
 
@@ -102,15 +104,15 @@ Maschinenlesbares Schema:
 
 `schemas/discord-audio-ai-v1.schema.json`
 
-## Test für V0.9.20
+## Test für V0.9.21
 
-Nur der reparierte Pfad muss erneut geprüft werden:
+Nur dieser Pfad muss geprüft werden:
 
-1. DM Cockpit auf V0.9.20 aktualisieren.
-2. Im NPC-Memory-Bereich einen Actor sichtbar auswählen.
+1. DM Cockpit auf V0.9.21 aktualisieren.
+2. Im NPC-Memory-Dropdown einen Actor auswählen.
 3. Im Live-Transkript auf **NPC-Kontext** klicken.
-4. Oben im Live-Transkript muss der Actorname mit `· Cockpit` erscheinen.
-5. Die Benachrichtigung muss ebenfalls den Actorname nennen.
+4. Oben muss `<Actorname> · Cockpit` erscheinen.
+5. Die Benachrichtigung muss `DM Cockpit: NPC-Kontext aktiv: <Actorname>` lauten.
 
 ## Nächster einzelner TODO
 
