@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
+import { DiscordOutputStore } from "./discord-output-store.js";
 import { IdentityProfileStore } from "./identity-profile-store.js";
 import {
   changeRecordStats,
@@ -14,12 +15,13 @@ import {
 } from "./change-record-runtime.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.12.0";
+const SERVICE_VERSION = "0.13.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
 const WS_PATH = process.env.DM_COCKPIT_WS_PATH?.trim() || "/v1";
 const DB_PATH = resolve(process.env.DM_COCKPIT_DB_PATH?.trim() || resolve(APP_DIR, "data", "dm-cockpit.sqlite"));
+const OUTPUT_GUILD_ID = String(process.env.DISCORD_GUILD_ID ?? "").trim() || null;
 
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error(`Ungültiger DM_COCKPIT_PORT: ${process.env.DM_COCKPIT_PORT}`);
@@ -27,6 +29,7 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
 
 const store = new CompanionStore(DB_PATH);
 export const identityProfileStore = new IdentityProfileStore(DB_PATH);
+export const discordOutputStore = new DiscordOutputStore(DB_PATH);
 const clients = new Set();
 const shutdownHandlers = new Set();
 let shutdownStarted = false;
@@ -37,6 +40,13 @@ let latestVoiceParticipants = {
   participants: []
 };
 let latestNicknameStatus = null;
+let latestDiscordOutputState = {
+  guildId: OUTPUT_GUILD_ID,
+  gatewayReady: false,
+  selectedChannel: OUTPUT_GUILD_ID ? discordOutputStore.selectedChannel(OUTPUT_GUILD_ID) : null,
+  validation: null,
+  updatedAt: new Date().toISOString()
+};
 
 export function registerShutdownHandler(handler) {
   if (typeof handler !== "function") throw new TypeError("Shutdown-Handler muss eine Funktion sein.");
@@ -84,7 +94,8 @@ function combinedStats() {
   return {
     ...store.stats(),
     changeRecords: changeRecordStats(store),
-    identityProfiles: identityProfileStore.stats()
+    identityProfiles: identityProfileStore.stats(),
+    discordOutput: discordOutputStore.stats()
   };
 }
 
@@ -186,6 +197,13 @@ function handleProtocolMessage(ws, message) {
           "identity.profile.state.request",
           "identity.profile.state",
           "nickname.status",
+          "discord.output.channels.request",
+          "discord.output.channels.result",
+          "discord.output.channel.set",
+          "discord.output.state.request",
+          "discord.output.state",
+          "discord.output.message.request",
+          "discord.output.message.result",
           "capture.status",
           "transcript.segment",
           "npc.context",
@@ -207,7 +225,9 @@ function handleProtocolMessage(ws, message) {
         persistentChangeRecords: true,
         persistentPlayerCharacterMappings: true,
         persistentIdentityProfiles: true,
-        persistentNicknameRestoreState: true
+        persistentNicknameRestoreState: true,
+        persistentDiscordOutputChannel: true,
+        idempotentDiscordOutputPosts: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -218,6 +238,7 @@ function handleProtocolMessage(ws, message) {
       }, sessionId);
       send(ws, "voice.participants", latestVoiceParticipants, sessionId);
       send(ws, "identity.profile.state", profileStatePayload(), sessionId);
+      send(ws, "discord.output.state", latestDiscordOutputState, sessionId);
       if (latestNicknameStatus) send(ws, "nickname.status", latestNicknameStatus, sessionId);
       for (const record of listActiveChangeRecords(store, 100)) {
         send(ws, "npc.memory.applied", record, sessionId);
@@ -327,6 +348,33 @@ function handleProtocolMessage(ws, message) {
         updatedAt: String(payload.updatedAt ?? "").trim() || receivedAt
       };
       broadcast("nickname.status", latestNicknameStatus, sessionId);
+      break;
+
+    case "discord.output.channels.request":
+    case "discord.output.channel.set":
+    case "discord.output.message.request":
+      broadcast(message.type, payload, sessionId);
+      break;
+
+    case "discord.output.state.request":
+      send(ws, "discord.output.state", latestDiscordOutputState, sessionId);
+      broadcast("discord.output.state.request", payload, sessionId);
+      break;
+
+    case "discord.output.channels.result":
+      broadcast("discord.output.channels.result", payload, sessionId);
+      break;
+
+    case "discord.output.state":
+      latestDiscordOutputState = {
+        ...payload,
+        updatedAt: String(payload.updatedAt ?? "").trim() || receivedAt
+      };
+      broadcast("discord.output.state", latestDiscordOutputState, sessionId);
+      break;
+
+    case "discord.output.message.result":
+      broadcast("discord.output.message.result", payload, sessionId);
       break;
 
     case "transcript.segment":
@@ -563,6 +611,7 @@ async function shutdown(signal) {
   httpServer.close(() => {
     store.close();
     identityProfileStore.close();
+    discordOutputStore.close();
     process.exit(0);
   });
   setTimeout(() => process.exit(1), 5000).unref();
