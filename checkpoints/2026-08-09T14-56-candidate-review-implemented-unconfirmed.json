@@ -1,0 +1,46 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.16",
+  "created_at": "2026-08-09T14:56:00+02:00",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "foundry_version": "0.9.22",
+    "companion_github_version": "0.9.0",
+    "last_fully_user_tested": "Companion 0.8.0 Ollama/qwen3:4b incl. 91.7% quality benchmark",
+    "current_unconfirmed_block": "Companion 0.9.0 candidate review backend + Foundry 0.9.22 candidate review UI"
+  },
+  "confirmed": {
+    "ollama_model": "qwen3:4b",
+    "quality_score_percent": 91.7,
+    "average_latency_ms": 1066,
+    "p95_latency_ms": 1935,
+    "ollama_e2e": true
+  },
+  "implemented_not_yet_user_tested": {
+    "companion_0_9_0": [
+      "candidate.review",
+      "candidate.reviewed",
+      "candidates.list.request/result",
+      "persistent accepted/rejected status in SQLite",
+      "candidate reload after Foundry refresh",
+      "test:candidate-review"
+    ],
+    "foundry_0_9_22": [
+      "KI candidate card",
+      "pending/accepted/rejected counters",
+      "manual accept/reject",
+      "NPC accept writes existing dm-cockpit.actionMemory only after GM click",
+      "session accept changes candidate status only",
+      "rejected candidates never alter Actor",
+      "pending reload from SQLite"
+    ]
+  },
+  "safety": {
+    "automatic_actor_writes": false,
+    "raw_audio_persistent_storage": false,
+    "secrets_in_checkpoint": false
+  },
+  "deployment_note": "dm-cockpit.zip for Foundry 0.9.22 has not yet been rebuilt/validated.",
+  "next_single_todo": "User PC: git pull, companion npm.cmd run check; if green start Companion 0.9.0 and run npm.cmd run test:candidate-review in second PowerShell."
+}
