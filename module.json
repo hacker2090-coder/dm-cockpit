@@ -7,7 +7,7 @@
       "name": "DM Cockpit"
     }
   ],
-  "version": "0.9.23",
+  "version": "0.9.24",
   "compatibility": {
     "minimum": "14",
     "verified": "14.365"
@@ -22,7 +22,8 @@
     "scripts/npc-action-memory.js",
     "scripts/live-transcript.js",
     "scripts/ai-candidate-review.js",
-    "scripts/npc-context-bridge.js"
+    "scripts/npc-context-bridge.js",
+    "scripts/module-version-badge.js"
   ],
   "styles": [
     "styles/dm-cockpit.css",
