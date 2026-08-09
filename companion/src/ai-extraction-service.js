@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { MockAiExtractionProvider } from "./ai-extraction-mock.js";
+import { OpenAiExtractionProvider } from "./ai-extraction-openai.js";
 
 const DEFAULT_MAX_SEEN_SEGMENTS = 2000;
 
@@ -41,7 +42,11 @@ export class AiExtractionService {
     this.onCandidate = onCandidate;
     this.onStatus = onStatus;
     this.maxSeenSegments = Math.max(100, Number(maxSeenSegments) || DEFAULT_MAX_SEEN_SEGMENTS);
-    this.provider = this.providerName === "mock" ? new MockAiExtractionProvider() : null;
+    this.provider = this.providerName === "mock"
+      ? new MockAiExtractionProvider()
+      : this.providerName === "openai"
+        ? new OpenAiExtractionProvider()
+        : null;
     this.seenSegmentIds = new Set();
     this.seenSegmentOrder = [];
     this.completed = 0;
@@ -72,7 +77,7 @@ export class AiExtractionService {
 
   start() {
     if (this.providerName === "none") {
-      console.log("[ai] Extraktion deaktiviert. AI_PROVIDER=mock aktiviert den deterministischen 0.6.0-Testprovider.");
+      console.log("[ai] Extraktion deaktiviert. AI_PROVIDER=mock aktiviert den Testprovider; AI_PROVIDER=openai aktiviert den realen OpenAI-Adapter.");
       this.emitStatus();
       return this.snapshot();
     }
