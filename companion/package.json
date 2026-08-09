@@ -1,6 +1,6 @@
 {
   "name": "dm-cockpit-companion",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Lokaler Discord Audio/KI Companion Service für DM Cockpit",
   "type": "module",
@@ -9,9 +9,10 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.js",
-    "check": "node --check src/main.js && node --check src/server.js && node --check src/store.js && node --check src/mock-client.js && node --check src/candidate-smoke-test.js && node --check src/ai-extraction-service.js && node --check src/ai-extraction-mock.js && node --check src/ai-extraction-openai.js && node --check src/ai-extraction-ollama.js && node --check src/ai-extraction-test.js && node --check src/ai-extraction-openai-test.js && node --check src/ai-extraction-ollama-test.js && node --check src/ai-pipeline-smoke-test.js && node --check src/ai-pipeline-ollama-smoke-test.js && node --check src/ollama-preflight.js && node --check src/ai-ollama-quality-eval.js && node --check src/discord-voice.js && node --check src/audio-receive.js && node --check src/companion-publisher.js && node --check src/stt-service.js && node --check src/stt-deepgram.js",
+    "check": "node --check src/main.js && node --check src/server.js && node --check src/store.js && node --check src/mock-client.js && node --check src/candidate-smoke-test.js && node --check src/candidate-review-smoke-test.js && node --check src/ai-extraction-service.js && node --check src/ai-extraction-mock.js && node --check src/ai-extraction-openai.js && node --check src/ai-extraction-ollama.js && node --check src/ai-extraction-test.js && node --check src/ai-extraction-openai-test.js && node --check src/ai-extraction-ollama-test.js && node --check src/ai-pipeline-smoke-test.js && node --check src/ai-pipeline-ollama-smoke-test.js && node --check src/ollama-preflight.js && node --check src/ai-ollama-quality-eval.js && node --check src/discord-voice.js && node --check src/audio-receive.js && node --check src/companion-publisher.js && node --check src/stt-service.js && node --check src/stt-deepgram.js",
     "mock": "node src/mock-client.js",
     "test:candidates": "node src/candidate-smoke-test.js",
+    "test:candidate-review": "node src/candidate-review-smoke-test.js",
     "test:ai": "node src/ai-extraction-test.js",
     "test:ai-openai": "node src/ai-extraction-openai-test.js",
     "test:ai-ollama": "node src/ai-extraction-ollama-test.js",
