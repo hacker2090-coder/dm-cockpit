@@ -1,0 +1,29 @@
+{
+  "checkpoint_type": "dm_cockpit_milestone",
+  "created_at": "2026-08-09T11:48:00+02:00",
+  "foundry_version": "0.9.21",
+  "foundry_status": "functionally_confirmed",
+  "companion_version": "0.1.0",
+  "companion_status": "implemented_needs_local_integration_test",
+  "completed": [
+    "Foundry Live-Transkript Mock/Transport-Client bestätigt",
+    "NPC-Kontext bestätigt",
+    "lokaler WebSocket Companion Service implementiert",
+    "SQLite-Basis implementiert",
+    "Health-Endpunkt implementiert",
+    "echter lokaler Mock-Client implementiert"
+  ],
+  "next_test": [
+    "cd companion",
+    "npm install",
+    "npm run check",
+    "npm start",
+    "Foundry mit ws://127.0.0.1:43170/v1 verbinden",
+    "npm run mock in zweitem Terminal",
+    "Companion Mock im Foundry-Transkript prüfen",
+    "/health stats prüfen"
+  ],
+  "next_after_success": "Discord Voice Bot Skeleton + DAVE/E2EE Auto-Join beim GM vorbereiten",
+  "secrets_needed_now": false,
+  "cloud_cost_now": 0
+}
