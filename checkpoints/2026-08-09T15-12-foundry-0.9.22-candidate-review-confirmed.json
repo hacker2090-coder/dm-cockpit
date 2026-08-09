@@ -1,0 +1,70 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.19",
+  "created_at": "2026-08-09T15:12:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "foundry_version": "0.9.22",
+    "companion_version": "0.9.0",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "pause_point": "Companion 0.9.0 Candidate-Review vollständig lokal bestätigt. Foundry 0.9.22 ist jetzt ebenfalls für den echten Kandidaten-Review bestätigt: realer Ollama/qwen3:4b NPC-Kandidat erscheint mit Foundry-Actor-Kontext; manuelles Annehmen und Verwerfen funktionieren; ein angenommener NPC-Kandidat wird korrekt dem bestehenden NPC Memory hinzugefügt. Der Nutzer hat Accept/Reject bereits erfolgreich durchgeführt. Nächster Entwicklungsblock: Undo/Change-Record Runtime vor jeder zukünftigen automatischen Actor-/Weltänderung."
+  },
+  "working_rules": {
+    "one_todo_at_a_time": true,
+    "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
+    "selection_questions_rule": "Auswahlfragen über HTML-Dateien mit kopierbarem Ergebnis führen.",
+    "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen und jeden regulären Checkpoint in GitHub sowie ChatGPT Library /DM Cockpit/ speichern.",
+    "user_action_rule": "Wenn etwas vom Nutzer benötigt wird, klarer Abschnitt 'Ich möchte von dir'.",
+    "local_command_rule": "$HOME\\Desktop\\dm-cockpit; npm.cmd statt npm.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "change_rule": "Keine automatischen Welt-/Actor-Änderungen ohne Undo/Change-Record oder explizite GM-Bestätigung."
+  },
+  "confirmed": {
+    "foundry_baseline": "0.9.21 Kernfunktionen funktional bestätigt; 0.9.22 Kandidatenkarte sichtbar bestätigt.",
+    "companion_0_8": {
+      "provider": "ollama",
+      "model": "qwen3:4b",
+      "preflight": "passed",
+      "e2e": "passed",
+      "quality": {
+        "passed": 11,
+        "cases": 12,
+        "score_percent": 91.7,
+        "average_latency_ms": 1066,
+        "p95_latency_ms": 1935,
+        "decision": "qwen3:4b bleibt kostenloser Standard"
+      }
+    },
+    "companion_0_9": {
+      "syntax": "passed",
+      "candidate_review_smoke": "passed",
+      "flow": "pending -> accepted/rejected -> SQLite status -> list reload",
+      "automatic_actor_writes": false
+    },
+    "foundry_0_9_22": {
+      "runtime": "fully_confirmed_candidate_review",
+      "card": "KI-Kandidaten",
+      "source_files": ["scripts/ai-candidate-review.js","styles/ai-candidate-review.css"],
+      "manual_review_only": true,
+      "real_ollama_candidate": "passed",
+      "foundry_actor_context": "passed",
+      "accept": "passed",
+      "reject": "passed",
+      "accept_to_npc_memory": "passed",
+      "automatic_actor_writes": false
+    }
+  },
+  "roadmap": [
+    "5: Foundry 0.9.22 Kandidaten-Review vollständig bestätigt",
+    "6a: Undo/Change-Record Runtime implementieren",
+    "6b: Undo für NPC-Memory-Änderungen testen",
+    "7: optionale automatische NPC-Memory-Übernahme",
+    "8: durchsuchbares Transkript",
+    "9: Session-Historie/Recap/Discord-Kurzfassung",
+    "10: optional lokales STT"
+  ]
+}
