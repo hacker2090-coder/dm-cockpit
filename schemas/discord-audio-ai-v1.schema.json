@@ -14,6 +14,13 @@
         "health",
         "session.started",
         "session.ended",
+        "session.control.start",
+        "session.control.stop",
+        "session.control.state.request",
+        "session.control.state",
+        "session.control.result",
+        "discord.command.recap.request",
+        "diagnostic.state",
         "speaker.upserted",
         "voice.participants",
         "voice.participants.request",
@@ -185,6 +192,71 @@
       "additionalProperties": false
     },
     "emptyPayload": { "type": "object", "additionalProperties": false },
+    "sessionControlRequest": {
+      "type": "object",
+      "properties": {
+        "source": { "type": "string" },
+        "requestedByDiscordUserId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "sessionControlState": {
+      "type": "object",
+      "required": ["active", "sessionId", "startedAt", "startedByDiscordUserId", "voiceReady", "voiceChannelId", "captureEnabled", "lastVoiceReadyAt", "lastVoiceLostAt", "lastTransitionAt", "lastReason"],
+      "properties": {
+        "active": { "type": "boolean" },
+        "sessionId": { "type": ["string", "null"] },
+        "startedAt": { "type": ["string", "null"], "format": "date-time" },
+        "startedByDiscordUserId": { "type": ["string", "null"] },
+        "voiceReady": { "type": "boolean" },
+        "voiceChannelId": { "type": ["string", "null"] },
+        "captureEnabled": { "type": "boolean" },
+        "lastVoiceReadyAt": { "type": ["string", "null"], "format": "date-time" },
+        "lastVoiceLostAt": { "type": ["string", "null"], "format": "date-time" },
+        "lastTransitionAt": { "type": "string", "format": "date-time" },
+        "lastReason": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "sessionControlResult": {
+      "type": "object",
+      "required": ["requestId", "action", "status", "state"],
+      "properties": {
+        "requestId": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["start", "stop"] },
+        "status": { "enum": ["started", "already_active", "voice_not_ready", "stopped", "already_idle"] },
+        "state": { "$ref": "#/$defs/sessionControlState" }
+      },
+      "additionalProperties": false
+    },
+    "discordCommandRecapRequest": {
+      "type": "object",
+      "required": ["requestId"],
+      "properties": {
+        "requestId": { "type": "string", "minLength": 1 },
+        "requestedByDiscordUserId": { "type": ["string", "null"] },
+        "sessionId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "diagnosticState": {
+      "type": "object",
+      "required": ["component", "state", "updatedAt"],
+      "properties": {
+        "component": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "minLength": 1 },
+        "detail": { "type": ["string", "null"] },
+        "gatewayState": { "type": "string" },
+        "voiceState": { "type": "string" },
+        "voiceError": { "type": ["string", "null"] },
+        "outputReady": { "type": "boolean" },
+        "outputError": { "type": ["string", "null"] },
+        "error": { "type": ["string", "null"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
     "nicknameOverride": {
       "type": "object",
       "required": ["guildId", "discordUserId", "profileId", "appliedNickname", "state", "createdAt", "updatedAt"],
@@ -451,6 +523,13 @@
     }
   },
   "allOf": [
+    { "if": { "properties": { "type": { "const": "session.control.start" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sessionControlRequest" } } } },
+    { "if": { "properties": { "type": { "const": "session.control.stop" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sessionControlRequest" } } } },
+    { "if": { "properties": { "type": { "const": "session.control.state.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } } },
+    { "if": { "properties": { "type": { "const": "session.control.state" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sessionControlState" } } } },
+    { "if": { "properties": { "type": { "const": "session.control.result" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sessionControlResult" } } } },
+    { "if": { "properties": { "type": { "const": "discord.command.recap.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/discordCommandRecapRequest" } } } },
+    { "if": { "properties": { "type": { "const": "diagnostic.state" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/diagnosticState" } } } },
     { "if": { "properties": { "type": { "const": "transcript.segment" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/transcriptSegment" } } } },
     { "if": { "properties": { "type": { "const": "speaker.upserted" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/speaker" } } } },
     { "if": { "properties": { "type": { "const": "voice.participants" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipants" } } } },
