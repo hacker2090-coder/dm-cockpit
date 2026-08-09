@@ -215,16 +215,13 @@ export class DiscordNicknameManager {
     });
 
     const existingLease = this.store.getNicknameOverride(guildId, discordUserId);
-    if (existingLease?.state === "restore_conflict") {
-      this.store.updateNicknameState(guildId, discordUserId, "conflict_released", { error: null, restoredAt: null });
-    }
-
     this.store.prepareNicknameOverride({
       guildId,
       discordUserId,
       profileId: this.activeProfile.profileId,
       originalNickname: state.currentNickname ?? null,
-      appliedNickname: desiredNickname
+      appliedNickname: desiredNickname,
+      replaceOriginal: existingLease?.state === "restore_conflict"
     });
 
     try {
