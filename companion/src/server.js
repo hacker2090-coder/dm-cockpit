@@ -4,9 +4,16 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
+import {
+  changeRecordStats,
+  getChangeRecord,
+  listActiveChangeRecords,
+  markChangeRecordUndone,
+  persistChangeRecord
+} from "./change-record-runtime.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.9.0";
+const SERVICE_VERSION = "0.10.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
@@ -56,6 +63,13 @@ function sendError(ws, message, code = "bad_request", sessionId = null) {
   send(ws, "error", { code, message }, sessionId);
 }
 
+function combinedStats() {
+  return {
+    ...store.stats(),
+    changeRecords: changeRecordStats(store)
+  };
+}
+
 function validEnvelope(value) {
   return value
     && typeof value === "object"
@@ -96,12 +110,16 @@ function handleProtocolMessage(ws, message) {
           "candidate.reviewed",
           "candidates.list.request",
           "candidates.list.result",
+          "npc.memory.applied",
+          "change.undo.request",
+          "change.undo.result",
           "sqlite"
         ],
         database: "sqlite",
         persistentTranscript: true,
         persistentCandidates: true,
-        persistentCandidateReviews: true
+        persistentCandidateReviews: true,
+        persistentChangeRecords: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -110,6 +128,9 @@ function handleProtocolMessage(ws, message) {
         noticeShown: false,
         legalAuthorizationConfirmedExternally: false
       }, sessionId);
+      for (const record of listActiveChangeRecords(store, 100)) {
+        send(ws, "npc.memory.applied", record, sessionId);
+      }
       break;
 
     case "health":
@@ -119,7 +140,7 @@ function handleProtocolMessage(ws, message) {
         protocolVersion: PROTOCOL_VERSION,
         connectedClients: clients.size,
         databasePath: DB_PATH,
-        stats: store.stats()
+        stats: combinedStats()
       }, sessionId);
       break;
 
@@ -197,6 +218,69 @@ function handleProtocolMessage(ws, message) {
       break;
     }
 
+    case "npc.memory.applied": {
+      if (!persistChangeRecord(store, payload, receivedAt)) {
+        sendError(ws, "Change-Record konnte nicht gespeichert werden.", "invalid_change_record", sessionId);
+        break;
+      }
+      const record = getChangeRecord(store, payload.changeId);
+      if (!record) {
+        sendError(ws, "Gespeicherter Change-Record konnte nicht geladen werden.", "change_record_missing", sessionId);
+        break;
+      }
+      broadcast("npc.memory.applied", record, sessionId);
+      break;
+    }
+
+    case "change.undo.request": {
+      const changeId = String(payload.changeId ?? "").trim();
+      const record = getChangeRecord(store, changeId);
+      if (!record) {
+        sendError(ws, "Change-Record wurde nicht gefunden.", "change_record_not_found", sessionId);
+        break;
+      }
+      if (record.undoneAt) {
+        send(ws, "change.undo.result", {
+          ...record,
+          status: "already_undone"
+        }, sessionId);
+        break;
+      }
+      send(ws, "change.undo.result", {
+        ...record,
+        status: "ready"
+      }, sessionId);
+      break;
+    }
+
+    case "change.undo.result": {
+      const changeId = String(payload.changeId ?? "").trim();
+      const status = String(payload.status ?? "").trim().toLowerCase();
+      const record = getChangeRecord(store, changeId);
+      if (!record) {
+        sendError(ws, "Change-Record wurde nicht gefunden.", "change_record_not_found", sessionId);
+        break;
+      }
+      if (status === "undone") {
+        const updated = markChangeRecordUndone(store, changeId, payload.undoneAt ?? receivedAt);
+        broadcast("change.undo.result", {
+          ...(updated ?? record),
+          status: "undone"
+        }, sessionId);
+        break;
+      }
+      if (["conflict", "failed"].includes(status)) {
+        broadcast("change.undo.result", {
+          ...record,
+          status,
+          message: payload.message ?? null
+        }, sessionId);
+        break;
+      }
+      sendError(ws, "Ungültiger Undo-Status.", "invalid_undo_result", sessionId);
+      break;
+    }
+
     case "capture.status":
       broadcast("capture.status", payload, sessionId);
       break;
@@ -219,7 +303,7 @@ const httpServer = createServer((req, res) => {
       websocket: `ws://${HOST}:${PORT}${WS_PATH}`,
       connectedClients: clients.size,
       databasePath: DB_PATH,
-      stats: store.stats()
+      stats: combinedStats()
     });
     res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
     res.end(body);
