@@ -1,169 +1,169 @@
-# DM Cockpit Companion Service 0.8.0
+# DM Cockpit Companion Service 0.10.0
 
 Lokaler Dienst zwischen Foundry/DM Cockpit, Discord Voice, Speech-to-Text, SQLite und strukturierter KI-Extraktion.
+
+Vollständige Projektübergabe: `../PROJECT-HANDOFF.md`
+Kanonischer Status: `../PROJECT-CHECKPOINT.json`
 
 ## Bestätigte Baseline
 
 Auf dem Nutzer-PC bestätigt:
 
-- Companion 0.5.0: Discord/DAVE/Audio/Deepgram/Protocol v1/Foundry sowie Candidate-Broadcast + SQLite
-- Companion 0.6.0: provider-neutrale AI-Extraction inklusive Mock-End-to-End-Pipeline
-- Companion 0.7.0: Syntaxprüfung und isolierter OpenAI-Adaptertest mit Fake-HTTP-Response
+- 0.1.0: Foundry ↔ WebSocket ↔ Companion ↔ SQLite
+- 0.2.0: Discord Voice/DAVE/GM-Follow
+- 0.3.0: sprechergetrennter Opus-Empfang, RAM-only
+- 0.4.0: Deepgram Nova-3 STT Deutsch
+- 0.5.0: realer Discord → STT → Protocol v1 → Foundry-Live-Transkript-Pfad plus Candidate/SQLite
+- 0.6.0: provider-neutrale KI + Mock-End-to-End-Pipeline
+- 0.7.0: OpenAI-Adapter mit Fake HTTP, kein echter bezahlter API-Aufruf
+- 0.8.0: Ollama/qwen3:4b Preflight, echter E2E-Lauf und Qualitätsbenchmark
+- 0.9.0: Candidate Review, SQLite-Status und Reload
 
 Weiterhin gilt:
 
 - keine dauerhafte Roh-Audio-Speicherung
 - finale Transkriptsegmente werden dedupliziert
 - NPC-Zuordnung kommt ausschließlich aus Foundry `npc.context`
-- keine automatischen Actor-Writes
+- keine automatischen Actor-Writes ohne sicheren Änderungs-/Undo-Pfad oder explizite GM-Aktion
 
-## Neu in 0.8.0: lokale kostenlose KI mit Ollama
+## Lokale KI – Ollama/Qwen3
 
-Neuer Provider:
-
-- `src/ai-extraction-ollama.js`
-- Standardmodell `qwen3:4b`
-- lokale API `http://127.0.0.1:11434/api/chat`
-- kein API-Key erforderlich
-- `stream: false`
-- `think: false`
-- Structured Output per JSON-Schema
-- `temperature: 0`
-- fester Seed für reproduzierbarere Tests
-- Standard-Kontextfenster 8192 Tokens
-- Modell-Keep-Alive standardmäßig 10 Minuten
-- lokale Nachvalidierung der Kandidaten
-- ohne Foundry-NPC-Kontext werden NPC-Kandidaten verworfen
-
-Der sichere Standard bleibt:
-
-```text
-AI_PROVIDER=none
-```
-
-Lokale KI wird nur durch folgende Einstellung aktiviert:
+Aktueller Standard:
 
 ```text
 AI_PROVIDER=ollama
-```
-
-## Provider
-
-```text
-AI_PROVIDER=none     # sicherer Standard
-AI_PROVIDER=mock     # deterministischer Testprovider
-AI_PROVIDER=ollama   # lokale kostenlose KI
-AI_PROVIDER=openai   # optionaler Cloud-Fallback
-```
-
-### Ollama-Konfiguration
-
-```text
 OLLAMA_AI_MODEL=qwen3:4b
 OLLAMA_AI_ENDPOINT=http://127.0.0.1:11434/api/chat
-OLLAMA_AI_TIMEOUT_MS=60000
 OLLAMA_AI_NUM_CTX=8192
 OLLAMA_AI_KEEP_ALIVE=10m
 ```
 
-Für den lokalen Standard-Endpunkt werden keine API-Schlüssel benötigt und die LLM-Auswertung bleibt auf dem Rechner. Wird `OLLAMA_AI_ENDPOINT` absichtlich auf einen anderen Host gesetzt, kennzeichnet der Provider dies in seinem Status als externe Datenübertragung.
+Eigenschaften:
 
-## Ollama-Tests
-
-Adaptertest ohne installiertes Ollama oder echten Modelllauf:
-
-```powershell
-npm.cmd run test:ai-ollama
-```
-
-Dieser Test verwendet eine lokale Fake-HTTP-Antwort und bestätigt:
-
-- API-Payload an `/api/chat`
-- `qwen3:4b`
-- `think=false`
-- Structured Output
+- kein API-Key erforderlich
+- `stream: false`
+- `think: false`
+- Structured Output per JSON-Schema
 - Temperatur 0
-- Kontextgröße 8192
-- Actor-Zuordnung aus Foundry-Kontext
-- keine API-Key-Pflicht
+- fixer Seed
+- lokale Nachvalidierung
+- ohne Foundry-NPC-Kontext keine NPC-Kandidaten
 
-Nicht-destruktiver Preflight gegen eine echte lokale Ollama-Installation:
+Qualitätsbenchmark auf dem Nutzer-PC:
+
+- 11/12 = 91,7 %
+- Mindestgrenze 80 %
+- Ø 1066 ms
+- P95 1935 ms
+- `qwen3:4b` bleibt Standard
+
+## Candidate Review – 0.9.0 bestätigt
+
+Implementiert und lokal bestätigt:
+
+- `candidate.review`
+- `candidate.reviewed`
+- `candidates.list.request`
+- `candidates.list.result`
+- `pending`, `accepted`, `rejected`
+- persistente SQLite-Statusänderung
+- Reload persistierter Kandidaten
+
+Test:
 
 ```powershell
-npm.cmd run test:ollama-preflight
+npm.cmd run test:candidate-review
 ```
 
-Der Preflight lädt nichts herunter und verändert keine Modelle. Er prüft nur:
+Foundry 0.9.22 wurde real mit echtem Ollama-NPC-Kandidaten bestätigt: Annehmen/Verwerfen funktioniert, Annehmen schreibt in das bestehende NPC Memory.
 
-- ist Ollama unter `127.0.0.1:11434` erreichbar?
-- ist `qwen3:4b` vorhanden?
-- falls verfügbar: Parametergröße und Quantisierung
+## Change Record / Undo – 0.10.0 implementiert
 
-Falls das Modell fehlt, nennt der Test lediglich den manuellen Befehl:
+Neu im aktuellen Code:
+
+- `src/change-record-runtime.js`
+- `change_records` Persistenz
+- `npc.memory.applied`
+- `change.undo.request`
+- `change.undo.result`
+- aktive Change-Records werden beim `hello` wieder gesendet
+- `already_undone` für idempotentes Undo
+- Change-Record-Statistiken im Health-Status
+
+Smoke-Test:
 
 ```powershell
-ollama pull qwen3:4b
+npm.cmd run test:change-record
 ```
 
-Ende-zu-Ende-Test mit echtem lokalem Modell:
+Der Test prüft:
 
-```powershell
-npm.cmd run test:ai-pipeline-ollama
-```
+`persist -> list -> undo ready -> undone -> already_undone`
 
-Dafür muss der Companion parallel mit `AI_PROVIDER=ollama` laufen. Der Test prüft:
+### Statusgrenze
 
-**npc.context + final transcript.segment → Ollama/Qwen3 → NPC-/Session-Kandidat → Protocol v1 → Broadcast → SQLite**
+Der 0.10.0-Code ist im Repository vorhanden, aber **noch nicht auf dem Nutzer-PC bestätigt**.
 
-## OpenAI-Fallback
+Der Companion stellt für ein Undo `before` und `after` bereit und persistiert anschließend den Undo-Status. Die eigentliche Wiederherstellung eines Foundry-Actor-Flags muss durch Foundry erfolgen. Dieser Foundry-Restore-End-to-End-Pfad ist noch nicht bestätigt.
 
-Der optionale Cloud-Adapter bleibt vorhanden, ist aber für den kostenlosen lokalen Pfad nicht erforderlich.
+## Provider
 
 ```text
-OPENAI_API_KEY=
-OPENAI_AI_MODEL=gpt-5-nano
-OPENAI_AI_ENDPOINT=https://api.openai.com/v1/responses
-OPENAI_AI_TIMEOUT_MS=20000
+AI_PROVIDER=none
+AI_PROVIDER=mock
+AI_PROVIDER=ollama
+AI_PROVIDER=openai
 ```
 
-Beim OpenAI-Adapter bleibt `store: false` aktiv. Secrets gehören ausschließlich in die lokale `companion/.env`.
+OpenAI bleibt optionaler Fallback:
+
+```text
+OPENAI_AI_MODEL=gpt-5-nano
+OPENAI_AI_ENDPOINT=https://api.openai.com/v1/responses
+```
+
+Beim OpenAI-Adapter bleibt `store: false` aktiv. Secrets gehören ausschließlich in `.env`.
 
 ## Speech-to-Text
 
-Der bestehende STT-Pfad bleibt unverändert. Aktuell real bestätigt ist Deepgram Nova-3 auf Deutsch. Die neue lokale Ollama-Integration ersetzt nur die LLM-Auswertung nach dem Transkript; sie ersetzt Deepgram noch nicht.
+Aktuell real bestätigt:
 
-## Tests
+- Deepgram Nova-3
+- Deutsch
+- EU-Endpoint
+
+Ollama ersetzt nur die LLM-Auswertung nach dem Transkript. Lokales STT ist noch nicht implementiert.
+
+## Relevante Tests
 
 ```powershell
 npm.cmd run check
+npm.cmd run test:candidates
+npm.cmd run test:candidate-review
+npm.cmd run test:change-record
 npm.cmd run test:ai
 npm.cmd run test:ai-openai
 npm.cmd run test:ai-ollama
 npm.cmd run test:ollama-preflight
+npm.cmd run test:ollama-quality
 npm.cmd run test:ai-pipeline
 npm.cmd run test:ai-pipeline-ollama
 ```
 
-## Noch nicht bestätigt / enthalten
+## Nächster einzelner Test
 
-- echter Ollama/Qwen3-Lauf auf dem Nutzer-PC
-- Qualitätsvergleich Qwen3 4B gegen 8B an realistischen deutschen Session-Sätzen
-- lokales Speech-to-Text als Ersatz für Deepgram
-- Foundry Candidate UI mit Annehmen/Verwerfen
-- automatische Actor-Memory-Änderungen
-- Undo-Ausführung
-- Transkript-Suche
-- Session-Recap / Discord-Kurzfassung
+Nach `git pull`:
 
-## Nächster einzelner externer Test
+```powershell
+cd $HOME\Desktop\dm-cockpit
+cd companion
+npm.cmd run check
+```
 
-Wenn der Nutzer wieder am Rechner ist:
+Wenn grün, Companion starten und in einer zweiten PowerShell:
 
-1. Companion 0.8.0 per `git pull` holen.
-2. `npm.cmd run check` und `npm.cmd run test:ai-ollama` ausführen.
-3. Ollama installieren/starten, falls noch nicht vorhanden.
-4. `qwen3:4b` lokal laden.
-5. `npm.cmd run test:ollama-preflight` ausführen.
-6. Companion mit `AI_PROVIDER=ollama` starten und danach `npm.cmd run test:ai-pipeline-ollama` ausführen.
+```powershell
+npm.cmd run test:change-record
+```
 
-Bis zu diesem echten lokalen Lauf ist 0.8.0 als **implementiert + isoliert getestet, echter Ollama-Test ausstehend** zu behandeln.
+Frühere bestätigte Ollama-/Candidate-Review-Tests nicht ohne Regression wiederholen.
