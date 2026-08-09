@@ -1,4 +1,4 @@
-const DM_COCKPIT_SESSION_RECAP_VERSION = "V0.9.25";
+const DM_COCKPIT_SESSION_RECAP_VERSION = "V0.9.29";
 const DM_COCKPIT_SESSION_RECAP_DISCORD_LIMIT = 1800;
 const DM_COCKPIT_SESSION_RECAP_MAX_DISCORD_ITEMS = 8;
 
@@ -177,10 +177,11 @@ function dmSessionRecapHtml(snapshot) {
         <div class="dm-session-recap-actions">
           <button type="button" class="dm-button-secondary small" data-dm-session-recap-refresh><i class="fa-solid fa-arrows-rotate"></i> Aktualisieren</button>
           <button type="button" class="dm-button-secondary small" data-dm-session-recap-copy ${snapshot.eventCount ? "" : "disabled"}><i class="fa-solid fa-copy"></i> Recap kopieren</button>
-          <button type="button" class="dm-button-primary small" data-dm-session-discord-copy ${snapshot.eventCount ? "" : "disabled"}><i class="fa-solid fa-share-nodes"></i> Discord kopieren</button>
+          <button type="button" class="dm-button-secondary small" data-dm-session-discord-copy ${snapshot.eventCount ? "" : "disabled"}><i class="fa-solid fa-copy"></i> Discord kopieren</button>
+          <button type="button" class="dm-button-primary small" data-dm-session-discord-send ${snapshot.eventCount ? "" : "disabled"}><i class="fa-brands fa-discord"></i> An Discord senden</button>
         </div>
       </div>
-      <div class="dm-transcript-notice dm-session-recap-notice"><i class="fa-solid fa-circle-check"></i><span>Ungeprüfte oder verworfene KI-Kandidaten fließen nicht ein. Die Kurzfassung wird lokal aus denselben bestätigten Punkten erzeugt.</span></div>
+      <div class="dm-transcript-notice dm-session-recap-notice"><i class="fa-solid fa-circle-check"></i><span>Ungeprüfte oder verworfene KI-Kandidaten fließen nicht ein. Die Kurzfassung wird lokal aus denselben bestätigten Punkten erzeugt. Direktes Discord-Posting erfolgt nur nach deinem Klick.</span></div>
       <div class="dm-session-recap-groups" data-dm-session-recap-groups>${dmSessionRecapSectionRows(snapshot)}</div>
       <div class="dm-session-discord-preview">
         <strong>Discord-Kurzfassung</strong>
@@ -197,11 +198,13 @@ function dmSessionRecapRender(section) {
   const discord = section.querySelector("[data-dm-session-discord-preview]");
   const recapCopy = section.querySelector("[data-dm-session-recap-copy]");
   const discordCopy = section.querySelector("[data-dm-session-discord-copy]");
+  const discordSend = section.querySelector("[data-dm-session-discord-send]");
   if (meta) meta.textContent = dmSessionRecapMeta(snapshot);
   if (groups) groups.innerHTML = dmSessionRecapSectionRows(snapshot);
   if (discord) discord.textContent = snapshot.discordSummary;
   if (recapCopy) recapCopy.disabled = !snapshot.eventCount;
   if (discordCopy) discordCopy.disabled = !snapshot.eventCount;
+  if (discordSend) discordSend.disabled = !snapshot.eventCount;
 }
 
 async function dmSessionRecapCopy(text, successMessage) {
@@ -218,6 +221,29 @@ function dmSessionRecapRefresh() {
   const refreshed = globalThis.DMCockpitCandidateReview?.refresh?.();
   Hooks.callAll("dmCockpitSessionRecapChanged", dmSessionRecapSnapshot());
   return refreshed;
+}
+
+function dmSessionRecapSendDiscord(snapshot) {
+  const output = globalThis.DMCockpitDiscordOutput;
+  const outputState = output?.snapshot?.() ?? null;
+  if (!output?.sendRecap) {
+    ui.notifications?.warn("DM Cockpit: Discord-Ausgabe ist noch nicht bereit.");
+    return false;
+  }
+  if (!outputState?.selectedChannel) {
+    ui.notifications?.warn("DM Cockpit: Wähle zuerst in „Discord-Ausgabe“ einen Textkanal.");
+    return false;
+  }
+  const sent = output.sendRecap({
+    text: snapshot.discordSummary,
+    sessionId: snapshot.sessionId
+  });
+  if (!sent) {
+    ui.notifications?.warn("DM Cockpit: Companion ist nicht verbunden.");
+    return false;
+  }
+  ui.notifications?.info("DM Cockpit: Discord-Recap wird gesendet.");
+  return true;
 }
 
 function dmSessionRecapInject(application, element) {
@@ -261,6 +287,13 @@ function dmSessionRecapInject(application, element) {
     if (discordCopy) {
       const snapshot = dmSessionRecapSnapshot();
       if (snapshot.eventCount) void dmSessionRecapCopy(snapshot.discordSummary, "DM Cockpit: Discord-Kurzfassung kopiert.");
+      return;
+    }
+
+    const discordSend = event.target.closest?.("[data-dm-session-discord-send]");
+    if (discordSend) {
+      const snapshot = dmSessionRecapSnapshot();
+      if (snapshot.eventCount) dmSessionRecapSendDiscord(snapshot);
     }
   });
 
@@ -272,7 +305,8 @@ Hooks.once("ready", () => {
     snapshot: () => dmSessionRecapSnapshot(),
     refresh: () => dmSessionRecapRefresh(),
     recapText: () => dmSessionRecapSnapshot().recap,
-    discordText: () => dmSessionRecapSnapshot().discordSummary
+    discordText: () => dmSessionRecapSnapshot().discordSummary,
+    sendDiscord: () => dmSessionRecapSendDiscord(dmSessionRecapSnapshot())
   };
 });
 
