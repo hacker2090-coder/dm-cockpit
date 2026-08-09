@@ -70,7 +70,7 @@ function currentDiagnostic() {
     gatewayState: voice.gatewayState ?? "unknown",
     voiceState: voice.voiceState ?? "unknown",
     voiceError: voice.lastError ?? null,
-    outputReady: Boolean(output?.gatewayReady && output?.selectedChannel && output?.validation?.valid !== false),
+    outputReady: Boolean(output?.gatewayReady && output?.selectedChannel && output?.validation?.valid === true),
     outputError: output?.validation?.valid === false ? (output.validation.error ?? "Ausgabekanal nicht verwendbar") : null,
     error: voice.lastError ?? (output?.validation?.valid === false ? output.validation.error : null) ?? null
   };
