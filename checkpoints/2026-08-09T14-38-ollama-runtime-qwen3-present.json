@@ -1,0 +1,10 @@
+{
+  "checkpoint_type":"dm_cockpit_project_handoff",
+  "schema_version":"3.12",
+  "created_at":"2026-08-09T14:38:00+02:00",
+  "project":{"name":"DM Cockpit","companion_github_version":"0.8.0","companion_last_fully_user_tested_stage":"0.8.0_ollama_adapter_local_test_confirmed","pause_point":"Ollama ist lokal vorhanden und ollama list zeigt qwen3:4b (2.5 GB). gpt-oss:latest ist ebenfalls vorhanden, aber nicht ausgewählt. Nächster Schritt: test:ollama-preflight erneut; danach echter Ollama-End-to-End-Test und Qualitätsbenchmark."},
+  "ollama":{"runtime_present":true,"selected_model":{"name":"qwen3:4b","id":"359d7dd4bcda","size":"2.5 GB"},"other_models":[{"name":"gpt-oss:latest","id":"17052f91a42e","size":"13 GB","selected":false}]},
+  "confirmed":{"npm_cmd_run_check":true,"npm_cmd_run_test_ai_ollama":true},
+  "pending":["npm.cmd run test:ollama-preflight","real Ollama inference pipeline","12-case quality benchmark"],
+  "safety":{"api_key_required":false,"automatic_actor_writes":false,"raw_audio_persisted":false}
+}
