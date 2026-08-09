@@ -15,9 +15,10 @@ function now() {
 }
 
 export class CompanionPublisher {
-  constructor({ onStatus = () => {} } = {}) {
+  constructor({ onStatus = () => {}, onMessage = () => {} } = {}) {
     this.url = env("DM_COCKPIT_WS_URL", DEFAULT_URL);
     this.onStatus = onStatus;
+    this.onMessage = onMessage;
     this.ws = null;
     this.state = "disconnected";
     this.queue = [];
@@ -56,13 +57,33 @@ export class CompanionPublisher {
       this.send("hello", {
         client: "dm-cockpit-companion-internal",
         protocolVersion: PROTOCOL_VERSION,
-        features: ["speaker.upserted", "session.started", "session.ended", "capture.status", "transcript.segment"]
+        features: [
+          "speaker.upserted",
+          "session.started",
+          "session.ended",
+          "capture.status",
+          "transcript.segment",
+          "npc.context",
+          "npc.memory.candidate",
+          "session.event.candidate"
+        ]
       });
       this.flush();
     });
 
-    ws.on("message", () => {
-      // Interner Publisher benötigt aktuell keine Serverantworten.
+    ws.on("message", raw => {
+      let message;
+      try {
+        message = JSON.parse(raw.toString("utf8"));
+      } catch (_error) {
+        return;
+      }
+
+      try {
+        this.onMessage(message);
+      } catch (error) {
+        console.warn("[publisher] Eingehende Protocol-Nachricht konnte nicht verarbeitet werden:", error?.message ?? error);
+      }
     });
 
     ws.once("error", () => {
