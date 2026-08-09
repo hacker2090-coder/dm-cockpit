@@ -47,7 +47,7 @@ function enrichTranscriptIdentity(payload = {}) {
   const mapping = discordUserId ? playerCharacterMappings.get(discordUserId) : null;
   return {
     ...payload,
-    playerName: mapping?.playerName ?? String(payload.speakerName ?? "").trim() || null,
+    playerName: mapping?.playerName ?? (String(payload.speakerName ?? "").trim() || null),
     actorId: mapping?.actorId ?? null,
     actorUuid: mapping?.actorUuid ?? null,
     characterName: mapping?.characterName ?? null
