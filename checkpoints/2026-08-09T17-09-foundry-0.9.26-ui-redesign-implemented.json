@@ -1,0 +1,90 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_snapshot",
+  "schema_version": "3.25",
+  "created_at": "2026-08-09T17:09:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "branch": "main",
+  "canonical_checkpoint_commit": "cbab8c1b454bf62840a533fa8d5e8c3c324ea812",
+  "versions": {
+    "foundry_repository": "0.9.26",
+    "foundry_last_fully_user_confirmed": "0.9.24",
+    "companion_repository": "0.10.0",
+    "companion_last_user_confirmed": "0.10.0"
+  },
+  "status": {
+    "source_of_truth_cleanup": "implemented_and_build_validated",
+    "ui_redesign_0_9_26": "implemented_clean_build_static_validation_passed_runtime_test_pending",
+    "session_recap_0_9_25": "implemented_ui_visible_runtime_content_copy_test_deferred_by_user"
+  },
+  "source_of_truth_cleanup": {
+    "recovered_versioned_sources": [
+      "scripts/dm-cockpit.js",
+      "styles/dm-cockpit.css",
+      "templates/cockpit.hbs"
+    ],
+    "recovery_commit": "db8eb8661d15099019f12920cca05aabd01730c1",
+    "workflow_commit": "6f8f38cef4df5ed1e60a0bdbfb4972141d30cd25",
+    "validated_build_commit": "15755c52c7aaf437f2fc7e656eb703f967c198ec",
+    "result": [
+      "old dm-cockpit.zip is no longer a build input",
+      "clean build directory",
+      "manifest source existence validation",
+      "node --check on all Foundry scripts",
+      "fresh dm-cockpit.zip from versioned sources"
+    ]
+  },
+  "ui_redesign": {
+    "scope": "docs/UI-REDESIGN-SCOPE-V1.json",
+    "files": [
+      "scripts/ui-layout.js",
+      "styles/ui-layout.css",
+      "module.json"
+    ],
+    "implemented": [
+      "technical dashboard visual system",
+      "Live/Spielleitung/Werkzeuge/Nachbereitung zones",
+      "live-first hierarchy",
+      "main/side column layout",
+      "compact cards and lists",
+      "sticky quick navigation",
+      "persistent collapse state and active tab",
+      "drag ordering inside zones",
+      "persistent vertical card resizing",
+      "automatic filtering for larger lists",
+      "tooltips",
+      "working/error card states",
+      "Alt+1/Alt+2 and Alt+Arrow keyboard navigation",
+      "subtle reduced-motion-aware animations",
+      "dynamic transcript/candidate/recap cards integrated"
+    ],
+    "deferred": [
+      "Fokusmodus für einzelne Bereiche",
+      "zusätzlicher Scroll-Verhaltens-Umbau"
+    ]
+  },
+  "safety": {
+    "domain_logic_preserved": true,
+    "automatic_actor_world_mutation_added": false,
+    "npc_memory_still_requires_manual_gm_action_and_change_record_undo": true,
+    "raw_audio_persistence": false,
+    "secrets_in_repo": false
+  },
+  "next_required_user_test": {
+    "type": "single_bundled_foundry_smoke_test",
+    "checks": [
+      "0.9.26 visible",
+      "zones visible and sensibly arranged",
+      "collapse/tab state persists after reopen",
+      "drag order persists",
+      "list filter works where present",
+      "Transcript/KI-Kandidaten/Session-Recap cards remain visible and core buttons remain clickable"
+    ],
+    "do_not_repeat": [
+      "full 0.9.24 regression suite",
+      "Discord/Deepgram/Ollama E2E",
+      "NPC Memory Undo E2E",
+      "deferred 0.9.25 recap content/copy test unless user explicitly resumes it"
+    ]
+  }
+}
