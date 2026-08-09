@@ -8,8 +8,8 @@
     "node": ">=24.17.0"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "check": "node --check src/server.js && node --check src/store.js && node --check src/mock-client.js && node --check src/discord-voice.js",
+    "start": "node src/main.js",
+    "check": "node --check src/main.js && node --check src/server.js && node --check src/store.js && node --check src/mock-client.js && node --check src/discord-voice.js",
     "mock": "node src/mock-client.js"
   },
   "dependencies": {
