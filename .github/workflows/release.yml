@@ -81,6 +81,7 @@ jobs:
           find companion/src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           node companion/src/identity-mapping-smoke-test.js
           node companion/src/identity-profile-smoke-test.js
+          node companion/src/discord-output-smoke-test.js
 
       - name: Build clean Foundry package
         if: steps.changes.outputs.foundry == 'true'
@@ -110,7 +111,7 @@ jobs:
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "418982634982+github-actions[bot]@users.noreply.github.com"
           git add dm-cockpit.zip
           if git diff --cached --quiet; then
             echo "No package changes to publish."
