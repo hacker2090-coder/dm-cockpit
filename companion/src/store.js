@@ -6,6 +6,20 @@ function json(value) {
   return value === undefined ? null : JSON.stringify(value);
 }
 
+function parseJsonArray(value) {
+  try {
+    const parsed = JSON.parse(String(value ?? "[]"));
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+const CANDIDATE_TABLES = {
+  "npc.memory.candidate": "npc_memory_candidates",
+  "session.event.candidate": "session_event_candidates"
+};
+
 export class CompanionStore {
   constructor(path) {
     mkdirSync(dirname(path), { recursive: true });
@@ -287,6 +301,99 @@ export class CompanionStore {
     return true;
   }
 
+  reviewCandidate(candidateType, candidateId, status) {
+    const table = CANDIDATE_TABLES[String(candidateType ?? "")];
+    const normalizedId = String(candidateId ?? "").trim();
+    const normalizedStatus = String(status ?? "").trim().toLowerCase();
+    if (!table || !normalizedId || !["accepted", "rejected"].includes(normalizedStatus)) return false;
+    const result = this.db.prepare(`UPDATE ${table} SET status = ? WHERE candidate_id = ?`)
+      .run(normalizedStatus, normalizedId);
+    return Number(result?.changes ?? 0) > 0;
+  }
+
+  candidateStatus(candidateType, candidateId) {
+    const table = CANDIDATE_TABLES[String(candidateType ?? "")];
+    const normalizedId = String(candidateId ?? "").trim();
+    if (!table || !normalizedId) return null;
+    const row = this.db.prepare(`SELECT status FROM ${table} WHERE candidate_id = ?`).get(normalizedId);
+    return row?.status ? String(row.status) : null;
+  }
+
+  listCandidates({ sessionId = null, status = "pending", limit = 100 } = {}) {
+    const normalizedLimit = Math.max(1, Math.min(250, Number.parseInt(String(limit), 10) || 100));
+    const normalizedSessionId = String(sessionId ?? "").trim() || null;
+    const normalizedStatus = String(status ?? "pending").trim().toLowerCase();
+    const statusFilter = normalizedStatus === "all" ? null : normalizedStatus;
+    const allowedStatuses = new Set(["pending", "accepted", "rejected"]);
+    if (statusFilter && !allowedStatuses.has(statusFilter)) return { npcCandidates: [], sessionEventCandidates: [] };
+
+    const buildWhere = () => {
+      const clauses = [];
+      const params = [];
+      if (normalizedSessionId) {
+        clauses.push("session_id = ?");
+        params.push(normalizedSessionId);
+      }
+      if (statusFilter) {
+        clauses.push("status = ?");
+        params.push(statusFilter);
+      }
+      return {
+        sql: clauses.length ? `WHERE ${clauses.join(" AND ")}` : "",
+        params
+      };
+    };
+
+    const npcWhere = buildWhere();
+    const npcRows = this.db.prepare(`
+      SELECT candidate_id, session_id, actor_id, actor_uuid, text, kind,
+             source_segment_ids_json, confidence, provider, model, status, created_at
+      FROM npc_memory_candidates
+      ${npcWhere.sql}
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).all(...npcWhere.params, normalizedLimit);
+
+    const sessionWhere = buildWhere();
+    const sessionRows = this.db.prepare(`
+      SELECT candidate_id, session_id, text, kind, source_segment_ids_json,
+             confidence, provider, model, status, created_at
+      FROM session_event_candidates
+      ${sessionWhere.sql}
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).all(...sessionWhere.params, normalizedLimit);
+
+    return {
+      npcCandidates: npcRows.map(row => ({
+        candidateId: String(row.candidate_id),
+        sessionId: row.session_id ?? null,
+        actorId: String(row.actor_id),
+        actorUuid: row.actor_uuid ?? null,
+        text: String(row.text),
+        kind: String(row.kind),
+        sourceSegmentIds: parseJsonArray(row.source_segment_ids_json),
+        confidence: typeof row.confidence === "number" ? row.confidence : null,
+        provider: row.provider ?? null,
+        model: row.model ?? null,
+        status: String(row.status ?? "pending"),
+        createdAt: String(row.created_at)
+      })),
+      sessionEventCandidates: sessionRows.map(row => ({
+        candidateId: String(row.candidate_id),
+        sessionId: row.session_id ?? null,
+        text: String(row.text),
+        kind: String(row.kind),
+        sourceSegmentIds: parseJsonArray(row.source_segment_ids_json),
+        confidence: typeof row.confidence === "number" ? row.confidence : null,
+        provider: row.provider ?? null,
+        model: row.model ?? null,
+        status: String(row.status ?? "pending"),
+        createdAt: String(row.created_at)
+      }))
+    };
+  }
+
   stats() {
     const sessions = this.db.prepare("SELECT COUNT(*) AS count FROM sessions").get().count;
     const speakers = this.db.prepare("SELECT COUNT(*) AS count FROM speakers").get().count;
@@ -294,7 +401,9 @@ export class CompanionStore {
     const npcContexts = this.db.prepare("SELECT COUNT(*) AS count FROM npc_context_events").get().count;
     const npcCandidates = this.db.prepare("SELECT COUNT(*) AS count FROM npc_memory_candidates").get().count;
     const sessionEventCandidates = this.db.prepare("SELECT COUNT(*) AS count FROM session_event_candidates").get().count;
-    return { sessions, speakers, segments, npcContexts, npcCandidates, sessionEventCandidates };
+    const npcPending = this.db.prepare("SELECT COUNT(*) AS count FROM npc_memory_candidates WHERE status = 'pending'").get().count;
+    const sessionEventPending = this.db.prepare("SELECT COUNT(*) AS count FROM session_event_candidates WHERE status = 'pending'").get().count;
+    return { sessions, speakers, segments, npcContexts, npcCandidates, sessionEventCandidates, npcPending, sessionEventPending };
   }
 
   close() {
