@@ -15,6 +15,20 @@ function normalizeId(value) {
   return String(value ?? "").trim();
 }
 
+function rowToRecord(row) {
+  if (!row) return null;
+  return {
+    changeId: String(row.change_id),
+    actorId: String(row.actor_id),
+    flagPath: String(row.flag_path),
+    before: parseJson(row.before_json),
+    after: parseJson(row.after_json),
+    sourceCandidateId: row.source_candidate_id ? String(row.source_candidate_id) : null,
+    createdAt: String(row.created_at),
+    undoneAt: row.undone_at ? String(row.undone_at) : null
+  };
+}
+
 export function persistChangeRecord(store, payload, timestamp = new Date().toISOString()) {
   const changeId = normalizeId(payload?.changeId);
   const actorId = normalizeId(payload?.actorId);
@@ -51,17 +65,7 @@ export function getChangeRecord(store, changeId) {
     FROM change_records
     WHERE change_id = ?
   `).get(normalizedId);
-  if (!row) return null;
-  return {
-    changeId: String(row.change_id),
-    actorId: String(row.actor_id),
-    flagPath: String(row.flag_path),
-    before: parseJson(row.before_json),
-    after: parseJson(row.after_json),
-    sourceCandidateId: row.source_candidate_id ? String(row.source_candidate_id) : null,
-    createdAt: String(row.created_at),
-    undoneAt: row.undone_at ? String(row.undone_at) : null
-  };
+  return rowToRecord(row);
 }
 
 export function getChangeRecordBySourceCandidateId(store, candidateId) {
@@ -75,6 +79,20 @@ export function getChangeRecordBySourceCandidateId(store, candidateId) {
     LIMIT 1
   `).get(normalizedId);
   return row?.change_id ? getChangeRecord(store, row.change_id) : null;
+}
+
+export function listActiveChangeRecords(store, limit = 100) {
+  if (!store?.db) return [];
+  const normalizedLimit = Math.max(1, Math.min(250, Number.parseInt(String(limit), 10) || 100));
+  const rows = store.db.prepare(`
+    SELECT change_id, actor_id, flag_path, before_json, after_json,
+           source_candidate_id, created_at, undone_at
+    FROM change_records
+    WHERE undone_at IS NULL
+    ORDER BY created_at DESC
+    LIMIT ?
+  `).all(normalizedLimit);
+  return rows.map(rowToRecord).filter(Boolean);
 }
 
 export function markChangeRecordUndone(store, changeId, timestamp = new Date().toISOString()) {
