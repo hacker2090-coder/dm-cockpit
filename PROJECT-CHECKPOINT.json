@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "1.7",
-  "created_at": "2026-08-09T12:22:00+02:00",
+  "schema_version": "1.8",
+  "created_at": "2026-08-09T12:23:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -12,8 +12,8 @@
     "default_branch": "main",
     "current_foundry_version": "0.9.21",
     "current_foundry_version_status": "functionally_confirmed_in_foundry",
-    "companion_version": "0.3.0",
-    "companion_status": "audio_receive_implemented_needs_real_speech_test"
+    "companion_version": "0.4.0",
+    "companion_status": "provider_neutral_stt_implemented_needs_deepgram_integration_test"
   },
   "working_rules": {
     "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur bei echten externen Tests, Zugängen oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
@@ -26,108 +26,118 @@
     "version": "0.9.21",
     "status": "confirmed_working"
   },
-  "companion_service": {
-    "baseline_0_1_0": {
+  "companion_confirmed": {
+    "0.1.0_websocket_sqlite": {
       "status": "end_to_end_confirmed_on_user_pc",
       "node_version_on_user_pc": "24.18.1",
-      "websocket_connected": true,
-      "mock_success": true,
-      "foundry_received_companion_mock": true,
-      "sqlite_health_stats": {
-        "sessions": 1,
-        "speakers": 1,
-        "segments": 1,
-        "npcContexts": 1
-      },
-      "confirmed_path": "Foundry <-> local WebSocket <-> Companion <-> SQLite"
+      "path": "Foundry <-> local WebSocket <-> Companion <-> SQLite"
     },
-    "voice_0_2_0": {
+    "0.2.0_discord_voice": {
       "status": "real_discord_test_confirmed",
-      "confirmed": {
-        "bot_login": true,
-        "auto_join_gm": true,
-        "follow_channel_move": true,
-        "leave_when_gm_leaves": true,
-        "dave_e2ee_voice_connection": true
-      },
-      "dependencies": {
-        "discord.js": "14.27.0",
-        "@discordjs/voice": "0.19.2"
-      },
-      "configuration": "local companion/.env",
-      "secrets_committed": false
+      "bot_login": true,
+      "auto_join_gm": true,
+      "follow_channel_move": true,
+      "leave_when_gm_leaves": true,
+      "dave_e2ee": true
     },
-    "audio_receive_0_3_0": {
-      "status": "implemented_needs_real_speech_test",
-      "files": [
-        "companion/src/audio-receive.js",
-        "companion/src/main.js"
-      ],
-      "implemented": [
-        "VoiceConnection.receiver based receive",
-        "speaker subscriptions by Discord User ID",
-        "one in-memory Opus packet buffer per speaking user",
-        "parallel speakers remain separated",
-        "segment end after 1200 ms inactivity",
-        "maximum 60 seconds per segment",
-        "maximum 8 MiB per segment",
-        "bot own user ID ignored",
-        "segment metadata with userId/start/end/duration/packetCount/byteLength",
-        "memory-only raw audio",
-        "no raw audio files",
-        "no cloud upload",
-        "buffer released after callback"
-      ],
+    "0.3.0_audio_receive": {
+      "status": "real_speech_test_confirmed",
+      "speaker_separation": "Discord User ID",
       "raw_audio_persistence": false,
-      "stt_implemented": false
-    },
-    "runtime": "Node.js >=24.17.0",
-    "websocket_url": "ws://127.0.0.1:43170/v1",
-    "health_url": "http://127.0.0.1:43170/health",
-    "sqlite_default": "companion/data/dm-cockpit.sqlite",
-    "ci": ".github/workflows/companion-ci.yml"
+      "confirmed_segments": [
+        {
+          "packet_count": 362,
+          "byte_length": 49801,
+          "duration_ms": 9363
+        },
+        {
+          "packet_count": 105,
+          "byte_length": 14643,
+          "duration_ms": 3289
+        }
+      ]
+    }
   },
-  "not_yet_implemented": [
-    "Opus decoding to PCM/WAV",
-    "Speech-to-Text provider",
-    "real speech transcript sent to Foundry",
-    "AI extraction",
-    "automatic NPC-memory persistence from speech",
-    "Undo runtime",
-    "transcript search",
-    "session recap",
-    "Discord short summary"
-  ],
-  "current_user_assistance_needed": {
-    "required_now": true,
-    "task": "Companion 0.3.0 mit der eigenen Stimme im echten Discord Voice testen",
-    "steps": [
-      "git pull",
-      "cd companion",
-      "npm.cmd install",
-      "npm.cmd run check",
-      "npm.cmd start",
-      "GM tritt einem Voice-Channel bei; Bot folgt automatisch",
-      "GM spricht 3-5 Sekunden",
-      "mindestens 2 Sekunden still sein",
-      "Terminal auf [audio-receive] Segment prüfen"
+  "companion_0_4_0": {
+    "status": "implemented_needs_external_provider_test",
+    "provider_strategy": "provider_neutral",
+    "default_provider": "none",
+    "first_provider": "deepgram",
+    "first_model": "nova-3",
+    "language": "de",
+    "deepgram_endpoint": "wss://api.eu.deepgram.com/v1/listen",
+    "discord_audio_input": {
+      "encoding": "opus",
+      "sample_rate": 48000,
+      "channels": 2
+    },
+    "files": [
+      "companion/src/stt-service.js",
+      "companion/src/stt-deepgram.js",
+      "companion/src/companion-publisher.js",
+      "companion/src/main.js",
+      "docs/STT-PROVIDER-EVALUATION-2026-08-09.md"
     ],
-    "expected": {
-      "packetCount": ">0",
-      "byteLength": ">0",
-      "speaker": "Discord User ID des GM"
+    "implemented": [
+      "STT_PROVIDER selector with none as safe default",
+      "Deepgram raw Opus streaming adapter",
+      "EU endpoint default",
+      "German Nova-3 configuration",
+      "bounded concurrency",
+      "bounded queue",
+      "bounded retry",
+      "speaker name resolution from Discord User",
+      "internal Protocol-v1 publisher",
+      "voice session started/ended messages",
+      "speaker upsert",
+      "capture status",
+      "successful final transcript returned through Protocol v1 to SQLite and Foundry",
+      "raw Opus packets released after successful or final failed STT job"
+    ],
+    "limits": {
+      "max_concurrency_default": 4,
+      "max_pending_default": 64,
+      "max_retries_default": 1,
+      "minimum_segment_ms": 250
     },
-    "test_scope": "Nur eigene Stimme nötig; keine anderen Teilnehmer erforderlich."
+    "cloud_audio_disabled_by_default": true
   },
-  "next_single_todo_after_successful_audio_test": {
-    "task": "Provider-neutralen STT-Adapter entwerfen und zuerst einen günstigen/geeigneten Provider evaluieren",
-    "constraints": [
-      "5-15 Sekunden Ziel-Latenz",
-      "mehr als 10 Teilnehmer möglich",
-      "Discord User ID als Sprecheridentität erhalten",
-      "Roh-Audio nach erfolgreicher Transkription freigeben",
-      "noch keine KI-NPC-Memory-Schreiblogik im selben Schritt"
+  "provider_evaluation": {
+    "document": "docs/STT-PROVIDER-EVALUATION-2026-08-09.md",
+    "decision": "Deepgram first because raw Opus 48k stereo can be sent directly; architecture remains switchable.",
+    "alternatives_kept_open": [
+      "OpenAI transcription/realtime",
+      "Google Speech-to-Text"
     ]
   },
-  "handoff_instruction_for_next_ai": "DM Cockpit V0.9.21 ist bestätigt. Companion 0.1.0 WebSocket/SQLite ist Ende-zu-Ende bestätigt. Companion 0.2.0 Discord Voice mit DAVE und automatischem GM-Follow ist auf echtem Discord bestätigt. Companion 0.3.0 implementiert getrennten, nur im RAM gehaltenen Opus-Empfang pro Discord User ID und benötigt als einzigen nächsten externen Test 3-5 Sekunden Sprache des GM; erwartet wird ein audio-receive Segment mit packetCount und byteLength > 0. Erst danach STT angehen."
+  "current_user_assistance_needed": {
+    "required_now": true,
+    "task": "Create a Deepgram test API key and perform first real STT integration test.",
+    "reason": "The next step makes a real external paid/free-credit API call and therefore needs a user-owned provider account/key.",
+    "never_send_in_chat": [
+      "DEEPGRAM_API_KEY",
+      "DISCORD_BOT_TOKEN"
+    ],
+    "local_env_changes": [
+      "STT_PROVIDER=deepgram",
+      "DEEPGRAM_API_KEY=<local secret>"
+    ],
+    "test_expected": [
+      "audio-receive segment is created",
+      "terminal prints [stt] <Discord name>: recognized German text",
+      "same final text appears in Foundry Discord Live-Transkript",
+      "SQLite health segments count increases"
+    ]
+  },
+  "next_single_todo_after_successful_stt_test": {
+    "task": "Implement AI extraction candidate pipeline from final transcript segments without automatic Actor writes yet.",
+    "constraints": [
+      "NPC context from Cockpit/token",
+      "detect promises/statements/knowledge/actions/relationships/lies/deadlines/consequences",
+      "detect session decisions/quests/loot/open questions/fights/events",
+      "candidate stage first",
+      "automatic writes only after Undo/change record path is ready"
+    ]
+  },
+  "handoff_instruction_for_next_ai": "DM Cockpit V0.9.21 is confirmed. Companion 0.1.0 WebSocket/SQLite, 0.2.0 Discord Voice/DAVE/GM follow, and 0.3.0 real speaker-separated Discord Opus receive are confirmed on the user's PC. Companion 0.4.0 adds a provider-neutral STT queue and a Deepgram Nova-3 adapter using raw Discord Opus directly via the EU endpoint. STT_PROVIDER defaults to none, so no cloud audio is sent unless explicitly enabled locally. The next external step is a Deepgram API key and one German speech test; never request the key in chat."
 }
