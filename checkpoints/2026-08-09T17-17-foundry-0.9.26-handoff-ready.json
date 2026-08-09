@@ -1,0 +1,59 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_snapshot",
+  "schema_version": "3.26",
+  "created_at": "2026-08-09T17:17:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "branch": "main",
+  "canonical_checkpoint_commit": "6034a859d3125c47398793599d60cfc3135d8f15",
+  "versions": {
+    "foundry_repository": "0.9.26",
+    "foundry_last_fully_user_confirmed": "0.9.24",
+    "foundry_last_visual_user_confirmed": "0.9.26",
+    "companion_repository": "0.10.0",
+    "companion_last_user_confirmed": "0.10.0"
+  },
+  "repository_health": {
+    "status": "handoff_ready",
+    "source_of_truth": "healthy",
+    "module_manifest": "0.9.26",
+    "master_handoff_updated": true,
+    "readme_updated": true,
+    "clean_source_only_release_build": true,
+    "latest_successful_build": "2f39fb6e5d852b2ffc39b121904a1fa8b66acdf5 Build DM Cockpit v0.9.26",
+    "blocking_repository_issue": null
+  },
+  "confirmed": {
+    "companion_0_10_0": "fully_user_confirmed",
+    "foundry_0_9_24_npc_memory_undo": "fully_user_confirmed",
+    "foundry_0_9_26_visual_ui": "user_confirmed_positive_visual_runtime_feedback"
+  },
+  "partially_confirmed": {
+    "foundry_0_9_25_session_recap": "implemented; card visible; content/copy runtime test deferred by user",
+    "foundry_0_9_26_ui_interactions": "implemented/build-validated; visual runtime confirmed; persistence/drag/resize/filter not explicitly fully smoke-tested"
+  },
+  "source_of_truth_cleanup": {
+    "recovered_sources": [
+      "scripts/dm-cockpit.js",
+      "styles/dm-cockpit.css",
+      "templates/cockpit.hbs"
+    ],
+    "workflow": "old zip is not a build input; manifest sources + template validated; all Foundry JS node --check; clean fresh package build"
+  },
+  "read_first_next_chat": [
+    "README.md",
+    "PROJECT-HANDOFF.md",
+    "PROJECT-CHECKPOINT.json"
+  ],
+  "official_open_work": [
+    "dauerhaft durchsuchbares Transkript",
+    "optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
+    "optional lokales STT",
+    "Performance-/Skalierungs-Hardening"
+  ],
+  "deferred_tests": [
+    "0.9.25 Session-Recap Inhalt + beide Copy-Buttons",
+    "0.9.26 Persistenz/Drag/Resize/Filter Interaktions-Smoke-Test"
+  ],
+  "handoff_rule": "Neuer Chat prüft zuerst aktuellen main und liest die drei Einstiegdateien. Keine bestätigten alten Tests wiederholen und aufgeschobene Tests nicht ungefragt erzwingen."
+}
