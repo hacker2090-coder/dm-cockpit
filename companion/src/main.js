@@ -1,24 +1,56 @@
-import { randomUUID } from "node:crypto";
 import { discordOutputStore, identityProfileStore, registerShutdownHandler } from "./server.js";
 import { AiExtractionService } from "./ai-extraction-service.js";
 import { DiscordAudioReceiver } from "./audio-receive.js";
 import { CompanionPublisher } from "./companion-publisher.js";
+import { DiscordCommandController } from "./discord-command-controller.js";
 import { DiscordNicknameManager } from "./discord-nickname-manager.js";
 import { DiscordOutputController } from "./discord-output-controller.js";
 import { DiscordVoiceController } from "./discord-voice.js";
 import { PlayerCharacterIdentityRegistry } from "./player-character-identity.js";
+import { SessionControl } from "./session-control.js";
 import { SttService } from "./stt-service.js";
 
 let activeSessionId = null;
 let publisher = null;
 let nicknameManager = null;
 let discordOutput = null;
+let commandController = null;
+let sessionControl = null;
+let attachedVoiceConnection = null;
+let latestVoiceStatus = null;
 const npcContextBySession = new Map();
 const playerIdentity = new PlayerCharacterIdentityRegistry();
+const processedAudioSegments = new Map();
 const LATEST_NPC_CONTEXT_KEY = "__latest_npc_context__";
+const AUDIO_DEDUPE_TTL_MS = 5 * 60_000;
 
 function contextKey(sessionId) {
   return String(sessionId ?? activeSessionId ?? "__no_session__");
+}
+
+function pruneAudioDedupe(nowMs = Date.now()) {
+  for (const [key, observedAt] of processedAudioSegments) {
+    if (nowMs - observedAt > AUDIO_DEDUPE_TTL_MS) processedAudioSegments.delete(key);
+  }
+}
+
+function audioSegmentKey(segment, sessionId) {
+  return [
+    sessionId ?? "",
+    segment?.discordUserId ?? "",
+    segment?.startedAt ?? "",
+    segment?.endedAt ?? "",
+    segment?.packetCount ?? 0,
+    segment?.byteLength ?? 0
+  ].join("|");
+}
+
+function claimAudioSegment(segment, sessionId) {
+  pruneAudioDedupe();
+  const key = audioSegmentKey(segment, sessionId);
+  if (processedAudioSegments.has(key)) return false;
+  processedAudioSegments.set(key, Date.now());
+  return true;
 }
 
 function sendCaptureStatus(state, sessionId = activeSessionId) {
@@ -29,6 +61,23 @@ function sendCaptureStatus(state, sessionId = activeSessionId) {
     noticeShown: Boolean(sessionId && discordOutput?.captureNoticeShown(sessionId)),
     legalAuthorizationConfirmedExternally: false
   }, sessionId ?? null);
+}
+
+function currentDiagnostic() {
+  const voice = latestVoiceStatus ?? {};
+  const output = discordOutput?.snapshot?.() ?? null;
+  return {
+    gatewayState: voice.gatewayState ?? "unknown",
+    voiceState: voice.voiceState ?? "unknown",
+    voiceError: voice.lastError ?? null,
+    outputReady: Boolean(output?.gatewayReady && output?.selectedChannel && output?.validation?.valid !== false),
+    outputError: output?.validation?.valid === false ? (output.validation.error ?? "Ausgabekanal nicht verwendbar") : null,
+    error: voice.lastError ?? (output?.validation?.valid === false ? output.validation.error : null) ?? null
+  };
+}
+
+function updatePresence() {
+  commandController?.setPresence(sessionControl?.snapshot?.() ?? {}, currentDiagnostic());
 }
 
 const aiExtraction = new AiExtractionService({
@@ -42,6 +91,47 @@ const aiExtraction = new AiExtractionService({
   }
 });
 aiExtraction.start();
+
+function handleSessionControlRequest(message, sessionId) {
+  if (!sessionControl) return false;
+
+  if (message?.type === "session.control.start") {
+    const result = sessionControl.start({
+      requestedByDiscordUserId: message.payload?.requestedByDiscordUserId ?? null,
+      metadata: { source: "foundry", requestId: message.id }
+    });
+    publisher?.send("session.control.result", {
+      requestId: message.id,
+      action: "start",
+      status: result.status,
+      state: result.state
+    }, result.state?.sessionId ?? sessionId ?? null);
+    syncAudioReceiver();
+    return true;
+  }
+
+  if (message?.type === "session.control.stop") {
+    const result = sessionControl.stop({
+      requestedByDiscordUserId: message.payload?.requestedByDiscordUserId ?? null,
+      reason: "foundry_stop"
+    });
+    publisher?.send("session.control.result", {
+      requestId: message.id,
+      action: "stop",
+      status: result.status,
+      state: result.state
+    }, result.endedSessionId ?? sessionId ?? null);
+    syncAudioReceiver();
+    return true;
+  }
+
+  if (message?.type === "session.control.state.request") {
+    publisher?.send("session.control.state", sessionControl.snapshot(), sessionControl.sessionId ?? sessionId ?? null);
+    return true;
+  }
+
+  return false;
+}
 
 function handleDiscordOutputRequest(message, sessionId) {
   if (!discordOutput) return false;
@@ -97,7 +187,7 @@ function handleDiscordOutputRequest(message, sessionId) {
       profileName: message.payload?.profileName ?? profile?.name ?? null
     }).then(result => {
       if (result?.kind === "capture_notice" && result?.status === "sent") {
-        sendCaptureStatus(discordVoice?.voiceState === "ready" ? "listening" : "paused", result.sessionId ?? sessionId);
+        sendCaptureStatus(sessionControl?.captureEnabled ? "listening" : "paused", result.sessionId ?? sessionId);
       }
     }).catch(error => {
       console.warn("[discord-output] Nachricht konnte nicht verarbeitet werden:", error?.message ?? error);
@@ -111,6 +201,7 @@ function handleDiscordOutputRequest(message, sessionId) {
 function handleProtocolBroadcast(message) {
   const sessionId = message?.sessionId ?? activeSessionId ?? null;
 
+  if (handleSessionControlRequest(message, sessionId)) return;
   if (handleDiscordOutputRequest(message, sessionId)) return;
 
   if (message?.type === "player.character.mapping.result") {
@@ -161,6 +252,7 @@ function handleProtocolBroadcast(message) {
 
 publisher = new CompanionPublisher({
   onStatus: status => {
+    updatePresence();
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       console.log("[publisher] Status:", JSON.stringify(status));
     }
@@ -171,10 +263,11 @@ publisher.start();
 
 const stt = new SttService({
   onTranscript: async (payload, context) => {
+    if (!context.sessionId || context.sessionId !== activeSessionId) return;
     publisher.send(
       "transcript.segment",
       playerIdentity.enrichTranscript(payload),
-      context.sessionId ?? activeSessionId
+      context.sessionId
     );
   },
   onStatus: status => {
@@ -215,9 +308,24 @@ async function resolveSpeaker(discordUserId) {
 }
 
 async function processAudioSegment(segment) {
+  const sessionId = String(segment?.sessionId ?? "").trim() || null;
+  if (!sessionId || sessionId !== activeSessionId || !sessionControl?.active) {
+    if (Array.isArray(segment?.opusPackets)) segment.opusPackets.length = 0;
+    return;
+  }
+  if (!claimAudioSegment(segment, sessionId)) {
+    if (Array.isArray(segment?.opusPackets)) segment.opusPackets.length = 0;
+    return;
+  }
+
   const speaker = await resolveSpeaker(segment.discordUserId);
+  if (sessionId !== activeSessionId) {
+    if (Array.isArray(segment.opusPackets)) segment.opusPackets.length = 0;
+    return;
+  }
+
   const result = await stt.submit(segment, {
-    sessionId: activeSessionId,
+    sessionId,
     speakerName: speaker.displayName
   });
 
@@ -230,6 +338,12 @@ async function processAudioSegment(segment) {
 
 const audioReceiver = new DiscordAudioReceiver({
   onSegment: segment => {
+    const sessionId = activeSessionId;
+    if (!sessionId || !sessionControl?.captureEnabled) {
+      if (Array.isArray(segment.opusPackets)) segment.opusPackets.length = 0;
+      return;
+    }
+    segment.sessionId = sessionId;
     void processAudioSegment(segment).catch(error => {
       console.warn("[stt] Segmentverarbeitung fehlgeschlagen:", error?.message ?? error);
       if (Array.isArray(segment.opusPackets)) segment.opusPackets.length = 0;
@@ -242,10 +356,39 @@ const audioReceiver = new DiscordAudioReceiver({
   }
 });
 
+function syncAudioReceiver() {
+  if (!sessionControl) return;
+  const connection = discordVoice.connection;
+  const shouldAttach = Boolean(sessionControl.captureEnabled && connection?.receiver);
+
+  if (shouldAttach) {
+    if (connection !== attachedVoiceConnection) {
+      try {
+        audioReceiver.attach(connection, { botUserId: discordVoice.botUserId });
+        attachedVoiceConnection = connection;
+      } catch (error) {
+        console.warn("[audio-receive] Konnte Receiver nicht anbinden:", error?.message ?? error);
+        sendCaptureStatus("error", activeSessionId);
+        return;
+      }
+    }
+    sendCaptureStatus("listening", activeSessionId);
+    return;
+  }
+
+  if (attachedVoiceConnection) {
+    audioReceiver.detach(sessionControl.active ? "Voice vorübergehend nicht bereit" : "Keine aktive Session");
+    attachedVoiceConnection = null;
+  }
+  sendCaptureStatus(sessionControl.active ? "paused" : "idle", activeSessionId);
+}
+
 const discordVoice = new DiscordVoiceController({
   onCaptureState: state => {
     console.log(`[discord-voice] Capture-Status: ${state}`);
-    sendCaptureStatus(state, activeSessionId);
+    if (!sessionControl?.active) return sendCaptureStatus("idle", null);
+    if (state === "error") return sendCaptureStatus("error", activeSessionId);
+    sendCaptureStatus(sessionControl.captureEnabled ? "listening" : "paused", activeSessionId);
   },
   onParticipants: payload => {
     publisher.send("voice.participants", payload, activeSessionId);
@@ -256,11 +399,27 @@ const discordVoice = new DiscordVoiceController({
     }
   },
   onStatus: status => {
-    if (status?.gatewayState === "ready" && discordOutput) {
-      void discordOutput.emitState().catch(error => {
-        console.warn("[discord-output] Status nach Discord-Ready fehlgeschlagen:", error?.message ?? error);
-      });
+    latestVoiceStatus = status;
+    sessionControl?.setVoiceState({
+      ready: status?.voiceState === "ready",
+      channelId: status?.channelId ?? null,
+      reason: status?.voiceState === "ready" ? "voice_ready" : `voice_${status?.voiceState ?? "unknown"}`
+    });
+    syncAudioReceiver();
+
+    if (status?.gatewayState === "ready") {
+      if (discordOutput) {
+        void discordOutput.emitState().catch(error => {
+          console.warn("[discord-output] Status nach Discord-Ready fehlgeschlagen:", error?.message ?? error);
+        });
+      }
+      if (commandController) {
+        void commandController.start().catch(error => {
+          console.warn("[discord-command] Slash Commands konnten nicht registriert werden:", error?.message ?? error);
+        });
+      }
     }
+    updatePresence();
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       console.log("[discord-voice] Status:", JSON.stringify(status));
     }
@@ -287,6 +446,7 @@ discordOutput = new DiscordOutputController({
   store: discordOutputStore,
   onState: state => {
     publisher.send("discord.output.state", state, activeSessionId);
+    updatePresence();
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       console.log("[discord-output] Status:", JSON.stringify(state));
     }
@@ -302,66 +462,123 @@ discordOutput = new DiscordOutputController({
   }
 });
 
-let attachedVoiceConnection = null;
+sessionControl = new SessionControl({
+  onStarted: event => {
+    activeSessionId = event.sessionId;
+    const activeProfile = identityProfileStore.activeProfile();
+    publisher.send("session.started", {
+      sessionId: activeSessionId,
+      startedAt: event.startedAt,
+      startedByDiscordUserId: event.startedByDiscordUserId,
+      guildId: discordVoice.guildId,
+      voiceChannelId: discordVoice.channelId,
+      gmDiscordUserId: discordVoice.gmUserId,
+      capturePolicy: "notice_only",
+      providers: {
+        stt: stt.snapshot().provider,
+        ai: aiExtraction.snapshot().provider
+      },
+      identityProfileId: activeProfile?.profileId ?? null,
+      startMode: "manual"
+    }, activeSessionId);
+
+    void discordOutput.sendRequestedMessage({
+      requestId: `auto-capture-notice:${activeSessionId}`,
+      kind: "capture_notice",
+      sessionId: activeSessionId,
+      profileName: activeProfile?.name ?? null
+    }).then(result => {
+      if (result?.status === "sent") sendCaptureStatus(sessionControl.captureEnabled ? "listening" : "paused", activeSessionId);
+    }).catch(error => {
+      console.warn("[discord-output] Automatischer Aufnahmehinweis fehlgeschlagen:", error?.message ?? error);
+    });
+  },
+  onEnded: event => {
+    const endedSessionId = event.sessionId;
+    if (attachedVoiceConnection) {
+      audioReceiver.detach("Session beendet");
+      attachedVoiceConnection = null;
+    }
+    sendCaptureStatus("idle", endedSessionId);
+    publisher.send("session.ended", {
+      sessionId: endedSessionId,
+      startedAt: event.startedAt,
+      endedAt: event.endedAt,
+      stoppedByDiscordUserId: event.stoppedByDiscordUserId,
+      reason: event.reason
+    }, endedSessionId);
+    npcContextBySession.delete(contextKey(endedSessionId));
+    activeSessionId = null;
+  },
+  onState: state => {
+    publisher.send("session.control.state", state, state.sessionId ?? activeSessionId);
+    updatePresence();
+  }
+});
+sessionControl.setVoiceState({
+  ready: discordVoice.voiceState === "ready",
+  channelId: discordVoice.channelId,
+  reason: "initial_voice_state"
+});
+
+function statusText() {
+  const session = sessionControl.snapshot();
+  const voice = latestVoiceStatus ?? discordVoice.snapshot();
+  const output = discordOutput.snapshot();
+  const lines = [
+    `Session: ${session.active ? `aktiv (${session.sessionId})` : "inaktiv"}`,
+    `Capture: ${session.captureEnabled ? "aktiv" : session.active ? "pausiert" : "aus"}`,
+    `Discord Gateway: ${voice.gatewayState}`,
+    `Voice: ${voice.voiceState}${voice.channelId ? ` (${voice.channelId})` : ""}`,
+    `Ausgabekanal: ${output.selectedChannel ? `#${output.selectedChannel.channelName ?? output.selectedChannel.channelId}` : "nicht gewählt"}`
+  ];
+  const error = voice.lastError ?? (output.validation?.valid === false ? output.validation.error : null);
+  if (error) lines.push(`Diagnose: ${error}`);
+  return `DM Cockpit\n${lines.join("\n")}`;
+}
+
+commandController = new DiscordCommandController({
+  voice: discordVoice,
+  gmUserId: discordVoice.gmUserId,
+  onStatusCommand: async () => ({ content: statusText() }),
+  onStartCommand: async context => {
+    const result = sessionControl.start({
+      requestedByDiscordUserId: context.discordUserId,
+      metadata: { source: "discord_slash", interactionId: context.interactionId }
+    });
+    syncAudioReceiver();
+    if (result.status === "started") return { content: `DM Cockpit: Session gestartet (${result.state.sessionId}).` };
+    if (result.status === "already_active") return { content: `DM Cockpit: Session läuft bereits (${result.state.sessionId}).` };
+    return { content: "DM Cockpit: Session kann erst gestartet werden, wenn die Voice-Verbindung bereit ist." };
+  },
+  onStopCommand: async context => {
+    const result = sessionControl.stop({
+      requestedByDiscordUserId: context.discordUserId,
+      reason: "discord_slash_stop"
+    });
+    syncAudioReceiver();
+    if (result.status === "stopped") return { content: `DM Cockpit: Session beendet (${result.endedSessionId}).` };
+    return { content: "DM Cockpit: Es läuft keine Session." };
+  },
+  onRecapCommand: async context => {
+    const sent = publisher.send("discord.command.recap.request", {
+      requestId: context.interactionId,
+      requestedByDiscordUserId: context.discordUserId,
+      sessionId: activeSessionId
+    }, activeSessionId);
+    return {
+      content: sent
+        ? "DM Cockpit: Bestätigtes Recap wurde bei Foundry angefordert. Der Versand erfolgt nur über den konfigurierten Discord-Ausgabekanal."
+        : "DM Cockpit: Recap-Anfrage wurde vorgemerkt; Foundry/Companion-Verbindung ist derzeit nicht vollständig bereit."
+    };
+  },
+  onDiagnostic: diagnostic => {
+    publisher.send("diagnostic.state", diagnostic, activeSessionId);
+  }
+});
+
 const receiverWatch = setInterval(() => {
-  const connection = discordVoice.connection;
-
-  if (connection && connection !== attachedVoiceConnection && connection.receiver) {
-    try {
-      const newSession = !activeSessionId;
-      if (newSession) {
-        activeSessionId = `voice_${randomUUID()}`;
-        const activeProfile = identityProfileStore.activeProfile();
-        publisher.send("session.started", {
-          sessionId: activeSessionId,
-          startedAt: new Date().toISOString(),
-          guildId: discordVoice.guildId,
-          voiceChannelId: discordVoice.channelId,
-          gmDiscordUserId: discordVoice.gmUserId,
-          capturePolicy: "notice_only",
-          providers: {
-            stt: stt.snapshot().provider,
-            ai: aiExtraction.snapshot().provider
-          },
-          identityProfileId: activeProfile?.profileId ?? null
-        }, activeSessionId);
-
-        void discordOutput.sendRequestedMessage({
-          requestId: `auto-capture-notice:${activeSessionId}`,
-          kind: "capture_notice",
-          sessionId: activeSessionId,
-          profileName: activeProfile?.name ?? null
-        }).then(result => {
-          if (result?.status === "sent") sendCaptureStatus("listening", activeSessionId);
-        }).catch(error => {
-          console.warn("[discord-output] Automatischer Aufnahmehinweis fehlgeschlagen:", error?.message ?? error);
-        });
-      }
-
-      audioReceiver.attach(connection, { botUserId: discordVoice.botUserId });
-      attachedVoiceConnection = connection;
-      sendCaptureStatus("listening", activeSessionId);
-    } catch (error) {
-      console.warn("[audio-receive] Konnte Receiver nicht anbinden:", error?.message ?? error);
-    }
-    return;
-  }
-
-  if (!connection && attachedVoiceConnection) {
-    audioReceiver.detach("Discord Voice verlassen");
-    attachedVoiceConnection = null;
-
-    if (activeSessionId) {
-      const endedSessionId = activeSessionId;
-      sendCaptureStatus("idle", endedSessionId);
-      publisher.send("session.ended", {
-        sessionId: endedSessionId,
-        endedAt: new Date().toISOString()
-      }, endedSessionId);
-      npcContextBySession.delete(contextKey(endedSessionId));
-      activeSessionId = null;
-    }
-  }
+  syncAudioReceiver();
 }, 500);
 receiverWatch.unref?.();
 
@@ -378,17 +595,12 @@ async function stopDiscordVoice() {
     console.warn("[nickname] Session-Nicknames konnten beim Shutdown nicht vollständig restauriert werden:", error?.message ?? error);
   }
 
+  commandController?.stop();
   audioReceiver.detach("Companion wird beendet");
   attachedVoiceConnection = null;
 
-  if (activeSessionId) {
-    const endedSessionId = activeSessionId;
-    publisher.send("session.ended", {
-      sessionId: endedSessionId,
-      endedAt: new Date().toISOString()
-    }, endedSessionId);
-    npcContextBySession.delete(contextKey(endedSessionId));
-    activeSessionId = null;
+  if (sessionControl?.active) {
+    sessionControl.stop({ reason: "companion_shutdown" });
   }
 
   try {
