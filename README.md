@@ -2,7 +2,11 @@
 
 Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext, strukturierte KI-Kandidaten, sicheren Change-Record/Undo, Session-Recaps sowie Discord-Spieler-/Foundry-Charakter-Zuordnung mit Session-/Kampagnenprofilen, reversiblen Server-Nicknames, frei wählbarem Discord-Ausgabe-Textkanal und manueller Session-Steuerung über Discord/Foundry.
 
-> **Release-Status:** 0.9.30 / Companion 0.14.0 ist auf dem Staging-Branch implementiert und befindet sich vor Main-Review/CI. Der letzte CI-validierte Release auf `main` bleibt 0.9.29 / Companion 0.13.0.
+> **Release-Status:** 0.9.30 / Companion 0.14.0 ist implementiert, automatisiert geprüft und CI-validiert. Der echte Discord-/Foundry-Runtime-Test dieses Ausbau-Blocks ist noch offen.
+
+CI-Validierungsbuild des 0.9.30-Codeblocks:
+
+`90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30`
 
 ## Für neue Chats / andere KIs
 
@@ -14,7 +18,7 @@ Zuerst lesen:
 4. `docs/UI-REDESIGN-SCOPE-V1.json` – Scope des UI-Umbaus.
 5. `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json` – verbindlicher Scope des laufenden Discord-Bot-Ausbaus.
 
-Bei Widerspruch zwischen Dokumentation und Code ist der aktuelle Repository-Code auf `main` technische Source of Truth; für noch nicht integrierte Arbeit ist der benannte Staging-Branch der Arbeitsstand. Der Checkpoint muss anschließend korrigiert werden.
+Bei Widerspruch zwischen Dokumentation und Code ist der aktuelle Repository-Code auf `main` technische Source of Truth. Der Checkpoint muss anschließend korrigiert werden.
 
 ## Bestätigter Baseline-Kern
 
@@ -157,7 +161,11 @@ Noch real zu prüfen:
 
 ## 0.9.30 / Companion 0.14.0 – Session-Steuerung, Commands, Presence, Diagnose und Reconnect
 
-Status auf diesem Staging-Branch: **implementiert; automatisierte Tests sind versioniert, Main-CI und realer Runtime-Test stehen noch aus.**
+Status: **implementiert, automatisiert geprüft und CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+
+CI-Validierungsbuild:
+
+`90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30`
 
 ### Manuelle logische Session
 
@@ -206,14 +214,19 @@ Der Bot kann seinen Betriebszustand sichtbar machen:
 
 ### Automatisierte Absicherung für 0.9.30
 
-Versioniert sind:
+Der Main-Workflow hat erfolgreich ausgeführt:
 
+- Foundry- und Companion-JavaScript-Syntaxchecks
+- Protocol-/Scope-JSON-Parsing
+- `identity-mapping-smoke-test.js`
+- `identity-profile-smoke-test.js`
+- `discord-output-smoke-test.js`
 - `session-control-smoke-test.js`
 - `discord-command-controller-smoke-test.js`
 - `discord-voice-reconnect-smoke-test.js`
-- bestehender `discord-output-smoke-test.js`
+- sauberen Paketbuild `Build DM Cockpit v0.9.30`
 
-Der neue Reconnect-Smoke prüft explizit den Unterschied zwischen absichtlichem Leave und unerwartetem `Destroyed`.
+Der Reconnect-Smoke prüft explizit den Unterschied zwischen absichtlichem Leave und unerwartetem `Destroyed`. Der Command-Smoke prüft zusätzlich Guild-Command-Registrierung, GM-Guard, Presence und Listener-Cleanup.
 
 ## Source of Truth / Packaging
 
