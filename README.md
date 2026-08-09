@@ -98,7 +98,7 @@ CI-validierter Build:
 
 ## 0.9.29 / Companion 0.13.0 – Discord-Ausgabe
 
-Implementierter neuer Block. Den jeweils verbindlichen CI-Status nach Integration auf `main` hält `PROJECT-CHECKPOINT.json`; ein echter Discord-/Foundry-Runtime-Test bleibt bis zum gebündelten Nutzertest offen.
+Implementierter und auf `main` integrierter neuer Block. Der automatisierte Main-/Paketlauf wird über den kanonischen Checkpoint festgehalten; ein echter Discord-/Foundry-Runtime-Test bleibt bis zum gebündelten Nutzertest offen.
 
 ### Frei wechselbarer Zielkanal
 
