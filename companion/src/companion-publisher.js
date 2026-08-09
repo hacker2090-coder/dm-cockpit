@@ -59,6 +59,8 @@ export class CompanionPublisher {
         protocolVersion: PROTOCOL_VERSION,
         features: [
           "speaker.upserted",
+          "voice.participants",
+          "player.character.mapping.result",
           "session.started",
           "session.ended",
           "capture.status",
