@@ -1,0 +1,53 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_snapshot",
+  "schema_version": "3.3",
+  "created_at": "2026-08-09T13:51:00+02:00",
+  "canonical_checkpoint": "PROJECT-CHECKPOINT.json",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "foundry_version": "0.9.21",
+  "companion_github_version": "0.6.0",
+  "last_fully_user_confirmed_companion": "0.5.0",
+  "status": "0.6.0 implemented_and_isolated_test_passed_user_test_pending",
+  "confirmed_0_5_0": {
+    "health": true,
+    "discord_dave_deepgram_foundry_regression": true,
+    "candidate_protocol_broadcast": true,
+    "candidate_sqlite_persistence": true
+  },
+  "implemented_0_6_0": [
+    "provider-neutral AiExtractionService",
+    "deterministic MockAiExtractionProvider",
+    "AI_PROVIDER safe default none",
+    "final transcript.segment processing through Protocol-v1 broadcasts",
+    "per-session npc.context tracking",
+    "npc.memory.candidate generation",
+    "session.event.candidate generation",
+    "sourceSegmentIds provenance",
+    "provider/model/confidence/status metadata",
+    "duplicate segment suppression",
+    "partial transcript suppression",
+    "no Actor writes",
+    "npm.cmd run test:ai"
+  ],
+  "isolated_validation": {
+    "syntax": "passed",
+    "test_ai": "passed",
+    "mock_input": "Ich verspreche dem Händler, morgen zurückzukommen.",
+    "outputs": ["npc promise", "session task"],
+    "duplicate_ignored": true,
+    "partial_ignored": true,
+    "decision_without_npc_context": true
+  },
+  "working_rules": {
+    "selection_questions": "Use HTML files with selectable options and a copyable answer for the user to paste back into chat.",
+    "checkpoints": "Create JSON checkpoints regularly and store each regular checkpoint in both ChatGPT Library and GitHub.",
+    "user_actions": "Whenever user action is required, use a clearly delimited 'Ich möchte von dir' section with exact instructions.",
+    "local_repo": "$HOME\\Desktop\\dm-cockpit",
+    "local_commands": "Use npm.cmd on Windows; standard flow starts with Ctrl+C if needed, cd $HOME\\Desktop\\dm-cockpit, git pull, cd companion.",
+    "secrets": "Never store Discord/Deepgram/future AI API secrets in chat, GitHub or checkpoints.",
+    "actor_writes": "No automatic world/Actor changes until safe Undo/Change-Record or explicit GM confirmation exists."
+  },
+  "next_single_todo": "On user PC: git pull, npm.cmd install, npm.cmd run check, npm.cmd run test:ai.",
+  "after_success": "Temporarily enable AI_PROVIDER=mock and test automatic Protocol pipeline end-to-end. No Actor writes."
+}
