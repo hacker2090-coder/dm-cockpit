@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hacker2090-coder/dm-cockpit/schemas/discord-audio-ai-v1.schema.json",
+  "title": "DM Cockpit Discord Audio & AI Protocol v1",
+  "description": "Provider-neutraler Nachrichtenvertrag zwischen DM Cockpit (Foundry VTT) und dem Discord/Audio/KI-Companion-Service.",
+  "type": "object",
+  "required": ["v", "type", "id", "ts", "payload"],
+  "properties": {
+    "v": { "const": "1.0" },
+    "type": {
+      "enum": [
+        "hello",
+        "hello.ack",
+        "health",
+        "session.started",
+        "session.ended",
+        "speaker.upserted",
+        "capture.status",
+        "transcript.segment",
+        "npc.context",
+        "npc.memory.candidate",
+        "npc.memory.applied",
+        "change.undo.request",
+        "change.undo.result",
+        "error"
+      ]
+    },
+    "id": { "type": "string", "minLength": 1 },
+    "ts": { "type": "string", "format": "date-time" },
+    "sessionId": { "type": ["string", "null"] },
+    "payload": { "type": "object" }
+  },
+  "$defs": {
+    "speaker": {
+      "type": "object",
+      "required": ["discordUserId", "displayName"],
+      "properties": {
+        "discordUserId": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "globalName": { "type": ["string", "null"] },
+        "isBot": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "transcriptSegment": {
+      "type": "object",
+      "required": ["segmentId", "discordUserId", "speakerName", "startedAt", "endedAt", "text", "final"],
+      "properties": {
+        "segmentId": { "type": "string", "minLength": 1 },
+        "discordUserId": { "type": "string", "minLength": 1 },
+        "speakerName": { "type": "string", "minLength": 1 },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "endedAt": { "type": "string", "format": "date-time" },
+        "text": { "type": "string" },
+        "final": { "type": "boolean" },
+        "language": { "type": ["string", "null"] },
+        "provider": { "type": ["string", "null"] },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "npcContext": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": { "enum": ["cockpit", "selected-token", "none"] },
+        "actorId": { "type": ["string", "null"] },
+        "actorUuid": { "type": ["string", "null"] },
+        "actorName": { "type": ["string", "null"] },
+        "changedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "npcMemoryCandidate": {
+      "type": "object",
+      "required": ["candidateId", "actorId", "text", "kind", "sourceSegmentIds", "createdAt"],
+      "properties": {
+        "candidateId": { "type": "string", "minLength": 1 },
+        "actorId": { "type": "string", "minLength": 1 },
+        "actorUuid": { "type": ["string", "null"] },
+        "text": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"]
+        },
+        "sourceSegmentIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "provider": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "captureStatus": {
+      "type": "object",
+      "required": ["state", "policy", "rawAudioRetention"],
+      "properties": {
+        "state": { "enum": ["idle", "joining", "listening", "paused", "stopping", "error"] },
+        "policy": { "enum": ["notice_only", "explicit_per_session", "persistent_participant_consent"] },
+        "rawAudioRetention": { "const": "until_successful_transcription" },
+        "noticeShown": { "type": "boolean" },
+        "legalAuthorizationConfirmedExternally": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "undoRecord": {
+      "type": "object",
+      "required": ["changeId", "actorId", "flagPath", "before", "after", "createdAt"],
+      "properties": {
+        "changeId": { "type": "string", "minLength": 1 },
+        "actorId": { "type": "string", "minLength": 1 },
+        "flagPath": { "type": "string", "minLength": 1 },
+        "before": {},
+        "after": {},
+        "createdAt": { "type": "string", "format": "date-time" },
+        "sourceCandidateId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "transcript.segment" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/transcriptSegment" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "speaker.upserted" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/speaker" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "npc.context" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/npcContext" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "npc.memory.candidate" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/npcMemoryCandidate" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "capture.status" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/captureStatus" } } }
+    }
+  ],
+  "additionalProperties": false
+}
