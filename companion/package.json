@@ -1,0 +1,17 @@
+{
+  "name": "dm-cockpit-companion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lokaler Discord Audio/KI Companion Service für DM Cockpit",
+  "type": "module",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "check": "node --check src/server.js && node --check src/store.js"
+  },
+  "dependencies": {
+    "ws": "8.21.1"
+  }
+}
