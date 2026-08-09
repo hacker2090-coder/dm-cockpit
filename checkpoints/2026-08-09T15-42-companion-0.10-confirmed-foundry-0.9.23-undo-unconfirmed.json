@@ -1,0 +1,126 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.21",
+  "created_at": "2026-08-09T15:42:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "foundry_repository_version": "0.9.23",
+    "foundry_last_user_confirmed_version": "0.9.22",
+    "companion_repository_version": "0.10.0",
+    "companion_last_user_confirmed_version": "0.10.0",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "pause_point": "Companion 0.10.0 Change-Record/Undo-Backend ist auf dem Nutzer-PC vollständig bestätigt. Foundry 0.9.23 mit echtem NPC-Memory-Change-Record, Undo-Button und konfliktgeschütztem Restore ist auf main implementiert und durch den Release-Workflow als dm-cockpit.zip gebaut, aber noch nicht in Foundry mit einem realen Test-NPC End-to-End bestätigt."
+  },
+  "working_rules": {
+    "one_todo_at_a_time": true,
+    "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
+    "do_not_reask_known_answers": true,
+    "selection_questions_rule": "Strukturierte Auswahlfragen über HTML-Dateien mit kopierbarer Zusammenfassung.",
+    "checkpoint_rule": "PROJECT-CHECKPOINT.json aktualisieren, historischen Snapshot unter checkpoints/ anlegen und regulären Checkpoint zusätzlich in ChatGPT Library /DM Cockpit/ speichern.",
+    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
+    "local_command_rule": "PowerShell: cd $HOME\\Desktop\\dm-cockpit; git pull; cd companion; npm.cmd ...; kein &&.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "change_rule": "Keine automatische Actor-/Weltänderung ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung."
+  },
+  "confirmed": {
+    "foundry_0_9_22": {
+      "status": "fully_user_confirmed",
+      "features": [
+        "KI-Kandidatenkarte sichtbar",
+        "realer Ollama/qwen3:4b NPC-Kandidat mit Foundry-Actor-Kontext",
+        "manuelles Annehmen",
+        "manuelles Verwerfen",
+        "Annehmen -> bestehendes NPC Memory"
+      ]
+    },
+    "companion_0_10_0": {
+      "status": "fully_user_confirmed",
+      "syntax_check": "passed",
+      "runtime_start": "passed",
+      "change_record_smoke": "passed",
+      "smoke_result": [
+        "Change-Record persistent bestätigt",
+        "akzeptierter Kandidat per Liste bestätigt",
+        "Undo-Vorher/Nachher-Zustand bereitgestellt",
+        "Undo als persistent rückgängig bestätigt",
+        "Doppel-Undo already_undone/idempotent bestätigt"
+      ],
+      "smoke_test_fix": {
+        "commit": "390f65f0deaafaac8f1cd4ca5e4632d8fb3910d0",
+        "reason": "Der erste Timeout lag im Smoke-Test: candidates.list.result enthält laut Protocol v1 keine changeId/undoneAt-Felder. Der Test wurde auf den vertraglich definierten accepted-Status korrigiert; der eigentliche Change-Record wird über change.undo.request validiert."
+      }
+    },
+    "ollama": {
+      "status": "fully_user_confirmed",
+      "model": "qwen3:4b",
+      "quality_score_percent": 91.7,
+      "passed_cases": 11,
+      "total_cases": 12
+    }
+  },
+  "implemented_unconfirmed": {
+    "foundry_0_9_23": {
+      "status": "implemented_not_user_confirmed",
+      "commits": [
+        "578b7064b857950f14df89d304f98e368f9df7f2 feat(foundry): add NPC memory change-record undo",
+        "0fb424bb4ab6bf49748f11cc50683f1b0109158b chore(foundry): bump 0.9.23 for undo",
+        "1f77fed69c245c270e3a072b4f7fc1af5e293d8f Build DM Cockpit v0.9.23"
+      ],
+      "implemented": [
+        "manuelles NPC-Kandidaten-Annehmen erfasst den exakten vorherigen und nachherigen actionMemory-Flag-Zustand",
+        "Foundry sendet npc.memory.applied mit changeId, actorId, flagPath, before, after und sourceCandidateId",
+        "aktive Change-Records werden in der Foundry-Kandidatenruntime gehalten",
+        "angenommene NPC-Kandidaten mit aktivem Change-Record erhalten einen Rückgängig-Button",
+        "Rückgängig sendet change.undo.request an Companion",
+        "Foundry verarbeitet change.undo.result status ready",
+        "Restore wird nur ausgeführt, wenn der aktuelle Actor-Flag exakt dem gespeicherten after-Zustand entspricht",
+        "bei Abweichung wird conflict zurückgemeldet und keine Actor-Änderung vorgenommen",
+        "nach erfolgreichem Restore sendet Foundry status undone",
+        "already_undone/conflict/failed werden verarbeitet",
+        "Foundry-Version auf 0.9.23 erhöht",
+        "Release-Workflow hat dm-cockpit.zip für 0.9.23 gebaut"
+      ],
+      "static_validation": "scripts/ai-candidate-review.js passed node --check before commit",
+      "runtime_validation": "not_run_in_foundry"
+    }
+  },
+  "architecture": {
+    "websocket": "ws://127.0.0.1:43170/v1",
+    "sqlite": "companion/data/dm-cockpit.sqlite",
+    "npc_memory_flag": "flags['dm-cockpit'].actionMemory",
+    "change_record_flag_path": "flags.dm-cockpit.actionMemory",
+    "raw_audio_persistence": false
+  },
+  "open_risks": [
+    "Foundry 0.9.23 Undo wurde noch nicht in einer echten Foundry-V14-Welt ausgeführt.",
+    "Ein Verbindungsabbruch genau zwischen Actor-Restore und Companion-Bestätigung kann einen manuellen Abgleich erfordern; der Normalpfad ist geschützt.",
+    "Frühere Smoke-Tests können synthetische akzeptierte Testkandidaten in SQLite hinterlassen; diese verändern keine echte Foundry-Welt."
+  ],
+  "roadmap": [
+    "6d-1: Foundry 0.9.23 laden und Runtime-Verfügbarkeit bestätigen",
+    "6d-2: echten neuen NPC-Kandidaten an Test-Actor annehmen und Change-Record/Undo-Button bestätigen",
+    "6d-3: Rückgängig klicken und verifizieren, dass exakt der vorherige NPC-Memory-Zustand wiederhergestellt wird",
+    "6d-4: nach erfolgreichem E2E Foundry 0.9.23 als vollständig bestätigt checkpointen",
+    "7: optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
+    "8: dauerhaft durchsuchbares Transkript",
+    "9: Session-Historie, Recap und Discord-Kurzfassung",
+    "10: optional lokales STT und Performance-/Skalierungs-Hardening"
+  ],
+  "resume_instructions": {
+    "next_single_external_test": "Nutzer soll main lokal synchronisieren und Foundry DM Cockpit auf 0.9.23 laden/aktualisieren. Zuerst nur bestätigen, dass 0.9.23 geladen ist und die KI-Kandidatenkarte ohne Fehler erscheint; erst danach den echten NPC-Undo-End-to-End-Test durchführen.",
+    "do_not_repeat": [
+      "Companion 0.10.0 npm.cmd run check",
+      "Companion 0.10.0 npm.cmd run test:change-record",
+      "Companion 0.9.0 Candidate-Review-Smoke-Test",
+      "Ollama Adapter/Preflight/E2E/Qualitätsbenchmark",
+      "Foundry 0.9.22 KI-Kandidaten-Sichtbarkeit",
+      "Foundry 0.9.22 realer Ollama-Kandidat",
+      "Foundry 0.9.22 Annehmen/Verwerfen",
+      "Foundry 0.9.22 Annehmen -> NPC Memory"
+    ]
+  }
+}
