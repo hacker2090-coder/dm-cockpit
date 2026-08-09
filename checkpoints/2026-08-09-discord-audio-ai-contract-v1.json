@@ -1,0 +1,84 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "1.1",
+  "created_at": "2026-08-09T11:11:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "type": "Foundry VTT Modul",
+    "foundry_version": "V14",
+    "module_id": "dm-cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "default_branch": "main",
+    "current_version": "0.9.18",
+    "current_version_status": "functionally_confirmed_in_foundry",
+    "runtime_changed_by_this_checkpoint": false
+  },
+  "working_rules": {
+    "autonomy": "Möglichst autonom weiterarbeiten und nur bei nicht sinnvoll ableitbaren Entscheidungen nachfragen.",
+    "one_todo_at_a_time": true,
+    "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Runtime-/Release-Änderungen zusätzlich mit Manifest, Installationspaket und Projektstatus synchronisieren.",
+    "checkpoint_rule": "In sinnvollen Abständen einen aktuellen Checkpoint auf GitHub und zusätzlich als JSON-Datei im Chat bereitstellen."
+  },
+  "discord_audio_ai": {
+    "status": "architecture_contract_v1_defined_not_runtime_implemented",
+    "completed_todo": "Datenmodell und API-Vertrag v1 für Discord Audio & KI definieren",
+    "files": {
+      "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
+      "schema": "schemas/discord-audio-ai-v1.schema.json"
+    },
+    "protocol_version": "1.0",
+    "architecture": {
+      "foundry_and_discord_host": "same_pc_currently",
+      "companion_service": "separate_process_between_discord_voice_stt_ai_sqlite_and_foundry",
+      "transport_local": "WebSocket on loopback, configurable port",
+      "transport_remote_future": "WSS plus authentication",
+      "provider_strategy": "STT and AI provider neutral adapters",
+      "speaker_identity": "Discord User ID",
+      "transcript_storage": "local SQLite",
+      "raw_audio_retention": "temporary until successful transcription then delete",
+      "latency_target": "5-15 seconds",
+      "participant_target": "more than 10; protocol has no hard participant cap",
+      "npc_context_priority": [
+        "explicit active NPC in DM Cockpit",
+        "selected Foundry token",
+        "none"
+      ],
+      "direct_ai_save": true,
+      "undo_required": true
+    },
+    "user_decisions": {
+      "bot_hosting": "open",
+      "auto_join": "follow configured GM voice channel automatically",
+      "cloud_ai": "open_compare_providers",
+      "capture_policy_preference": "notice_only",
+      "foundry_test_world": "not_created_needs_short_instructions"
+    },
+    "capture_policy_note": "notice_only ist nur eine technische Workflow-Einstellung und wird nicht als automatische rechtliche Freigabe interpretiert.",
+    "not_yet_implemented": [
+      "Foundry Live-Transkript UI/Transport Client",
+      "Discord Voice Bot",
+      "DAVE/E2EE Voice integration",
+      "Speech-to-Text Provider",
+      "SQLite runtime persistence",
+      "AI extraction",
+      "automatic NPC-memory persistence",
+      "Undo runtime",
+      "transcript search",
+      "session recap",
+      "Discord short summary"
+    ]
+  },
+  "next_single_todo": {
+    "task": "Foundry Live-Transkript V1 als Mock/Transport-Client implementieren",
+    "scope": [
+      "simulierte transcript.segment Nachrichten verarbeiten",
+      "capture.status anzeigen",
+      "npc.context aus Foundry bereitstellen",
+      "noch kein echter Discord Voice Bot",
+      "noch kein kostenpflichtiger Cloud Provider"
+    ],
+    "test_prerequisite": "Kurze Anleitung zum Anlegen einer separaten Foundry-V14-Testwelt bereitstellen, bevor Runtime-Tests nötig werden."
+  },
+  "handoff_instruction_for_next_ai": "Behandle diesen Checkpoint als aktuellen Stand. Der API-/Datenvertrag v1 ist abgeschlossen und auf GitHub dokumentiert. Die Modulversion bleibt 0.9.18, weil noch kein Runtime-Code geändert wurde. Als nächstes ausschließlich das Foundry Live-Transkript V1 als Mock/Transport-Client umsetzen. Danach GitHub synchronisieren und bei sinnvoller Etappe erneut einen JSON-Checkpoint erzeugen."
+}
