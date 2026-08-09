@@ -15,20 +15,22 @@ Aktueller Stand:
 - NPC-Schnellgenerator
 - Actor-basiertes NPC Memory
 - Discord Live-Transkript Mock/Transport-Client
+- lokaler Companion-Service Skeleton 0.1.0 mit WebSocket + SQLite
 
-## Bestätigter Kern
+## Bestätigter Foundry-Kern
 
-**V0.9.18 ist in Foundry funktional bestätigt.**
+**DM Cockpit V0.9.21 ist in Foundry funktional bestätigt.**
 
-Der Live-Transkript-Test von V0.9.19 wurde am 09.08.2026 teilweise erfolgreich durchgeführt:
+Für den Discord-Live-Transkript-Schritt wurden erfolgreich geprüft:
 
-- Bereich sichtbar: bestätigt
-- Mock-Status: bestätigt
-- Mock-Segmente: bestätigt
-- Leeren: bestätigt
-- NPC-Kontext: noch nicht eindeutig bestätigt
+- Bereich sichtbar
+- Mock-Status Live/Inaktiv
+- Mock-Segmente
+- Feed leeren
+- NPC-Kontext aus dem NPC-Memory-Dropdown
+- Anzeige `<Actorname> · Cockpit`
 
-V0.9.20 synchronisierte die sichtbare NPC-Memory-Auswahl erstmals separat. V0.9.21 macht den Button-Pfad selbst eindeutig und übernimmt den aktuell sichtbaren Actor direkt aus dem Dropdown.
+Damit ist der Foundry-seitige Mock-/Transport-Client abgeschlossen.
 
 ## NPC-Schnellgenerator
 
@@ -71,30 +73,54 @@ Funktionen:
 - sichtbarer Hinweis auf die konfigurierte Capture-Policy
 - Debug-/Integrations-API unter `globalThis.DMCockpitLiveTranscript`
 
-### Neu in V0.9.21 – eindeutiger NPC-Kontext-Button
+## Neu – lokaler Companion-Service 0.1.0
 
-Beim Klick auf **NPC-Kontext** passiert jetzt direkt:
+Der nächste Architekturbaustein ist unter `companion/` implementiert.
 
-1. Die Bridge liest den aktuell sichtbaren Actor aus dem NPC-Memory-Dropdown.
-2. Dieser Actor wird als `npcMemorySelectedActorId` gespeichert.
-3. Der Live-Transcript-Transport erhält denselben Actor unmittelbar als `npc.context`.
-4. Oben im Live-Transkript erscheint `<Actorname> · Cockpit`.
-5. Die Benachrichtigung lautet eindeutig `NPC-Kontext aktiv: <Actorname>`.
-6. Der ältere Button-Handler wird für diesen Klick bewusst nicht zusätzlich ausgeführt.
+Ziel: Foundry bleibt browserbasiert; Discord Voice, STT, KI und lokale Persistenz laufen später im separaten Companion-Prozess.
 
-Damit hängt dieser Test nicht mehr davon ab, ob eine vorherige automatische Dropdown-Auswahl bereits gespeichert wurde.
+### Enthalten
 
-## Noch nicht enthalten
+- Node.js Service für lokalen Betrieb
+- Standardbindung nur an `127.0.0.1:43170`
+- WebSocket-Endpunkt `/v1`
+- HTTP-Health-Endpunkt `/health`
+- `hello` → `hello.ack` Handshake nach Contract v1
+- Verarbeitung von `session.started` / `session.ended`
+- Sprecher-Upsert
+- finale `transcript.segment`-Persistenz
+- NPC-Kontext-Ereignisse
+- `capture.status` Transport
+- SQLite-Datenbank unter `companion/data/dm-cockpit.sqlite`
+- Tabellen für Sessions, Sprecher, Transkriptsegmente, NPC-Kontext und zukünftige Change-/Undo-Records
+- idempotente Transkriptsegmente über `segmentId`
+- 1-MiB WebSocket-Maximalpayload
+- WebSocket-Kompression deaktiviert
+- echter lokaler Mock-Client mit `npm run mock`
 
-- echter Discord Voice Bot
-- DAVE/E2EE-Voice-Integration
-- echter Speech-to-Text-Provider
-- SQLite-Runtime
-- automatische KI-Extraktion
-- automatisches NPC-Memory aus Sprache
-- Undo-Runtime für KI-Aktionen
+Details und Startanleitung:
+
+`companion/README.md`
+
+### Voraussetzungen
+
+- Node.js 22.16.0 oder neuer
+- npm
+
+### Noch nicht enthalten
+
+- Discord Gateway / Voice
+- DAVE/E2EE
+- Audio-Buffering
+- Speech-to-Text
+- KI-Extraktion
+- automatische NPC-Memory-Änderungen
+- Undo-Ausführung
 - Transkript-Suche
 - Session-Recap
+- Discord-Kurzfassung
+
+## Architektur v1
 
 Technischer Contract:
 
@@ -104,23 +130,34 @@ Maschinenlesbares Schema:
 
 `schemas/discord-audio-ai-v1.schema.json`
 
-## Test für V0.9.21
+Festgelegt:
 
-Nur dieser Pfad muss geprüft werden:
+- Companion Service getrennt vom Foundry-Modul
+- WebSocket zwischen Foundry und Companion Service
+- Sprechertrennung über Discord User IDs
+- Ziel-Latenz 5–15 Sekunden
+- Ziel auch für >10 Teilnehmer
+- lokales SQLite für dauerhafte Transkripte
+- Roh-Audio nur bis zur erfolgreichen Transkription
+- austauschbare STT-/KI-Provider
+- NPC-Kontext über Cockpit oder ausgewählten Token
+- automatisches KI-Speichern später nur mit Undo-/Change-Datenmodell
+- Capture-Policy wird technisch dokumentiert und nicht mit einer rechtlichen Freigabe gleichgesetzt
 
-1. DM Cockpit auf V0.9.21 aktualisieren.
-2. Im NPC-Memory-Dropdown einen Actor auswählen.
-3. Im Live-Transkript auf **NPC-Kontext** klicken.
-4. Oben muss `<Actorname> · Cockpit` erscheinen.
-5. Die Benachrichtigung muss `DM Cockpit: NPC-Kontext aktiv: <Actorname>` lauten.
+## Nächster einzelner Test
 
-## Nächster einzelner TODO
+Companion-Service lokal starten und die echte Verbindung zu Foundry prüfen:
 
-Nach erfolgreichem NPC-Kontext-Retest:
+1. `cd companion`
+2. `npm install`
+3. `npm run check`
+4. `npm start`
+5. Foundry → Discord Live-Transkript → **Verbinden**
+6. in zweitem Terminal `npm run mock`
+7. prüfen, ob **Companion Mock** im Foundry-Transkript erscheint
+8. `/health` prüfen, ob SQLite mindestens Session/Sprecher/Segment gezählt hat
 
-**Lokalen Companion-Service-Skeleton mit WebSocket und SQLite-Basis implementieren.**
-
-Dabei weiterhin noch kein echter Discord Voice Bot und kein kostenpflichtiger Cloud-Provider.
+Für diesen Test werden weiterhin kein Discord-Bot, kein API-Key und keine kostenpflichtige Cloud benötigt.
 
 ## Updates
 
@@ -130,4 +167,4 @@ Manifest:
 Installationspaket:
 `https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip`
 
-Die Installations-ZIP wird durch GitHub Actions aus dem aktuellen Repository-Stand gebaut.
+Der Companion-Service liegt separat im Repository und ist nicht Teil des Foundry-Modul-ZIPs. Die Foundry-Version bleibt daher V0.9.21.
