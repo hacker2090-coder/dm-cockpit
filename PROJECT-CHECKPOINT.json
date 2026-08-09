@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.26",
-  "created_at": "2026-08-09T17:17:00+02:00",
+  "schema_version": "3.27",
+  "created_at": "2026-08-09T17:37:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -13,12 +13,13 @@
     "companion_repository_version": "0.10.0",
     "companion_last_user_confirmed_version": "0.10.0",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
-    "pause_point": "Repository ist für die Übergabe bereinigt und dokumentiert. Foundry 0.9.26 UI-/Layout-Umbau ist implementiert, statisch validiert, sauber gebaut und vom Nutzer in Foundry visuell positiv bestätigt ('Sieht super aus'). Diese Rückmeldung gilt nicht automatisch als vollständiger Interaktions-Smoke-Test für Drag/Persistenz/Resize/Filter. 0.9.25 Session-Recap + Discord-Kurzfassung bleibt implementiert; der eigentliche Inhalts-/Copy-Test wurde ausdrücklich auf später verschoben."
+    "pause_point": "Foundry 0.9.26 UI-/Layout-Umbau ist implementiert, sauber gebaut und visuell positiv bestätigt; Drag/Persistenz/Resize/Filter bleiben nicht als vollständig getestet markiert. 0.9.25 Session-Recap + Discord-Kurzfassung bleibt implementiert, der Inhalts-/Copy-Test ist weiter aufgeschoben. Zusätzlich wurde am 2026-08-09 der Discord-Bot-Ausbau-Scope V1 ausgewählt und dokumentiert; die Implementierung dieses neuen Scopes wurde noch nicht begonnen."
   },
   "repository_health": {
-    "checked_at": "2026-08-09T17:17:00+02:00",
-    "latest_checked_main_before_handoff": "2f39fb6e5d852b2ffc39b121904a1fa8b66acdf5 Build DM Cockpit v0.9.26",
+    "checked_at": "2026-08-09T17:37:00+02:00",
+    "latest_checked_main_before_checkpoint_update": "31f3a22139d6e20dae0c887e5718e3728043e6eb checkpoint: archive Discord bot expansion scope v1",
     "module_manifest": "0.9.26",
+    "companion_package": "0.10.0",
     "readme": "updated_for_0.9.26_and_visual_confirmation",
     "master_handoff": "updated_for_0.9.26",
     "release_workflow": "clean_reproducible_source_only_build",
@@ -32,7 +33,7 @@
     "user_test_cadence": "Zusammengehörige lokale Prüfungen als vollständigen Testblock bündeln; keine Bestätigung nach jedem Mikroschritt verlangen.",
     "selection_questions_rule": "Strukturierte Auswahlfragen bei Bedarf über bearbeitbare HTML-Dateien mit kopierbarer Zusammenfassung; maximal etwa 15 grobe Fragen.",
     "ui_rule": "Normale Bedienfunktionen müssen über das Cockpit erreichbar sein; Entwicklerkonsole nur für tatsächliches Debugging.",
-    "checkpoint_rule": "PROJECT-CHECKPOINT.json aktualisieren, historischen Snapshot unter checkpoints/ anlegen und regulären Checkpoint zusätzlich in ChatGPT Library /DM Cockpit/ speichern.",
+    "checkpoint_rule": "Nach sinnvollen abgeschlossenen Arbeits- oder Entscheidungsblöcken PROJECT-CHECKPOINT.json aktualisieren, historischen JSON-Snapshot unter checkpoints/ anlegen und denselben Speicherstand zusätzlich in ChatGPT als JSON-Datei bereitstellen. Keine Secrets in Checkpoints.",
     "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
     "local_command_rule": "PowerShell: cd $HOME\\Desktop\\dm-cockpit; git pull; cd companion; npm.cmd ...; kein &&.",
     "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
@@ -100,6 +101,43 @@
       ]
     }
   },
+  "planned_scopes": {
+    "discord_bot_expansion_v1": {
+      "status": "selected_not_implemented",
+      "scope_document": "docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json",
+      "scope_commit": "3020887cea14b16416db8237b2707d3c3e92b43c",
+      "historical_checkpoint": "checkpoints/2026-08-09T17-37-discord-bot-expansion-scope-v1.json",
+      "historical_checkpoint_commit": "31f3a22139d6e20dae0c887e5718e3728043e6eb",
+      "selected_ids": [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15],
+      "deferred_ids": [5, 14],
+      "selected_features": [
+        "Discord-Slash-Commands",
+        "manuelle Session-Steuerung",
+        "Aufnahme-/Transkriptionshinweis in Discord",
+        "sichtbarer Bot-Status / Presence",
+        "robuster Voice-Reconnect",
+        "Recap nach bewusster GM-Aktion direkt an Discord senden",
+        "Session-Status in Discord abrufen",
+        "Discord-Spieler mit Foundry-Charakteren verknüpfen",
+        "unkritische Bot-Konfiguration ins Cockpit holen",
+        "verständlicher Fehler-/Diagnosemodus",
+        "veraltete Discord-Code-Statusangaben bereinigen",
+        "jederzeit neu auswählbarer Discord-Ausgabe-Textkanal",
+        "Call-Mitglieder im Cockpit Foundry-Spielercharakteren zuordnen und danach den serverbezogenen Discord-Nickname so setzen, dass der Charaktername zuerst steht"
+      ],
+      "deferred_features": [
+        "mehrere GMs unterstützen",
+        "Berechtigungen für Bot-Befehle"
+      ],
+      "special_requirements": {
+        "discord_output_channel": "Der GM kann den Ziel-Textkanal jederzeit erneut auswählen; keine fest verdrahtete Einmal-Konfiguration.",
+        "call_member_mapping": "Der Bot ermittelt Mitglieder des relevanten Voice-Calls; das Cockpit zeigt Foundry-Spielercharaktere und der GM bestätigt die Zuordnung Discord-Mitglied -> Charakter.",
+        "discord_nickname": "Nach bestätigter Zuordnung soll nur der serverbezogene Discord-Nickname angepasst werden; der Charaktername steht zuerst. Der globale Discord-Benutzername ist nicht Ziel der Änderung.",
+        "recap_posting": "Nur nach bewusster GM-Aktion, nicht automatisch."
+      },
+      "implementation_started": false
+    }
+  },
   "source_of_truth_cleanup": {
     "status": "implemented_and_build_validated",
     "recovered_versioned_sources": [
@@ -120,6 +158,10 @@
     "latest_successful_build_after_handoff_docs": "2f39fb6e5d852b2ffc39b121904a1fa8b66acdf5 Build DM Cockpit v0.9.26",
     "result": "GitHub main ist strukturell Source of Truth für den Foundry-Paketinhalt."
   },
+  "known_repository_followups": [
+    "docs/UI-REDESIGN-SCOPE-V1.json enthält noch eine inzwischen überholte source_of_truth_precondition aus der Zeit vor der Packaging-Bereinigung.",
+    "companion/src/discord-voice.js enthält noch veraltete Status-/Kommentarstellen, nach denen Audio-Capture nicht implementiert sei, obwohl der Audio-Receiver längst integriert ist. Dieser Punkt ist im Discord-Bot-Scope V1 zur Bereinigung ausgewählt."
+  ],
   "handoff_documents": {
     "read_first": [
       "README.md",
@@ -127,6 +169,7 @@
       "PROJECT-CHECKPOINT.json"
     ],
     "ui_scope_if_relevant": "docs/UI-REDESIGN-SCOPE-V1.json",
+    "discord_bot_scope_if_relevant": "docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json",
     "protocol_if_relevant": [
       "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
       "schemas/discord-audio-ai-v1.schema.json"
@@ -142,6 +185,7 @@
     "Foundry 0.9.25 Recap-Inhalts-/Copy-Test solange der Nutzer ihn nicht wieder aufnehmen möchte"
   ],
   "official_open_work": [
+    "Discord-Bot-Ausbau gemäß docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json; ausgewählt, aber noch nicht begonnen",
     "dauerhaft durchsuchbares Transkript",
     "optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
     "optional lokales STT",
@@ -152,8 +196,8 @@
     "aufgeschobener 0.9.25 Recap-Inhalts-/Copy-Test"
   ],
   "resume_instructions": {
-    "status": "handoff_ready",
-    "rule": "Neuer Chat muss zuerst aktuellen main prüfen und README.md, PROJECT-HANDOFF.md sowie PROJECT-CHECKPOINT.json lesen. Danach am aktuellen Nutzerauftrag oder einem ausdrücklich gewählten offenen offiziellen Block weiterarbeiten. Keine alten bestätigten Tests wiederholen. Aufgeschobene Tests nicht ungefragt erzwingen.",
+    "status": "handoff_ready_with_selected_discord_bot_scope",
+    "rule": "Neuer Chat muss zuerst aktuellen main prüfen und README.md, PROJECT-HANDOFF.md sowie PROJECT-CHECKPOINT.json lesen. Bei Discord-Bot-Arbeit zusätzlich docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json lesen. Der Discord-Bot-Scope ist ausgewählt, aber noch nicht implementiert. Keine alten bestätigten Tests wiederholen und aufgeschobene Tests nicht ungefragt erzwingen.",
     "next_chat_can_continue_without_old_chat_context": true
   }
 }
