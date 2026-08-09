@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.5",
+  "schema_version": "1.6",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T19:40:00+02:00",
+  "updated_at": "2026-08-09T20:20:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
@@ -18,112 +18,85 @@
   "completed_implementation_blocks": [
     {
       "name": "discord_identity_core",
-      "status": "implemented_ci_validated_runtime_not_user_confirmed",
+      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
       "foundry_version": "0.9.27",
       "companion_version": "0.11.0",
-      "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27",
-      "implemented": [
-        "Voice-Teilnehmer des relevanten Discord-Calls",
-        "Foundry-Cockpit-Karte Spieler & Charaktere",
-        "GM-bestätigte Discord-Mitglied-zu-Foundry-Actor-Zuordnung",
-        "weltbezogene Persistenz und Companion-SQLite-Spiegelung",
-        "strukturierte Sprecherattribution in finalen Transkriptsegmenten",
-        "bestätigte Charakteridentität als KI-Kontext ohne Actor-Raten"
-      ],
-      "runtime_pending": [
-        "echte Voice-Teilnehmerliste in Foundry",
-        "echte Spieler-/Charakterzuordnung",
-        "Live-Transkript mit realer Charakterattribution",
-        "realer Call-Wechsel/Reconnect"
-      ]
+      "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27"
     },
     {
       "name": "campaign_session_identity_and_nickname",
-      "status": "implemented_ci_validated_runtime_not_user_confirmed",
+      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
       "foundry_version": "0.9.28",
       "companion_version": "0.12.0",
-      "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28",
+      "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28"
+    },
+    {
+      "name": "discord_output_channel_notice_and_recap_posting",
+      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+      "foundry_version": "0.9.29",
+      "companion_version": "0.13.0",
+      "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29",
       "implemented": [
-        "persistente Kampagnen-/One-Shot-/Sessionprofile",
-        "Profile als Snapshot der GM-bestätigten Spieler-/Charakterzuordnungen",
-        "Foundry-Cockpit-Karte Session-Identität",
-        "immer höchstens ein aktives Identitätsprofil",
-        "Nickname-Automatik nur nach ausdrücklicher Profil-Aktivierung",
-        "Session-Nickname mit Charaktername zuerst und maximal 32 Unicode-Zeichen",
-        "aktueller Discord-Anzeigename vor altem gespeicherten Spielerlabel",
-        "ursprünglicher Server-Nickname vor Mutation persistent gesichert",
-        "Join/Rejoin Apply und Call-Leave Restore",
-        "Profilwechsel/Deaktivierung Restore",
-        "geordneter Companion-Shutdown mit Restore vor Discord-/SQLite-Ende",
-        "persistenter Lease für Restart-/Crash-Recovery",
-        "Restore-Konfliktschutz für externe manuelle Namensänderungen",
-        "atomarer Rebase des Restore-Basisnamens nach Konflikt",
-        "Manage-Nicknames- und Rollen-Hierarchie-Prüfung",
-        "bestehende DAVE-Join-Konfiguration erhalten"
+        "verfügbare Discord-Textkanäle werden mit realem View-Channel-/Send-Messages-Zugriff ermittelt",
+        "Zielkanal ist im Cockpit jederzeit neu auswählbar oder entfernbar",
+        "Zielkanal wird pro Discord-Guild persistent in SQLite gespeichert",
+        "vor jedem Versand wird der gespeicherte Kanal erneut gegen Discord und aktuelle Rechte validiert",
+        "Foundry-Karte Discord-Ausgabe mit Kanalwahl, Refresh und manuellem Aufnahmehinweis",
+        "automatischer Aufnahme-/Transkriptionshinweis bei neu gestarteter Voice-Session, idempotent gegen Retry/Reconnect",
+        "capture.status.noticeShown folgt einem tatsächlich erfolgreichen Hinweis",
+        "Session-Recap-Karte behält Copy-Funktionen und erhält bewussten Button An Discord senden",
+        "Recap wird niemals automatisch gepostet",
+        "Discord allowedMentions.parse ist für DM-Cockpit-Ausgaben leer",
+        "Versand-Audit persistiert Metadaten, aber keinen Nachrichtentext",
+        "erfolgreiche Request-IDs sind idempotent gegen doppelte Reconnect-/Retry-Ausgaben"
       ],
-      "automated_validation": {
-        "isolated_local_smoke": "passed",
-        "main_ci_and_packaging": "passed",
-        "validated_build_commit": "5bc18698a0dad8bfd2bb1a914313888d9e000a20"
-      },
+      "automated_validation": [
+        "Foundry-/Companion-JavaScript-Syntax",
+        "Protocol-/Scope-JSON",
+        "Identity-Mapping-Smoke",
+        "Identity-Profile-Smoke",
+        "Discord-Output-Smoke: Kanalliste, Persistenz, Recap, Request-Idempotenz, Aufnahmehinweis, Reload, Clear",
+        "sauberer Foundry-Paketbuild 0.9.29"
+      ],
       "runtime_pending": [
-        "Profil in echtem Foundry speichern/aktivieren",
-        "echte Discord-Nickname-Änderung",
-        "Leave/Rejoin mit echtem Voice-Call",
-        "realer Restore nach Companion-Neustart",
-        "Mapping -> Profil -> Nickname -> Live-Transkript End-to-End"
+        "echte Discord-Textkanalliste in Foundry",
+        "echten Zielkanal auswählen und nach Reload wiedersehen",
+        "realen automatischen Aufnahmehinweis im ausgewählten Kanal",
+        "Kanal während der Nutzung wechseln",
+        "echtes bewusstes Recap-Posting",
+        "fehlende Senderechte / gelöschter Kanal im echten Discord",
+        "kein doppelter automatischer Hinweis bei realem Reconnect"
       ]
     }
   ],
   "current_implementation_block": {
-    "name": "discord_output_channel_notice_and_recap_posting",
-    "status": "implemented_on_staging_review_pending_main_ci",
-    "target_foundry_version": "0.9.29",
-    "target_companion_version": "0.13.0",
-    "staging_branch": "work/discord-output-channel-v1",
-    "implemented": [
-      "verfügbare Discord-Textkanäle werden mit realem View-Channel-/Send-Messages-Zugriff ermittelt",
-      "Zielkanal ist im Cockpit jederzeit neu auswählbar oder entfernbar",
-      "Zielkanal wird pro Discord-Guild persistent in SQLite gespeichert",
-      "vor jedem Versand wird der gespeicherte Kanal erneut gegen Discord und aktuelle Rechte validiert",
-      "Foundry-Karte Discord-Ausgabe mit Kanalwahl, Refresh und manuellem Aufnahmehinweis",
-      "automatischer Aufnahme-/Transkriptionshinweis bei neu gestarteter Voice-Session, höchstens einmal erfolgreich pro Session-Request-ID",
-      "capture.status.noticeShown folgt einem tatsächlich erfolgreichen Hinweis",
-      "Session-Recap-Karte behält Copy-Funktionen und erhält bewussten Button An Discord senden",
-      "Recap wird niemals automatisch gepostet",
-      "Discord allowedMentions.parse ist für DM-Cockpit-Ausgaben leer",
-      "Versand-Audit persistiert Metadaten, aber keinen Nachrichtentext",
-      "erfolgreiche Request-IDs sind idempotent gegen doppelte Reconnect-/Retry-Ausgaben",
-      "isolierter Discord-Output-Smoke-Test deckt Kanalliste, Persistenz, Recap, Idempotenz, Hinweis, Reload und Clear ab"
-    ],
-    "review_pending": [
-      "Foundry-/Companion-JavaScript-Syntax über Main-CI",
-      "Protocol-/Scope-JSON Parse über Main-CI",
-      "discord-output-smoke-test.js über Main-CI",
-      "Foundry-Paketbuild 0.9.29"
-    ],
-    "runtime_pending": [
-      "echte Discord-Textkanalliste in Foundry",
-      "echten Zielkanal auswählen und nach Reload wiedersehen",
-      "realen automatischen Aufnahmehinweis im ausgewählten Kanal",
-      "Kanal während der Nutzung wechseln",
-      "echtes bewusstes Recap-Posting",
-      "fehlende Senderechte / gelöschter Kanal im echten Discord",
-      "kein doppelter automatischer Hinweis bei realem Reconnect"
-    ],
-    "explicitly_not_in_this_block": [
-      "Slash-Commands",
-      "manuelle Session-Steuerung",
-      "Presence",
-      "allgemeiner Diagnosebildschirm",
-      "Reconnect-Hardening über die für Output nötige Idempotenz hinaus",
-      "mehrere GMs",
-      "Befehlsberechtigungsmodell"
-    ]
-  },
-  "next_implementation_block_after_current": {
     "name": "session_control_commands_presence_diagnostics_reconnect",
-    "status": "planned"
+    "status": "starting_on_staging_branch",
+    "staging_branch": "session_control_commands_presence_diagnostics_reconnect",
+    "planned_features": [
+      "manuelle Session-Steuerung getrennt vom bloßen Discord-Voice-Join",
+      "Discord Slash Command /dm status",
+      "Discord Slash Command /dm start",
+      "Discord Slash Command /dm stop",
+      "Discord Slash Command /dm recap",
+      "sichtbarer Bot-Presence-/Sessionstatus",
+      "verständliche Diagnose- und Fehlerzustände",
+      "robuster Voice-Reconnect",
+      "Wiederherstellung des Sessionzustands nach Reconnect",
+      "keine doppelten Sessions",
+      "keine doppelten Aufnahmehinweise",
+      "keine doppelten Transkriptsegmente durch Reconnect"
+    ],
+    "constraints": [
+      "Voice-Join allein startet keine manuell gesteuerte Session.",
+      "Recap-Posting bleibt eine bewusste GM-Aktion.",
+      "Discord User ID bleibt Source of Truth für die sprechende Person.",
+      "Foundry-Charakterzuordnung kommt ausschließlich vom GM.",
+      "Reconnect darf keine neue logische Session erzeugen, wenn eine bestehende Session wiederhergestellt wird.",
+      "Reconnect darf keinen bereits erfolgreich gesendeten Aufnahmehinweis erneut automatisch senden.",
+      "Reconnect darf bereits verarbeitete Transkriptsegmente nicht duplizieren.",
+      "keine dauerhafte Roh-Audio-Speicherung"
+    ]
   },
   "identity_semantics": {
     "human_speaker_source_of_truth": "Discord User ID aus der sprechergetrennten Voice-Audiospur.",
@@ -152,12 +125,19 @@
     { "id": 5, "feature": "Mehrere GMs unterstützen", "decision": "Später" },
     { "id": 14, "feature": "Berechtigungen für Bot-Befehle", "decision": "Später" }
   ],
+  "status_semantics": {
+    "implemented": "Code vorhanden und integriert.",
+    "automated_tested": "Relevante isolierte oder syntaktische Tests erfolgreich.",
+    "ci_validated": "Main-Workflow bzw. kontrollierter Paketlauf erfolgreich.",
+    "local_confirmed": "Reale lokale/Discord-/Foundry-Ausführung durch Nutzer bestätigt.",
+    "fully_confirmed": "Vorgesehener realer End-to-End-Nachweis abgeschlossen."
+  },
   "constraints": [
     "Keine Secrets in GitHub, Chat oder Checkpoints.",
     "Keine dauerhafte Roh-Audio-Speicherung.",
     "Recap-Posting nur nach bewusster GM-Aktion.",
     "Normale Bedienung soll im Cockpit bzw. über Discord-Befehle möglich sein; keine Entwicklerkonsole als Standardweg.",
-    "Implementiert, CI-validiert, lokal bestätigt und vollständig bestätigt strikt unterscheiden.",
+    "Implementiert, automatisiert geprüft, CI-validiert, lokal bestätigt und vollständig bestätigt strikt unterscheiden.",
     "Neue Discord-/Foundry-Runtime-Funktionen gelten bis zum gebündelten Nutzertest ausdrücklich als noch lokal zu prüfen."
   ]
 }
