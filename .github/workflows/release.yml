@@ -91,6 +91,7 @@ jobs:
           node companion/src/discord-output-smoke-test.js
           node companion/src/session-control-smoke-test.js
           node companion/src/discord-command-controller-smoke-test.js
+          node companion/src/discord-voice-reconnect-smoke-test.js
 
       - name: Build clean Foundry package
         if: steps.changes.outputs.foundry == 'true'
