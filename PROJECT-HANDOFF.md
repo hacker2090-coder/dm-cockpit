@@ -1,31 +1,30 @@
 # DM Cockpit – Master Handoff
 
-Stand: 2026-08-09 15:19 CEST
+Stand: 2026-08-09 17:17 CEST
 
-Dieses Dokument ist der Einstiegspunkt für einen neuen Chat/eine andere KI. Es beschreibt Ziel, Architektur, bestätigten Stand, Historie, Sicherheitsregeln und den nächsten Arbeitsblock. Für den jeweils letzten maschinenlesbaren Zustand zusätzlich immer `PROJECT-CHECKPOINT.json` lesen.
+Dieses Dokument ist der menschlich/LLM-lesbare Einstiegspunkt für einen neuen Chat. Für den jeweils neuesten maschinenlesbaren Status zusätzlich immer `PROJECT-CHECKPOINT.json` lesen. GitHub `main` ist Source of Truth.
 
 ## 1. Projektziel
 
-DM Cockpit ist ein Foundry-VTT-V14-Modul plus lokaler Companion Service. Ziel ist ein zentrales GM-Live-Cockpit, das möglichst viel Session-Arbeit ohne ständiges Wechseln zwischen Foundry, Discord und Notizen abdeckt.
+DM Cockpit ist ein Foundry-VTT-V14-Modul plus lokaler Companion Service. Ziel ist ein zentrales GM-Live-Cockpit, das Session-Arbeit bündelt und Kontextwechsel zwischen Foundry, Discord und Notizen reduziert.
 
 Produktprinzipien:
 
-- im Live-Betrieb nur wenige relevante Aktionen gleichzeitig zeigen;
-- Warnungen und Zeitdruck priorisieren;
-- seltene Funktionen einklappen oder in Kontextaktionen verschieben;
-- KI darf Vorschläge erzeugen;
-- KI darf nicht ungefragt die Foundry-Welt verändern;
-- automatische Welt-/Actor-Änderungen erst mit Undo/Change-Record oder expliziter GM-Bestätigung.
+- wichtige Live-Aktionen priorisieren;
+- seltene Funktionen kompakt/einklappbar halten;
+- KI erzeugt Vorschläge, keine stillen Weltänderungen;
+- Actor-/Weltänderungen nur mit expliziter GM-Aktion oder sicherem Change-Record/Undo;
+- keine Secrets in Chat/GitHub/Checkpoints;
+- kein dauerhaftes Roh-Audio.
 
-## 2. Repository und lokale Umgebung
+## 2. Repository / Versionen
 
 - Repository: `hacker2090-coder/dm-cockpit`
 - Branch: `main`
 - lokales Repo: `$HOME\Desktop\dm-cockpit`
 - Foundry-Modul-ID: `dm-cockpit`
-- aktuelles Foundry-Modul: `0.9.22`
-- aktueller Companion-Code: `0.10.0`
-- Node: `>=24.17.0`; Nutzer-PC bestätigte 24.18.1
+- Foundry Repository-Version: `0.9.26`
+- Companion Repository-Version: `0.10.0`
 - Companion WebSocket: `ws://127.0.0.1:43170/v1`
 - Health: `http://127.0.0.1:43170/health`
 - SQLite: `companion/data/dm-cockpit.sqlite`
@@ -40,31 +39,28 @@ cd companion
 npm.cmd ...
 ```
 
-`npm.cmd` verwenden, nicht `npm`, weil die PowerShell-Execution-Policy `npm.ps1` blockieren kann.
+`npm.cmd` verwenden, nicht `npm`.
 
-## 3. Arbeitsregeln des Chats
+## 3. Arbeitsregeln
 
-Diese Regeln nicht ohne ausdrückliche Nutzerentscheidung ändern:
-
-1. Immer nur einen TODO-Block gleichzeitig verfolgen.
-2. Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.
-3. Bekannte Antworten nicht erneut abfragen.
-4. Auswahlfragen/strukturierte Entscheidungen über HTML-Dateien führen; Ergebnis muss kopierbar sein.
-5. Regelmäßig JSON-Checkpoints erstellen.
-6. Reguläre Checkpoints doppelt sichern: GitHub + ChatGPT Library `/DM Cockpit/`.
-7. Kanonischer GitHub-Checkpoint: `PROJECT-CHECKPOINT.json`; historische Snapshots: `checkpoints/`.
-8. Wenn Nutzeraktion nötig ist, Abschnitt exakt `Ich möchte von dir` verwenden.
-9. Niemals Discord-Bot-Token, Deepgram-Key, OpenAI-Key, Passwörter oder andere Secrets in Chat/GitHub/Checkpoint speichern.
-10. Roh-Audio nicht dauerhaft speichern; nur temporär im RAM bis zur Verarbeitung.
-11. Keine automatischen Actor-/Weltänderungen ohne Change-Record/Undo oder klare GM-Bestätigung.
+1. Vor Änderungen aktuellen `main` prüfen.
+2. GitHub `main` ist technische Source of Truth.
+3. Implementiert, statisch getestet, lokal bestätigt und vollständig bestätigt strikt unterscheiden.
+4. Nutzer nicht nach jedem Mikroschritt bestätigen lassen; zusammengehörige Tests bündeln.
+5. Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht ableitbare Entscheidungen einbeziehen.
+6. Wenn Nutzeraktion nötig ist, Abschnitt exakt `Ich möchte von dir` verwenden.
+7. Regelmäßig `PROJECT-CHECKPOINT.json` + historischen Snapshot unter `checkpoints/` aktualisieren; regulären Checkpoint zusätzlich in ChatGPT Library `/DM Cockpit/` sichern.
+8. Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.
+9. Roh-Audio nicht dauerhaft speichern.
+10. Keine automatische Actor-/Weltänderung ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung.
+11. Bekannte bestätigte Tests nicht ohne Regression wiederholen.
+12. UI-/Auswahlfragen bei Bedarf als bearbeitbare HTML-Checkliste mit kopierbarer Zusammenfassung anbieten.
 
 ## 4. Architektur
 
 ### Foundry
 
-Foundry ist UI und Weltzustand. Es verarbeitet kein Discord-Audio.
-
-Bestätigte Kernfunktionen bis 0.9.22:
+Foundry ist UI und Weltzustand. Aktueller Funktionskern:
 
 - LIVE-Dashboard
 - Abenteuer-Flowchart
@@ -78,10 +74,12 @@ Bestätigte Kernfunktionen bis 0.9.22:
 - Compendium-Schnellsuche
 - NPC-Schnellgenerator
 - Actor-basiertes NPC Memory
-- Discord Live-Transkript UI/Transport
+- Discord Live-Transkript
 - NPC-Kontext aus Cockpit-Actor oder ausgewähltem Token
-- manuelle KI-Kandidatenprüfung mit Annehmen/Verwerfen
-- Foundry/GitHub Update-System
+- manuelle KI-Kandidatenprüfung
+- konfliktgeschütztes NPC-Memory-Undo
+- Session-Recap + Discord-Kurzfassung
+- technisches UI-/Layout-System 0.9.26
 
 NPC-Memory-Flag:
 
@@ -100,91 +98,53 @@ Der Companion übernimmt:
 - GM-Follow/Auto-Join
 - sprechergetrennten Audioempfang
 - temporäre Audio-Pufferung
-- STT
-- KI-Extraktion
+- Deepgram STT
+- provider-neutrale KI-Extraktion
 - SQLite-Persistenz
-- Protocol-v1-WebSocket zu Foundry
+- Protocol-v1-WebSocket
+- Candidate Review Persistenz
+- Change-Record/Undo Backend
 
-### Speech-to-Text
+### KI / STT
 
-Aktuell real bestätigt:
+Real bestätigt:
 
-- Provider: Deepgram
-- Modell: Nova-3
-- Sprache: Deutsch
-- Endpoint: EU-Endpoint
-
-Ollama ersetzt nur die LLM-Extraktion nach dem Transkript, nicht das STT.
-
-### KI-Extraktion
-
-Provider-neutral:
-
-- `none`
-- `mock`
-- `ollama`
-- `openai`
-
-Aktueller Standard: lokales Ollama mit `qwen3:4b`.
-
-Konfiguration:
-
-```text
-AI_PROVIDER=ollama
-OLLAMA_AI_MODEL=qwen3:4b
-OLLAMA_AI_ENDPOINT=http://127.0.0.1:11434/api/chat
-OLLAMA_AI_NUM_CTX=8192
-OLLAMA_AI_KEEP_ALIVE=10m
-```
-
-Ollama benötigt lokal keinen API-Key.
+- STT: Deepgram Nova-3, Deutsch, EU
+- lokale KI: Ollama `qwen3:4b`
+- Qualitätsbenchmark: 11/12 = 91,7 %, Ø 1066 ms, P95 1935 ms
+- OpenAI nur optionaler Fallback; kein echter bezahlter OpenAI-Aufruf bestätigt
 
 ## 5. Protocol v1
 
-Version: `1.0`
+Version `1.0`.
 
 Relevante Nachrichtentypen:
 
-- `hello`
-- `hello.ack`
-- `health`
-- `session.started`
-- `session.ended`
+- `hello`, `hello.ack`, `health`
+- `session.started`, `session.ended`
 - `speaker.upserted`
 - `capture.status`
 - `transcript.segment`
 - `npc.context`
 - `npc.memory.candidate`
 - `session.event.candidate`
-- `candidate.review`
-- `candidate.reviewed`
-- `candidates.list.request`
-- `candidates.list.result`
+- `candidate.review`, `candidate.reviewed`
+- `candidates.list.request`, `candidates.list.result`
 - `npc.memory.applied`
-- `change.undo.request`
-- `change.undo.result`
+- `change.undo.request`, `change.undo.result`
 - `error`
 
-Vertrag und Schema:
+Vertrag/Schema:
 
 - `docs/DISCORD-AUDIO-AI-CONTRACT-V1.md`
 - `schemas/discord-audio-ai-v1.schema.json`
 
-NPC-Kandidatentypen:
-
-`statement`, `knowledge`, `action`, `relationship`, `promise`, `lie`, `deadline`, `consequence`, `other`
-
-Session-Kandidatentypen:
-
-`decision`, `quest`, `task`, `loot`, `reward`, `open_question`, `combat`, `event`, `other`
-
-Actor-ID wird niemals vom Modell erfunden. NPC-Kandidaten dürfen nur entstehen, wenn Foundry einen gültigen `npc.context` geliefert hat.
+Actor-ID wird nie vom Modell erfunden. NPC-Kandidaten benötigen gültigen Foundry-`npc.context`.
 
 ## 6. SQLite
 
-Wichtige Tabellen:
+Wichtige persistente Tabellen:
 
-- `meta`
 - `sessions`
 - `speakers`
 - `transcript_segments`
@@ -193,201 +153,173 @@ Wichtige Tabellen:
 - `session_event_candidates`
 - `change_records`
 
-Finale Transkripte und Kandidaten werden persistiert. Roh-Audio wird nicht dauerhaft gespeichert.
+Finale Transkripte/Kandidaten werden persistiert; Roh-Audio nicht dauerhaft.
 
-## 7. Versions- und Testhistorie
+## 7. Bestätigter Stand
 
-### Companion 0.1.0
+### Companion 0.10.0 – vollständig bestätigt
+
+Nicht erneut testen ohne Regression:
+
+- Discord Login / DAVE / Auto-Join / GM Follow
+- speaker-getrennte Audioverarbeitung
+- Deepgram-End-to-End
+- Ollama Adapter / Preflight / E2E / Qualitätsbenchmark
+- Candidate Review Persistenz/Reload
+- Change-Record/Undo Backend (`npm.cmd run check`, `npm.cmd run test:change-record`)
+
+### Foundry 0.9.24 – NPC-Memory Undo vollständig bestätigt
+
+Real bestätigt:
+
+- echter Ollama-Kandidat mit echtem Actor-Kontext
+- Annehmen/Verwerfen
+- angenommen → bestehendes NPC Memory
+- Change-Record wird erzeugt
+- `Rückgängig` stellt exakten vorherigen `actionMemory`-Zustand wieder her
+- keine automatische Übernahme ohne GM-Aktion
+
+### Foundry 0.9.25 – Session-Recap implementiert, Inhaltstest aufgeschoben
+
+Implementiert:
+
+- Recap nur aus angenommenen `session.event.candidate`
+- Kategorien: Entscheidungen, Quests/Aufgaben, Loot/Belohnungen, Kämpfe, offene Fragen, wichtige Ereignisse
+- Discord-Kurzfassung aus denselben bestätigten Punkten
+- Recap kopieren / Discord kopieren
+- kein automatisches Discord-Posting
+
+Nutzer hat bestätigt, dass die Recap-Karte sichtbar ist. Der eigentliche Test mit angenommenem Session-Kandidaten + beiden Kopierbuttons wurde ausdrücklich auf später verschoben und soll nicht automatisch erneut verlangt werden.
+
+### Foundry 0.9.26 – UI-/Layout-Umbau
+
+Implementiert und sauber gebaut:
+
+- Zonen `Live`, `Spielleitung`, `Werkzeuge`, `Nachbereitung`
+- technische moderne Dashboard-Optik
+- Live-Funktionen priorisiert
+- Haupt-/Seitenspalten und unterschiedlich gewichtete Karten
+- kompaktere Karten/Listen und höhere Informationsdichte
+- einheitliche Typografie, Abstände, Icons, Buttons, Inputs
+- fixe Bereichsnavigation
+- persistente Ein-/Ausklappzustände
+- persistenter aktiver Tab
+- Kartenreihenfolge innerhalb einer Zone per Drag-Handle
+- vertikale Kartenhöhe anpassbar/persistiert
+- Such-/Filterleiste bei größeren Listen
+- Tooltips
+- kartenbezogene Working-/Error-Zustände
+- Shortcuts `Alt+1`, `Alt+2`, `Alt+Pfeil hoch/runter`
+- dezente Animationen mit Reduced-Motion-Fallback
+
+Nutzer-Runtime-Rückmeldung am 2026-08-09 17:17 CEST: **„Sieht super aus.“** Das bestätigt den visuellen UI-/Layout-Eindruck in Foundry. Nicht als vollständige Bestätigung von Drag-Persistenz, Filter, Resize und sämtlichen Interaktionen auslegen, solange diese nicht explizit getestet wurden.
+
+Bewusst zurückgestellt aus der UI-Auswahl:
+
+- Fokusmodus für einzelne Bereiche
+- zusätzlicher Scroll-Verhaltens-Umbau
+
+Verbindlicher Scope: `docs/UI-REDESIGN-SCOPE-V1.json`.
+
+## 8. Source-of-Truth / Packaging – bereinigt
+
+Früheres Problem: Release-Workflow entpackte das vorhandene `dm-cockpit.zip` und kopierte Repository-Dateien darüber. Dadurch konnten alte/nicht versionierte Dateien im Paket überleben.
+
+Behoben:
+
+- `scripts/dm-cockpit.js`
+- `styles/dm-cockpit.css`
+- `templates/cockpit.hbs`
+
+sind wieder normale versionierte Quellen auf `main`.
+
+Aktueller Workflow:
+
+1. Checkout von `main`.
+2. Manifest-referenzierte Skripte/Styles müssen existieren.
+3. `templates/cockpit.hbs` muss existieren.
+4. alle Foundry-JS-Dateien laufen durch `node --check`.
+5. Build startet in leerem `build/dm-cockpit`.
+6. ZIP wird ausschließlich aus versionierten Quellen neu erstellt.
+7. GitHub Actions veröffentlicht das neue `dm-cockpit.zip` auf `main`.
+
+0.9.26 wurde mit diesem sauberen Workflow erfolgreich gebaut. Das alte ZIP ist kein Build-Eingang mehr.
+
+## 9. Aktueller Pausepunkt
+
+Repository ist konsistent auf Foundry `0.9.26` / Companion `0.10.0`.
 
 Bestätigt:
 
-Foundry ↔ WebSocket ↔ Companion ↔ SQLite.
+- kompletter historischer Companion-Baseline-Stack bis 0.10.0
+- Foundry NPC-Memory/Undo bis 0.9.24
+- 0.9.25 Recap-Karte sichtbar
+- 0.9.26 neues UI visuell vom Nutzer positiv in Foundry bestätigt
+- sauberer, reproduzierbarer Packaging-Workflow
 
-### 0.2.0
+Noch bewusst offen:
 
-Bestätigt:
+- 0.9.25 Recap-Inhalts-/Copy-Test: vom Nutzer auf später verschoben
+- 0.9.26 Interaktions-Smoke-Test für Persistenz/Drag/Resize/Filter: nicht vollständig bestätigt
+- dauerhaft durchsuchbares Transkript: geplant/offen
+- optionale automatische NPC-Memory-Übernahme: offen, nur mit sicherem Undo
+- optional lokales STT: offen
 
-Discord Login, DAVE/E2EE, Auto-Join, Follow des konfigurierten GM, Channel-Wechsel und Leave bei GM-Leave.
+## 10. Was ein neuer Chat zuerst tun soll
 
-### 0.3.0
+1. Aktuellen `main` prüfen; nicht von diesem Text allein ausgehen.
+2. `README.md`, `PROJECT-HANDOFF.md`, `PROJECT-CHECKPOINT.json` lesen.
+3. Bei UI-Arbeit zusätzlich `docs/UI-REDESIGN-SCOPE-V1.json` lesen.
+4. Keine alten bestätigten Tests wiederholen.
+5. Den aufgeschobenen 0.9.25 Recap-Inhalts-/Copy-Test nicht ungefragt wieder hervorholen.
+6. Vor neuer großer UI-/Funktionsänderung gegebenenfalls den kleinen 0.9.26 Interaktions-Smoke-Test bündeln oder bei einem neuen klaren Nutzerauftrag direkt den gewählten nächsten Block bearbeiten.
 
-Bestätigt:
+## 11. Naheliegende nächste offizielle Arbeitsblöcke
 
-sprechergetrennter Discord-Opus-Empfang; Audio nur temporär im RAM.
+Aus der bisherigen Repository-Roadmap:
 
-### 0.4.0
+1. dauerhaft durchsuchbares Transkript
+2. optionale automatische NPC-Memory-Übernahme, ausschließlich mit sicherem Undo
+3. optional lokales STT
+4. Performance-/Skalierungs-Hardening
 
-Bestätigt:
+Session-Recap + Discord-Kurzfassung sind bereits implementiert; nur ihr aufgeschobener Runtime-Inhaltstest ist noch offen.
 
-Discord → Deepgram Nova-3 → deutsches Transkript.
+## 12. Nicht erneut testen ohne Regression
 
-### 0.5.0
-
-Vollständig lokal bestätigt:
-
-- Health
-- Discord/DAVE
-- Deepgram
-- Foundry Live-Transkript
-- Candidate-Broadcast
-- SQLite
-
-Realer Sprachtest enthielt u. a. den Satz: „Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.“; Confidence 0.961; Satz war in Foundry sichtbar.
-
-### 0.6.0
-
-Vollständig lokal bestätigt:
-
-- provider-neutraler `AiExtractionService`
-- deterministischer Mock
-- Final-only
-- Deduplizierung
-- NPC-Kontext
-- NPC- und Session-Kandidaten
-- End-to-End Mock-Pipeline bis Protocol v1/Broadcast/SQLite
-
-### 0.7.0
-
-Auf Nutzer-PC bestätigt:
-
-- Syntax
-- OpenAI-Adapter mit Fake-HTTP
-- Responses API Payload
-- `store=false`
-- Strict Structured Output
-- Actor-Zuordnung aus Foundry-Kontext
-
-Kein echter OpenAI-Aufruf; keine API-Kosten.
-
-Aktueller optionaler OpenAI-Fallback: `gpt-5-nano`.
-
-### 0.8.0
-
-Vollständig lokal bestätigt:
-
-- Ollama-Adapter
-- `qwen3:4b`
-- Preflight gegen echten Ollama-Dienst
-- echter Ollama-End-to-End-Test
-- Protocol v1/Broadcast/SQLite
-- 12-Fälle-Qualitätsbenchmark
-
-Benchmark `qwen3:4b`:
-
-- 11/12 bestanden
-- 91,7 %
-- Mindestgrenze 80 %
-- Ø 1066 ms
-- P95 1935 ms
-- einziger Fehlfall: `npc-relationship` wurde als `statement` klassifiziert
-
-Entscheidung: `qwen3:4b` bleibt Standard. `qwen3:8b` ist aktuell nicht nötig.
-
-### 0.9.0
-
-Vollständig lokal bestätigt:
-
-- `candidate.review`
-- `candidate.reviewed`
-- `candidates.list.request/result`
-- Status `pending/accepted/rejected`
-- persistente SQLite-Review-Status
-- Reload der Kandidaten
-- Candidate-Review-Smoke-Test
-
-Foundry 0.9.22 wurde anschließend real bestätigt:
-
-- Karte `KI-Kandidaten` sichtbar
-- realer Ollama-Kandidat mit echtem Foundry-Actor-Kontext sichtbar
-- `Annehmen` funktioniert
-- `Verwerfen` funktioniert
-- angenommener NPC-Kandidat wird dem bestehenden NPC Memory hinzugefügt
-- keine automatische Übernahme ohne GM-Klick
-
-### Companion 0.10.0 – aktueller Code
-
-Bereits im Repository implementiert, aber **noch nicht auf dem Nutzer-PC bestätigt**:
-
-- `companion/src/change-record-runtime.js`
-- Persistenz von `change_records`
-- `npc.memory.applied`
-- `change.undo.request`
-- `change.undo.result`
-- aktiver Change-Record-Reload beim `hello`
-- idempotentes Undo (`already_undone`)
-- `npm.cmd run test:change-record`
-
-Wichtige Abgrenzung: Der Companion kann Change-Records speichern, Vorher/Nachher liefern und den Undo-Status persistieren. Die tatsächliche Wiederherstellung des Foundry-Actor-Flags muss Foundry ausführen und danach `undone` zurückmelden. Dieser Foundry-Restore-Pfad ist noch nicht als Runtime-Test bestätigt.
-
-## 8. Aktueller Pausepunkt
-
-Bestätigt bis einschließlich:
-
-- Foundry 0.9.22 Candidate Review
-- Companion 0.9.0 Candidate Review Backend
-- lokales Ollama/qwen3:4b mit 91,7-%-Benchmark
-
-Im Repository zusätzlich vorhanden, aber noch unbestätigt:
-
-- Companion 0.10.0 Change-Record/Undo-Backend
-
-## 9. Nächster einzelner Arbeitsblock
-
-Nicht wieder bei Ollama, Candidate Review oder Foundry-UI anfangen.
-
-Als Nächstes:
-
-1. Companion 0.10.0 lokal holen (`git pull`).
-2. `npm.cmd run check` ausführen.
-3. Companion starten.
-4. In zweiter PowerShell `npm.cmd run test:change-record` ausführen.
-5. Wenn grün: 0.10.0 Backend als bestätigt checkpointen.
-6. Danach Foundry-seitigen Restore/Undo-Pfad implementieren bzw. vervollständigen.
-7. Erst danach einen echten NPC-Memory-Undo-Test mit einem Test-Actor durchführen.
-
-## 10. Danach geplante Roadmap
-
-1. Undo/Change-Record End-to-End inklusive Foundry Restore
-2. optional automatische NPC-Memory-Übernahme nur mit sicherem Undo
-3. dauerhaft durchsuchbares Transkript
-4. Session-Historie
-5. Recap
-6. Discord-Kurzfassung
-7. optional lokales STT als Ersatz für Deepgram
-8. Performance-/Skalierungs-Hardening
-
-## 11. Was nicht erneut getestet werden soll
-
-Ohne neue Regression nicht wiederholen:
-
-- Discord-Bot neu anlegen
-- Deepgram-Konto neu einrichten
-- Secrets erneut anfordern
-- Companion 0.1–0.7 Baseline-Tests
-- 0.8 Ollama Adapter/Preflight/E2E/Qualitätsbenchmark
-- 0.9 Candidate-Review-Smoke-Test
-- Foundry 0.9.22 Sichtbarkeit der KI-Kandidatenkarte
-- Foundry realer Ollama-Kandidat
+- Discord-Bot-Erstellung
+- Secrets/API-Key-Einrichtung
+- Companion 0.1–0.10 Baseline
+- Deepgram E2E
+- Ollama Preflight/E2E/Qualitätsbenchmark
+- Candidate Review Smoke
+- echter Ollama-NPC-Kandidat
 - Foundry Annehmen/Verwerfen
-- Foundry Annehmen → NPC Memory
+- Annehmen → NPC Memory
+- Foundry 0.9.24 NPC-Memory Undo E2E
 
-## 12. Wichtige Dateien
+## 13. Wichtige Dateien
 
-- `PROJECT-CHECKPOINT.json` – kanonischer maschinenlesbarer Status
-- `PROJECT-HANDOFF.md` – kompletter menschlich/LLM-lesbarer Übergabestand
+- `PROJECT-CHECKPOINT.json` – kanonischer Maschinenstatus
+- `PROJECT-HANDOFF.md` – dieser Master-Handoff
+- `README.md` – aktueller Überblick
 - `checkpoints/` – historische Snapshots
+- `docs/UI-REDESIGN-SCOPE-V1.json` – verbindlicher UI-Scope
 - `module.json` – Foundry Manifest
-- `scripts/live-transcript.js` – Foundry Transport/Live-Transkript
-- `scripts/ai-candidate-review.js` – Foundry Kandidatenprüfung
-- `scripts/npc-action-memory.js` – Actor-basiertes NPC Memory
+- `.github/workflows/release.yml` – reproduzierbarer Paket-Build
+- `scripts/dm-cockpit.js` – Foundry Grundkern
+- `scripts/ui-layout.js` – UI-Layout-/Persistenzschicht
+- `styles/ui-layout.css` – aktuelles Designsystem
+- `scripts/live-transcript.js` – Live-Transkript
+- `scripts/ai-candidate-review.js` – Kandidatenreview + Undo
+- `scripts/session-recap.js` – Session-Recap + Discord-Kurzfassung
+- `scripts/npc-action-memory.js` – NPC Memory
 - `companion/src/server.js` – Protocol-v1-Server
 - `companion/src/store.js` – SQLite Store
 - `companion/src/change-record-runtime.js` – Change-Record/Undo Backend
-- `companion/src/change-record-smoke-test.js` – 0.10 Undo Backend Smoke Test
-- `companion/src/ai-extraction-ollama.js` – lokaler Qwen/Ollama Provider
 - `docs/DISCORD-AUDIO-AI-CONTRACT-V1.md` – Protokollvertrag
 - `schemas/discord-audio-ai-v1.schema.json` – Protokollschema
 
-## 13. Handoff-Regel für eine neue KI
+## 14. Handoff-Regel
 
-Eine neue KI soll zuerst `PROJECT-HANDOFF.md` und `PROJECT-CHECKPOINT.json` lesen. Repository-Code ist die technische Quelle der Wahrheit; bei einem Widerspruch zwischen Dokumentation und Code muss der reale Code-/Versionsstand geprüft und der Checkpoint korrigiert werden. Danach am `next_single_external_test` bzw. dem nächsten unbestätigten Block fortsetzen – nicht frühere bestätigte Arbeit wiederholen.
+Ein neuer Chat soll nicht aus früherem Chatgedächtnis weiterarbeiten, sondern zuerst den aktuellen GitHub-Stand lesen. Bei Widerspruch gewinnt der reale Code auf `main`; danach Dokumentation/Checkpoint korrigieren. Chronologisch ab dem aktuellen Stand weiterarbeiten und bestätigte Arbeit nicht erneut aufrollen.
