@@ -1,0 +1,27 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_checkpoint",
+  "created_at": "2026-08-09T12:22:00+02:00",
+  "project": "DM Cockpit",
+  "foundry_version": "0.9.21",
+  "companion_version": "0.3.0",
+  "confirmed": {
+    "foundry_core": true,
+    "websocket_sqlite_0_1_0": true,
+    "discord_voice_0_2_0": true,
+    "bot_login": true,
+    "auto_join_gm": true,
+    "follow_gm": true,
+    "leave_with_gm": true,
+    "dave_e2ee": true
+  },
+  "new_in_0_3_0": {
+    "discord_audio_receive": true,
+    "speaker_separation_by_discord_user_id": true,
+    "memory_only_opus_buffer": true,
+    "raw_audio_files": false,
+    "stt": false,
+    "test_status": "needs_real_speech_test"
+  },
+  "next_test": "GM speaks 3-5 seconds in Discord Voice, then stays silent for at least 2 seconds; terminal must show audio-receive segment with packetCount > 0 and byteLength > 0.",
+  "next_after_success": "provider-neutral STT adapter and provider evaluation"
+}
