@@ -76,6 +76,18 @@ function currentDiagnostic() {
   };
 }
 
+function publishDiagnosticState(component = "runtime", state = null, detail = null) {
+  const diagnostic = currentDiagnostic();
+  publisher?.send("diagnostic.state", {
+    component,
+    state: state ?? (diagnostic.error ? "error" : "ready"),
+    detail: detail ? String(detail) : null,
+    ...diagnostic,
+    updatedAt: new Date().toISOString()
+  }, activeSessionId);
+  return diagnostic;
+}
+
 function updatePresence() {
   commandController?.setPresence(sessionControl?.snapshot?.() ?? {}, currentDiagnostic());
 }
@@ -369,6 +381,7 @@ function syncAudioReceiver() {
       } catch (error) {
         console.warn("[audio-receive] Konnte Receiver nicht anbinden:", error?.message ?? error);
         sendCaptureStatus("error", activeSessionId);
+        publishDiagnosticState("audio_receiver", "error", error?.message ?? error);
         return;
       }
     }
@@ -406,6 +419,11 @@ const discordVoice = new DiscordVoiceController({
       reason: status?.voiceState === "ready" ? "voice_ready" : `voice_${status?.voiceState ?? "unknown"}`
     });
     syncAudioReceiver();
+    publishDiagnosticState(
+      "discord_voice",
+      status?.gatewayState === "error" || status?.voiceState === "error" ? "error" : "ready",
+      status?.lastError ?? null
+    );
 
     if (status?.gatewayState === "ready") {
       if (discordOutput) {
@@ -446,6 +464,11 @@ discordOutput = new DiscordOutputController({
   store: discordOutputStore,
   onState: state => {
     publisher.send("discord.output.state", state, activeSessionId);
+    publishDiagnosticState(
+      "discord_output",
+      state?.validation?.valid === false ? "error" : "ready",
+      state?.validation?.valid === false ? state.validation.error : null
+    );
     updatePresence();
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       console.log("[discord-output] Status:", JSON.stringify(state));
@@ -525,11 +548,14 @@ function statusText() {
   const session = sessionControl.snapshot();
   const voice = latestVoiceStatus ?? discordVoice.snapshot();
   const output = discordOutput.snapshot();
+  const reconnect = voice.reconnect ?? {};
+  const reconnectActive = voice.voiceState === "reconnecting" || Boolean(reconnect.scheduled);
   const lines = [
     `Session: ${session.active ? `aktiv (${session.sessionId})` : "inaktiv"}`,
     `Capture: ${session.captureEnabled ? "aktiv" : session.active ? "pausiert" : "aus"}`,
     `Discord Gateway: ${voice.gatewayState}`,
     `Voice: ${voice.voiceState}${voice.channelId ? ` (${voice.channelId})` : ""}`,
+    `Reconnect: ${reconnectActive ? `läuft (${reconnect.attempts ?? 0}/${reconnect.maxAttempts ?? "?"})` : reconnect.allowed ? "bereit" : "aus"}`,
     `Ausgabekanal: ${output.selectedChannel ? `#${output.selectedChannel.channelName ?? output.selectedChannel.channelId}` : "nicht gewählt"}`
   ];
   const error = voice.lastError ?? (output.validation?.valid === false ? output.validation.error : null);
@@ -573,7 +599,11 @@ commandController = new DiscordCommandController({
     };
   },
   onDiagnostic: diagnostic => {
-    publisher.send("diagnostic.state", diagnostic, activeSessionId);
+    publisher.send("diagnostic.state", {
+      ...diagnostic,
+      ...currentDiagnostic(),
+      updatedAt: diagnostic?.updatedAt ?? new Date().toISOString()
+    }, activeSessionId);
   }
 });
 
