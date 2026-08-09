@@ -1,5 +1,5 @@
 const DEFAULT_ENDPOINT = "https://api.openai.com/v1/responses";
-const DEFAULT_MODEL = "gpt-5.4-nano";
+const DEFAULT_MODEL = "gpt-5-nano";
 const DEFAULT_TIMEOUT_MS = 20000;
 const MAX_CANDIDATES_PER_TYPE = 8;
 
