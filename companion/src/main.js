@@ -1,20 +1,63 @@
 import { randomUUID } from "node:crypto";
 import "./server.js";
+import { AiExtractionService } from "./ai-extraction-service.js";
 import { DiscordAudioReceiver } from "./audio-receive.js";
 import { CompanionPublisher } from "./companion-publisher.js";
 import { DiscordVoiceController } from "./discord-voice.js";
 import { SttService } from "./stt-service.js";
 
-const publisher = new CompanionPublisher({
+let activeSessionId = null;
+let publisher = null;
+const npcContextBySession = new Map();
+
+function contextKey(sessionId) {
+  return String(sessionId ?? activeSessionId ?? "__no_session__");
+}
+
+const aiExtraction = new AiExtractionService({
+  onCandidate: async (type, payload, context) => {
+    publisher?.send(type, payload, context.sessionId ?? activeSessionId);
+  },
+  onStatus: status => {
+    if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
+      console.log("[ai] Status:", JSON.stringify(status));
+    }
+  }
+});
+aiExtraction.start();
+
+function handleProtocolBroadcast(message) {
+  const sessionId = message?.sessionId ?? activeSessionId ?? null;
+
+  if (message?.type === "npc.context") {
+    const key = contextKey(sessionId);
+    const payload = message.payload ?? null;
+    npcContextBySession.set(key, payload?.actorId ? payload : null);
+    return;
+  }
+
+  if (message?.type === "session.ended") {
+    npcContextBySession.delete(contextKey(sessionId));
+    return;
+  }
+
+  if (message?.type !== "transcript.segment" || message.payload?.final !== true) return;
+
+  const npcContext = npcContextBySession.get(contextKey(sessionId)) ?? null;
+  void aiExtraction.submit(message.payload, { sessionId, npcContext }).catch(error => {
+    console.warn("[ai] Protocol-Segment konnte nicht verarbeitet werden:", error?.message ?? error);
+  });
+}
+
+publisher = new CompanionPublisher({
   onStatus: status => {
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       console.log("[publisher] Status:", JSON.stringify(status));
     }
-  }
+  },
+  onMessage: handleProtocolBroadcast
 });
 publisher.start();
-
-let activeSessionId = null;
 
 const stt = new SttService({
   onTranscript: async (payload, context) => {
@@ -115,7 +158,8 @@ const receiverWatch = setInterval(() => {
           gmDiscordUserId: discordVoice.gmUserId,
           capturePolicy: "notice_only",
           providers: {
-            stt: stt.snapshot().provider
+            stt: stt.snapshot().provider,
+            ai: aiExtraction.snapshot().provider
           }
         }, activeSessionId);
       }
@@ -140,17 +184,19 @@ const receiverWatch = setInterval(() => {
     attachedVoiceConnection = null;
 
     if (activeSessionId) {
+      const endedSessionId = activeSessionId;
       publisher.send("capture.status", {
         state: "idle",
         policy: "notice_only",
         rawAudioRetention: "until_successful_transcription",
         noticeShown: false,
         legalAuthorizationConfirmedExternally: false
-      }, activeSessionId);
+      }, endedSessionId);
       publisher.send("session.ended", {
-        sessionId: activeSessionId,
+        sessionId: endedSessionId,
         endedAt: new Date().toISOString()
-      }, activeSessionId);
+      }, endedSessionId);
+      npcContextBySession.delete(contextKey(endedSessionId));
       activeSessionId = null;
     }
   }
@@ -167,10 +213,12 @@ async function stopDiscordVoice() {
   attachedVoiceConnection = null;
 
   if (activeSessionId) {
+    const endedSessionId = activeSessionId;
     publisher.send("session.ended", {
-      sessionId: activeSessionId,
+      sessionId: endedSessionId,
       endedAt: new Date().toISOString()
-    }, activeSessionId);
+    }, endedSessionId);
+    npcContextBySession.delete(contextKey(endedSessionId));
     activeSessionId = null;
   }
 
