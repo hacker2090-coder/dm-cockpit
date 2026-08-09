@@ -1,0 +1,65 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.10",
+  "created_at": "2026-08-09T14:31:00+02:00",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "foundry_version": "0.9.21",
+    "companion_version": "0.8.0",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "last_fully_user_tested_stage": "0.8.0_ollama_adapter_local_test_confirmed"
+  },
+  "working_rules": {
+    "one_todo_at_a_time": true,
+    "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur für echte externe Tests, Secrets oder nicht ableitbare Entscheidungen einbeziehen.",
+    "selection_questions": "Auswahlfragen über HTML mit kopierbarem Ergebnis.",
+    "checkpoint_storage": "Reguläre Checkpoints in ChatGPT Library und GitHub speichern; PROJECT-CHECKPOINT.json kanonisch halten.",
+    "user_action": "Benötigte Nutzeraktionen immer unter 'Ich möchte von dir' exakt angeben.",
+    "local_commands": "Repo fest unter $HOME\\Desktop\\dm-cockpit; npm.cmd verwenden.",
+    "secrets": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "actor_changes": "Keine automatischen Actor-/Weltänderungen ohne Undo/Change-Record oder GM-Bestätigung."
+  },
+  "confirmed": {
+    "companion_0_6": "Mock-AI-Pipeline Ende-zu-Ende bis Protocol v1/Broadcast/SQLite bestätigt.",
+    "companion_0_7": "OpenAI-Adapter auf Nutzer-PC mit Fake-HTTP-Test bestätigt; kein echter API-Aufruf und keine API-Kosten.",
+    "companion_0_8_local": {
+      "npm_cmd_run_check": "passed",
+      "npm_cmd_run_test_ai_ollama": "passed",
+      "confirmed_features": [
+        "lokaler Ollama API-Payload",
+        "qwen3:4b Default",
+        "think=false",
+        "Structured Output",
+        "temperature=0",
+        "Actor-Zuordnung nur aus Foundry-Kontext",
+        "keine API-Key-Pflicht"
+      ]
+    }
+  },
+  "implemented_not_real_tested": {
+    "provider": "ollama",
+    "model": "qwen3:4b",
+    "endpoint": "http://127.0.0.1:11434/api/chat",
+    "preflight": "npm.cmd run test:ollama-preflight",
+    "e2e_test": "npm.cmd run test:ai-pipeline-ollama",
+    "quality_test": "npm.cmd run test:ollama-quality",
+    "quality_cases": 12,
+    "minimum_target_percent": 80,
+    "pending": [
+      "Ollama-Dienst auf Nutzer-PC",
+      "qwen3:4b lokal vorhanden",
+      "echter Ollama-Inferenzlauf",
+      "End-to-End-Pipeline",
+      "Qualitätsbenchmark"
+    ]
+  },
+  "cost_strategy": {
+    "llm": "Ollama/Qwen3 lokal zuerst; keine laufenden LLM-API-Gebühren wenn Qualität ausreicht.",
+    "openai": "Nur optionaler Fallback; kein echter Aufruf bisher.",
+    "stt": "Deepgram bleibt aktuell im bestätigten Pfad; lokales STT noch nicht implementiert."
+  },
+  "next_single_todo": "Auf Nutzer-PC npm.cmd run test:ollama-preflight ausführen. Der Preflight verändert nichts und lädt nichts herunter."
+}
