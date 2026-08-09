@@ -1,9 +1,9 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.8",
-  "created_at": "2026-08-09T14:12:00+02:00",
+  "schema_version": "3.9",
+  "created_at": "2026-08-09T14:17:00+02:00",
   "language": "de",
-  "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit.",
+  "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit. Trennt bestätigte, implementierte aber noch nicht real getestete und geplante Stufen.",
   "project": {
     "name": "DM Cockpit",
     "type": "Foundry VTT Modul + lokaler Discord/Audio/KI Companion Service",
@@ -13,23 +13,24 @@
     "module_id": "dm-cockpit",
     "foundry_version": "0.9.21",
     "foundry_status": "functionally_confirmed",
-    "companion_github_version": "0.7.0",
-    "companion_last_fully_user_tested_stage": "0.6.0_fully_confirmed",
-    "pause_point": "Companion 0.6.0 vollständig lokal bestätigt. Companion 0.7.0 ist auf GitHub implementiert: realer provider-neutral eingebundener OpenAI-Adapter über Responses API mit Standardmodell gpt-5.4-nano, Strict Structured Output, store=false, lokaler Nachvalidierung und Actor-Zuordnung ausschließlich aus Foundry npc.context. Isolierter Adaptertest mit Fake-HTTP-Response erfolgreich; Nutzer-PC-Syntax- und Adaptertest stehen aus. Noch kein echter OpenAI-API-Aufruf erfolgt; keine Actor-Writes.",
-    "local_repository_path": "$HOME\\Desktop\\dm-cockpit"
+    "companion_github_version": "0.8.0",
+    "companion_last_fully_user_tested_stage": "0.7.0_adapter_local_test_confirmed",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "pause_point": "Companion 0.7.0 wurde auf dem Nutzer-PC mit npm.cmd run check und npm.cmd run test:ai-openai bestätigt. Kein echter OpenAI-API-Aufruf wurde durchgeführt. Companion 0.8.0 ist auf GitHub implementiert und isoliert getestet: lokaler Ollama-Provider, qwen3:4b Standard, Structured Output, think=false, Temperatur 0, 8192 Kontext, kein API-Key, Preflight, provider-neutraler Ollama-End-to-End-Smoke-Test und 12-Fälle-Qualitätsbenchmark. Echter Ollama/Qwen3-Lauf auf dem Nutzer-PC steht aus. Keine automatischen Actor-Writes."
   },
   "working_rules": {
     "one_todo_at_a_time": true,
-    "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur bei echten externen Tests, Zugängen, Secrets oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
+    "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur bei echten externen Tests, Zugängen, Secrets oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
     "do_not_reask_known_answers": true,
-    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten über HTML-Dateien mit kopierbarem Ergebnis führen.",
-    "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen; kanonischen PROJECT-CHECKPOINT.json und historische Checkpoints pflegen.",
-    "checkpoint_dual_storage": "Jeden regulären Checkpoint sowohl in ChatGPT Library /DM Cockpit/ als auch im GitHub-Repository speichern.",
-    "user_action_rule": "Wenn etwas vom Nutzer benötigt wird, Abschnitt 'Ich möchte von dir' mit exakter Anweisung verwenden.",
-    "local_command_rule": "Lokale Companion-Arbeit auf $HOME\\Desktop\\dm-cockpit; npm.cmd statt npm verwenden.",
-    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints speichern.",
-    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung; nur RAM-Verarbeitung.",
-    "change_rule": "Keine automatischen Welt-/Actor-Änderungen ohne Undo/Change-Record oder klare GM-Bestätigung."
+    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten werden über HTML-Dateien geführt; die HTML-Datei enthält alle Optionen und erzeugt eine kopierbare Antwort.",
+    "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen; PROJECT-CHECKPOINT.json kanonisch pflegen und historische Checkpoints unter checkpoints/ sichern.",
+    "checkpoint_dual_storage": "Jeder reguläre Checkpoint wird sowohl in ChatGPT Library /DM Cockpit/ als auch im GitHub-Repository gespeichert.",
+    "user_action_rule": "Wenn eine Handlung oder Information vom Nutzer benötigt wird, immer einen klaren Abschnitt 'Ich möchte von dir' mit exakter Anweisung verwenden.",
+    "local_command_rule": "Lokale Companion-Arbeit unter $HOME\\Desktop\\dm-cockpit; npm.cmd statt npm verwenden.",
+    "secret_rule": "Discord Bot Token, Deepgram API Key, OpenAI/API Keys und Passwörter niemals in Chat, GitHub oder Checkpoints speichern.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung; nur temporäre RAM-Verarbeitung.",
+    "change_rule": "Keine automatischen Welt-/Actor-Änderungen ohne Undo/Change-Record oder klare GM-Bestätigung.",
+    "away_mode_rule": "Wenn der Nutzer nicht am Rechner ist und ein echter Test nötig wird: ungetesteten Stand checkpointen und an unabhängigen Aufgaben weiterarbeiten, statt zu blockieren."
   },
   "confirmed_foundry": {
     "version": "0.9.21",
@@ -57,101 +58,151 @@
     "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
     "0.4.0": "Deepgram Nova-3 STT bestätigt",
     "0.5.0": "vollständig lokal bestätigt: Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite",
-    "0.6.0": "vollständig lokal bestätigt: Syntax, isolierte AI-Extraction und End-to-End Mock-AI-Pipeline bis Protocol v1/Broadcast/SQLite",
-    "0.7.0": "OpenAI-Extraktionsadapter auf GitHub implementiert und isoliert mit Fake-HTTP-Response getestet; lokaler Nutzer-PC-Test und echter API-Aufruf ausstehend"
-  },
-  "companion_0_5_confirmed": {
-    "health_service_version": "0.5.0",
-    "voice_regression": {
-      "packets": 344,
-      "bytes": 47775,
-      "duration_ms": 8220,
-      "recognized_text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.",
-      "confidence": 0.961,
-      "foundry_live_transcript_visible": true
-    },
-    "candidate_smoke_test": {
-      "npc_candidates": {"before": 0, "after": 1},
-      "session_event_candidates": {"before": 0, "after": 1},
-      "protocol_v1": true,
-      "sqlite_persistence": true
-    }
-  },
-  "companion_0_6": {
-    "status": "fully_user_confirmed_mock_ai_pipeline",
-    "pipeline_smoke_test": {
-      "status": "passed",
-      "command": "npm.cmd run test:ai-pipeline",
-      "runtime_provider": "mock",
-      "npc_candidate_kind": "promise",
-      "session_candidate_kind": "task",
-      "npc_candidates": {"before": 1, "after": 2},
-      "session_event_candidates": {"before": 1, "after": 2},
-      "protocol_v1": true,
-      "sqlite_persistence": true
-    },
-    "automatic_actor_writes": false
+    "0.6.0": "vollständig lokal bestätigt: provider-neutrale AI/Mock-Extraktion und End-to-End Candidate-Pipeline",
+    "0.7.0": "Nutzer-PC: Syntax + OpenAI-Adaptertest mit Fake-HTTP-Response bestätigt; kein echter API-Aufruf",
+    "0.8.0": "lokaler Ollama-Provider implementiert und isoliert getestet; echter Nutzer-PC/Ollama-Modelllauf ausstehend"
   },
   "companion_0_7": {
-    "status": "implemented_isolated_adapter_test_passed_user_test_pending",
+    "status": "local_user_adapter_test_confirmed_no_real_api_call",
     "provider": "openai",
-    "default_model": "gpt-5.4-nano",
     "endpoint": "https://api.openai.com/v1/responses",
-    "safe_default_ai_provider": "none",
-    "implemented": [
-      "OpenAiExtractionProvider",
-      "AI_PROVIDER=openai routing",
-      "Responses API request",
-      "store=false",
-      "Strict Structured Output via JSON Schema",
-      "NPC/session kind enums constrained",
-      "max 8 candidates per type per segment",
-      "local post-validation",
-      "NPC actorId supplied only from Foundry npc.context",
-      "NPC candidates suppressed without npc.context",
-      "20s configurable timeout",
-      "npm.cmd run test:ai-openai",
-      "package/server version 0.7.0"
-    ],
-    "isolated_validation": {
-      "status": "passed",
-      "real_api_call": false,
-      "api_key_required": false,
-      "confirmed": [
-        "Responses API payload shape",
-        "Authorization header wiring with fake key",
-        "store=false",
-        "json_schema strict=true",
-        "gpt-5.4-nano default",
-        "actor assignment from Foundry context",
-        "NPC suppression without context",
-        "missing OPENAI_API_KEY detection"
+    "default_model_current": "gpt-5-nano",
+    "model_note": "Der frühere unbestätigte Default gpt-5.4-nano wurde vor einem echten API-Aufruf auf den offiziell dokumentierten gpt-5-nano korrigiert.",
+    "local_validation": {
+      "npm_cmd_run_check": "passed",
+      "npm_cmd_run_test_ai_openai": "passed",
+      "observed_output": [
+        "OpenAI-AI-Adapter-Test erfolgreich.",
+        "Bestätigt: Responses API Payload, store=false, Strict Structured Output, Actor-Zuordnung aus Foundry-Kontext, lokale Nachvalidierung."
       ]
     },
-    "real_provider_test": {
+    "real_api_call": false,
+    "real_api_cost_incurred": false
+  },
+  "companion_0_8": {
+    "status": "implemented_isolated_test_passed_real_ollama_test_pending",
+    "preferred_cost_strategy": "lokale KI zuerst; OpenAI nur optionaler Fallback",
+    "provider": "ollama",
+    "default_model": "qwen3:4b",
+    "default_endpoint": "http://127.0.0.1:11434/api/chat",
+    "api_key_required": false,
+    "implemented": [
+      "OllamaExtractionProvider",
+      "AI_PROVIDER=ollama routing",
+      "Structured Output via JSON Schema",
+      "stream=false",
+      "think=false",
+      "temperature=0",
+      "seed=42",
+      "OLLAMA_AI_NUM_CTX default 8192",
+      "OLLAMA_AI_KEEP_ALIVE default 10m",
+      "local/remote endpoint detection",
+      "NPC actorId only from Foundry npc.context",
+      "NPC suppression without npc.context",
+      "local post-validation",
+      "npm.cmd run test:ai-ollama",
+      "npm.cmd run test:ollama-preflight",
+      "provider-neutral AI pipeline smoke test",
+      "npm.cmd run test:ai-pipeline-ollama",
+      "12-case German TTRPG quality benchmark",
+      "npm.cmd run test:ollama-quality",
+      "package/server version 0.8.0"
+    ],
+    "isolated_validation": {
+      "status": "passed_in_assistant_runtime",
+      "node_syntax_check_ollama_adapter": true,
+      "node_syntax_check_ollama_test": true,
+      "fake_http_adapter_test": true,
+      "confirmed": [
+        "qwen3:4b payload",
+        "local endpoint",
+        "no API key",
+        "think=false",
+        "Structured Output schema",
+        "temperature 0",
+        "num_ctx 8192",
+        "Actor assignment from Foundry context",
+        "NPC suppression without context",
+        "remote endpoint marked as external transfer"
+      ]
+    },
+    "real_local_test": {
       "status": "not_run",
-      "requires_local_secret": "OPENAI_API_KEY",
-      "secret_must_not_be_sent_to_chat": true
+      "requires": [
+        "Ollama installed/running on user PC",
+        "qwen3:4b pulled locally",
+        "npm.cmd run check",
+        "npm.cmd run test:ai-ollama",
+        "npm.cmd run test:ollama-preflight",
+        "Companion started with AI_PROVIDER=ollama",
+        "npm.cmd run test:ai-pipeline-ollama",
+        "npm.cmd run test:ollama-quality"
+      ]
+    },
+    "quality_benchmark": {
+      "cases": 12,
+      "default_minimum_percent": 80,
+      "measures": [
+        "required candidate kinds",
+        "smalltalk false positives",
+        "NPC guard without context",
+        "average latency",
+        "P95 latency"
+      ],
+      "planned_comparison": [
+        "qwen3:4b",
+        "qwen3:8b"
+      ]
     }
+  },
+  "cost_strategy": {
+    "llm_extraction": "Can be fully local/free of per-request API fees using Ollama/Qwen3 if quality test passes.",
+    "openai": "Optional fallback only; no real paid API call performed yet.",
+    "speech_to_text": "Still Deepgram in the currently confirmed pipeline; local STT not yet implemented.",
+    "raw_audio": "No permanent storage."
   },
   "protocol_v1": {
     "endpoint": "ws://127.0.0.1:43170/v1",
-    "candidate_types": ["npc.memory.candidate", "session.event.candidate"],
-    "npc_candidate_kinds": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"],
-    "session_candidate_kinds": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
+    "candidate_types": [
+      "npc.memory.candidate",
+      "session.event.candidate"
+    ],
+    "npc_candidate_kinds": [
+      "statement",
+      "knowledge",
+      "action",
+      "relationship",
+      "promise",
+      "lie",
+      "deadline",
+      "consequence",
+      "other"
+    ],
+    "session_candidate_kinds": [
+      "decision",
+      "quest",
+      "task",
+      "loot",
+      "reward",
+      "open_question",
+      "combat",
+      "event",
+      "other"
+    ]
   },
   "roadmap": [
     "1: Companion 0.5.0 vollständig lokal bestätigt",
-    "2: Companion 0.6.0 provider-neutrale AI/Mock-Extraktion vollständig lokal bestätigt",
-    "3a: Companion 0.7.0 OpenAI-Adapter implementiert und isoliert getestet",
-    "3b: Nutzer-PC Syntax + npm.cmd run test:ai-openai bestätigen",
-    "3c: OpenAI API-Key ausschließlich lokal setzen und echten Pipeline-Test durchführen",
-    "4: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
-    "5: Undo/Change-Record Runtime",
-    "6: optionale automatische NPC-Memory-Übernahme",
-    "7: dauerhaft durchsuchbares Transkript",
-    "8: Session-Historie, Recap und Discord-Kurzfassung",
-    "9: Skalierungs-/Provider-/Cost-Hardening"
+    "2: Companion 0.6.0 Mock-AI-Pipeline vollständig lokal bestätigt",
+    "3: Companion 0.7.0 OpenAI-Adapter lokal ohne echten API-Aufruf bestätigt",
+    "4a: Companion 0.8.0 Ollama/Qwen3 lokal implementiert + isoliert getestet",
+    "4b: Nutzer-PC Ollama/qwen3:4b Preflight + End-to-End + Qualitätsbenchmark",
+    "4c: qwen3:4b gegen qwen3:8b vergleichen und Standard festlegen",
+    "5: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
+    "6: Undo/Change-Record Runtime",
+    "7: optionale automatische NPC-Memory-Übernahme",
+    "8: dauerhaft durchsuchbares Transkript",
+    "9: Session-Historie, Recap und Discord-Kurzfassung",
+    "10: optional lokales STT und Skalierungs-/Performance-Hardening"
   ],
   "resume_instructions": {
     "source_of_truth": true,
@@ -161,9 +212,11 @@
       "Keys erneut anfordern",
       "Companion 0.1-0.6 neu bauen/testen",
       "0.6.0 End-to-End test:ai-pipeline erneut ausführen",
+      "0.7.0 npm.cmd run check erneut ausführen, außer neue Änderungen erfordern Regression",
+      "0.7.0 alten gpt-5.4-nano Default verwenden",
       "bestätigte Foundry-Grundfunktionen neu implementieren"
     ],
-    "next_single_todo": "Companion 0.7.0 auf dem Nutzer-PC aktualisieren und zunächst ohne echten API-Key npm.cmd run check sowie npm.cmd run test:ai-openai ausführen.",
-    "after_success": "Dann OPENAI_API_KEY ausschließlich lokal in companion/.env setzen, AI_PROVIDER=openai aktivieren und kontrollierten echten test:ai-pipeline durchführen; API-Key niemals im Chat posten."
+    "next_single_external_test": "Wenn der Nutzer wieder am Rechner ist: Companion 0.8.0 holen, Ollama/qwen3:4b lokal prüfen und dann test:ai-pipeline-ollama + test:ollama-quality ausführen.",
+    "autonomous_next_work": "Bis dahin unabhängige Backend/UI-Aufgaben weiterbearbeiten und jede ungetestete Stufe klar als unbestätigt markieren."
   }
 }
