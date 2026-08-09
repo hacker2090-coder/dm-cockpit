@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.3",
-  "created_at": "2026-08-09T13:51:00+02:00",
+  "schema_version": "3.4",
+  "created_at": "2026-08-09T13:58:00+02:00",
   "language": "de",
   "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit. Source of Truth für neue Chats; trennt bestätigt, implementiert aber noch nicht getestet, historisch implementiert und geplant.",
   "project": {
@@ -15,7 +15,7 @@
     "foundry_status": "functionally_confirmed",
     "companion_github_version": "0.6.0",
     "companion_last_fully_user_tested_stage": "0.5.0_fully_confirmed",
-    "pause_point": "Companion 0.5.0 vollständig lokal bestätigt. Companion 0.6.0 AI-Extraction-Grundgerüst auf GitHub implementiert und in isolierter Ausführungsumgebung syntaktisch/funktional getestet; lokaler Nutzer-PC-Test noch ausstehend. AI_PROVIDER bleibt standardmäßig none; Mock-Provider dient nur Tests. Noch kein realer LLM-Provider und keine Actor-Writes.",
+    "pause_point": "Companion 0.5.0 vollständig lokal bestätigt. Companion 0.6.0 AI-Extraction-Grundgerüst auf GitHub implementiert und isoliert getestet; automatischer End-to-End-Smoke-Test test:ai-pipeline ist vorbereitet. Lokaler Nutzer-PC-Test von 0.6.0 steht aus. AI_PROVIDER bleibt standardmäßig none; kein realer LLM-Provider und keine Actor-Writes.",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
     "manifest": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/module.json",
     "download": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip"
@@ -39,31 +39,71 @@
   "product_goal": {
     "goal": "Ein zentrales DM/GM-Cockpit, in dem der Großteil der Live-Sessionarbeit ohne ständigen Wechsel zwischen Foundry, Discord und externen Notizen erledigt werden kann.",
     "live_dashboard_target": "LIVE soll langfristig ungefähr 90 Prozent der Sessionarbeit abdecken.",
-    "ux_rules": [
-      "maximal etwa drei primäre relevante Aktionen gleichzeitig",
-      "Warnungen und Zeitdruck priorisieren",
-      "seltene Funktionen einklappen oder in Kontextmenüs/Command Palette verschieben",
-      "automatische Vorschläge ja, ungefragte Weltveränderungen nein"
-    ]
+    "ux_rules": ["maximal etwa drei primäre relevante Aktionen gleichzeitig", "Warnungen und Zeitdruck priorisieren", "seltene Funktionen einklappen oder in Kontextmenüs/Command Palette verschieben", "automatische Vorschläge ja, ungefragte Weltveränderungen nein"]
   },
   "confirmed_foundry_0_9_21": {
     "features": ["LIVE-Dashboard", "Abenteuer-Flowchart", "Spontane Szenen", "Szenen-Presets", "Gegner-Spawnpunkte", "Enemy Reserve Bench", "Handout Queue", "Loot-/Belohnungspakete", "Item-Suche für Loot-/Belohnungspakete", "Compendium-Schnellsuche", "NPC-Schnellgenerator", "Actor-basiertes NPC Memory", "Discord Live-Transkript UI/Transport-Client", "NPC-Kontext aus Cockpit-Actor bzw. ausgewähltem Token", "Foundry/GitHub Update-System"],
     "live_transcript": {"default_ws": "ws://127.0.0.1:43170/v1", "protocol": "1.0", "max_ui_segments": 120, "confirmed": ["Bereich sichtbar", "Mock-Status", "Mock-Segment", "Feed leeren", "NPC-Kontext", "<Actorname> · Cockpit", "echtes Deepgram-Transkript unter Companion 0.5.0 sichtbar"]}
   },
   "discord_audio_ai_decisions": {
-    "dedicated_bot": "DM Cockpit", "bot_created_and_installed": true, "same_pc_as_foundry": true, "auto_join": "Bot folgt konfiguriertem GM", "speaker_identity": "Discord User ID", "participant_target": ">10", "latency_target": "5-15 Sekunden", "transcript_storage": "lokales SQLite", "transcript_retention": "dauerhaft durchsuchbar", "raw_audio": "keine dauerhafte Speicherung", "npc_context_priority": ["Cockpit NPC", "selected Foundry token", "none"], "desired_outputs": ["Live-Transkript", "NPC-Memory-Updates", "durchsuchbares Transkript", "Session-Historie", "Session-Recap", "Discord-Kurzfassung"], "direct_ai_save_long_term": true, "direct_ai_save_gate": "Undo/Change-Record"
+    "dedicated_bot": "DM Cockpit",
+    "bot_created_and_installed": true,
+    "same_pc_as_foundry": true,
+    "auto_join": "Bot folgt konfiguriertem GM",
+    "speaker_identity": "Discord User ID",
+    "participant_target": ">10",
+    "latency_target": "5-15 Sekunden",
+    "transcript_storage": "lokales SQLite",
+    "transcript_retention": "dauerhaft durchsuchbar",
+    "raw_audio": "keine dauerhafte Speicherung",
+    "npc_context_priority": ["Cockpit NPC", "selected Foundry token", "none"],
+    "desired_outputs": ["Live-Transkript", "NPC-Memory-Updates", "durchsuchbares Transkript", "Session-Historie", "Session-Recap", "Discord-Kurzfassung"],
+    "direct_ai_save_long_term": true,
+    "direct_ai_save_gate": "Undo/Change-Record"
   },
   "discord_voice": {
-    "status": "real_discord_confirmed_on_companion_0_5_0", "permissions": ["View Channel", "Connect"], "administrator_needed": false, "privileged_intents_needed": false, "intents": ["Guilds", "GuildVoiceStates"], "voice": {"selfDeaf": false, "selfMute": true, "daveEncryption": true}, "confirmed": ["Login", "DAVE/E2EE", "Auto-Join", "Follow bei Channel-Wechsel", "Leave wenn GM Voice verlässt", "echter 0.5.0 Regressionstest"]
+    "status": "real_discord_confirmed_on_companion_0_5_0",
+    "permissions": ["View Channel", "Connect"],
+    "administrator_needed": false,
+    "privileged_intents_needed": false,
+    "intents": ["Guilds", "GuildVoiceStates"],
+    "voice": {"selfDeaf": false, "selfMute": true, "daveEncryption": true},
+    "confirmed": ["Login", "DAVE/E2EE", "Auto-Join", "Follow bei Channel-Wechsel", "Leave wenn GM Voice verlässt", "echter 0.5.0 Regressionstest"]
   },
   "protocol_v1": {
-    "transport": "lokaler WebSocket", "endpoint": "ws://127.0.0.1:43170/v1", "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md", "schema": "schemas/discord-audio-ai-v1.schema.json", "message_types": ["hello", "hello.ack", "health", "session.started", "session.ended", "speaker.upserted", "capture.status", "transcript.segment", "npc.context", "npc.memory.candidate", "session.event.candidate", "npc.memory.applied", "change.undo.request", "change.undo.result", "error"], "npc_candidate_kinds": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"], "session_candidate_kinds": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
+    "transport": "lokaler WebSocket",
+    "endpoint": "ws://127.0.0.1:43170/v1",
+    "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
+    "schema": "schemas/discord-audio-ai-v1.schema.json",
+    "message_types": ["hello", "hello.ack", "health", "session.started", "session.ended", "speaker.upserted", "capture.status", "transcript.segment", "npc.context", "npc.memory.candidate", "session.event.candidate", "npc.memory.applied", "change.undo.request", "change.undo.result", "error"],
+    "npc_candidate_kinds": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"],
+    "session_candidate_kinds": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
   },
   "companion": {
-    "runtime": "Node.js >=24.17.0", "confirmed_user_node": "24.18.1", "path": "companion/", "websocket": "ws://127.0.0.1:43170/v1", "health": "http://127.0.0.1:43170/health", "sqlite": "companion/data/dm-cockpit.sqlite",
-    "history": {"0.1.0": "Foundry <-> WebSocket <-> Companion <-> SQLite Ende-zu-Ende bestätigt", "0.2.0": "realer Discord Voice/DAVE/GM Follow bestätigt", "0.3.0": "realer sprechergetrennter Discord-Opus-Empfang bestätigt", "0.4.0": "echter Deepgram Nova-3 STT-Test bestätigt", "0.5.0": "vollständig lokal bestätigt: Health, echter Discord/DAVE/Deepgram/Foundry-Regressionspfad sowie Candidate Protocol-v1 Broadcast + SQLite-Persistenz", "0.6.0": "provider-neutraler AiExtractionService + deterministischer Mock-Provider + Protocol-Broadcast-Anbindung + Deduplizierung/Final-only auf GitHub; isolierter Test bestanden, Nutzer-PC-Test ausstehend"},
+    "runtime": "Node.js >=24.17.0",
+    "confirmed_user_node": "24.18.1",
+    "path": "companion/",
+    "websocket": "ws://127.0.0.1:43170/v1",
+    "health": "http://127.0.0.1:43170/health",
+    "sqlite": "companion/data/dm-cockpit.sqlite",
+    "history": {
+      "0.1.0": "Foundry <-> WebSocket <-> Companion <-> SQLite Ende-zu-Ende bestätigt",
+      "0.2.0": "realer Discord Voice/DAVE/GM Follow bestätigt",
+      "0.3.0": "realer sprechergetrennter Discord-Opus-Empfang bestätigt",
+      "0.4.0": "echter Deepgram Nova-3 STT-Test bestätigt",
+      "0.5.0": "vollständig lokal bestätigt: Health, echter Discord/DAVE/Deepgram/Foundry-Regressionspfad sowie Candidate Protocol-v1 Broadcast + SQLite-Persistenz",
+      "0.6.0": "provider-neutraler AiExtractionService + deterministischer Mock-Provider + Protocol-Broadcast-Anbindung + Deduplizierung/Final-only auf GitHub; isolierter Test bestanden, Nutzer-PC-Test ausstehend"
+    },
     "0_4_stt": {"provider_strategy": "provider-neutral", "safe_default": "none", "provider": "deepgram", "model": "nova-3", "language": "de", "endpoint": "wss://api.eu.deepgram.com/v1/listen", "input": "raw Discord Opus 48kHz stereo", "mip_opt_out": true},
-    "0_5_regression": {"health_confirmed": true, "health_service_version": "0.5.0", "health_protocol_version": "1.0", "health_connected_clients": 1, "health_stats_before_candidate_test": {"sessions": 3, "speakers": 2, "segments": 6, "npcContexts": 1, "npcCandidates": 0, "sessionEventCandidates": 0}, "real_voice_test": {"speaker": "hacker 2090", "packets": 344, "bytes": 47775, "duration_ms": 8220, "recognized_text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.", "confidence": 0.961, "foundry_live_transcript_visible": true}, "candidate_smoke_test": {"confirmed": true, "protocol_v1": true, "npc_memory_candidate_broadcast": true, "session_event_candidate_broadcast": true, "sqlite_persistence": true, "npc_candidates": {"before": 0, "after": 1}, "session_event_candidates": {"before": 0, "after": 1}, "command": "npm.cmd run test:candidates"}}
+    "0_5_regression": {
+      "health_confirmed": true,
+      "health_service_version": "0.5.0",
+      "health_protocol_version": "1.0",
+      "health_connected_clients": 1,
+      "health_stats_before_candidate_test": {"sessions": 3, "speakers": 2, "segments": 6, "npcContexts": 1, "npcCandidates": 0, "sessionEventCandidates": 0},
+      "real_voice_test": {"speaker": "hacker 2090", "packets": 344, "bytes": 47775, "duration_ms": 8220, "recognized_text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.", "confidence": 0.961, "foundry_live_transcript_visible": true},
+      "candidate_smoke_test": {"confirmed": true, "protocol_v1": true, "npc_memory_candidate_broadcast": true, "session_event_candidate_broadcast": true, "sqlite_persistence": true, "npc_candidates": {"before": 0, "after": 1}, "session_event_candidates": {"before": 0, "after": 1}, "command": "npm.cmd run test:candidates"}
+    }
   },
   "github_0_5_0": {
     "status": "fully_user_regression_tested",
@@ -71,20 +111,28 @@
     "not_implemented": ["real LLM/AI provider", "Foundry candidate UI", "accept/reject UI", "automatic Actor writes", "Undo execution"]
   },
   "sqlite_tables": ["meta", "sessions", "speakers", "transcript_segments", "npc_context_events", "npc_memory_candidates", "session_event_candidates", "change_records"],
-  "ai_extraction_next": {"provider": "noch offen", "input": ["finale transcript.segment", "Session", "NPC-Kontext"], "npc_categories": ["Versprechen", "Aussagen", "Wissen", "Aktionen", "Beziehungen", "Lügen", "Fristen", "Konsequenzen"], "session_categories": ["Entscheidungen", "Quests", "Aufgaben", "Loot", "Belohnungen", "offene Fragen", "Kämpfe", "wichtige Ereignisse"], "outputs": ["npc.memory.candidate", "session.event.candidate"], "initial_policy": "nur Kandidaten, keine Actor-Writes"},
+  "ai_extraction_next": {
+    "provider": "noch offen",
+    "input": ["finale transcript.segment", "Session", "NPC-Kontext"],
+    "npc_categories": ["Versprechen", "Aussagen", "Wissen", "Aktionen", "Beziehungen", "Lügen", "Fristen", "Konsequenzen"],
+    "session_categories": ["Entscheidungen", "Quests", "Aufgaben", "Loot", "Belohnungen", "offene Fragen", "Kämpfe", "wichtige Ereignisse"],
+    "outputs": ["npc.memory.candidate", "session.event.candidate"],
+    "initial_policy": "nur Kandidaten, keine Actor-Writes"
+  },
   "github_0_6_0": {
     "status": "implemented_and_isolated_test_passed_user_test_pending",
     "version": "0.6.0",
-    "implemented": ["AiExtractionService provider-neutral", "MockAiExtractionProvider deterministic-v1", "AI_PROVIDER safe default none", "final transcript.segment -> extraction via Protocol-v1 broadcast", "per-session npc.context tracking", "npc.memory.candidate output", "session.event.candidate output", "sourceSegmentIds provenance", "candidate provider/model/confidence/status metadata", "duplicate segment suppression", "partial transcript suppression", "no automatic Actor writes", "npm test:ai", "package/server serviceVersion 0.6.0"],
+    "implemented": ["AiExtractionService provider-neutral", "MockAiExtractionProvider deterministic-v1", "AI_PROVIDER safe default none", "final transcript.segment -> extraction via Protocol-v1 broadcast", "per-session npc.context tracking with latest-context fallback", "npc.memory.candidate output", "session.event.candidate output", "sourceSegmentIds provenance", "candidate provider/model/confidence/status metadata", "duplicate segment suppression", "partial transcript suppression", "no automatic Actor writes", "npm test:ai", "package/server serviceVersion 0.6.0", "ai-pipeline-smoke-test.js", "npm test:ai-pipeline"],
     "isolated_validation": {"node_syntax_check": true, "test_ai": true, "expected_mock_case": "promise + task from 'Ich verspreche dem Händler, morgen zurückzukommen.'", "duplicate_ignored": true, "partial_ignored": true, "session_decision_without_npc_context": true},
+    "integration_smoke_test": {"status": "prepared_not_user_run", "command": "npm.cmd run test:ai-pipeline", "requires": "Companion 0.6.0 running with AI_PROVIDER=mock", "checks": ["npc.context sent through Protocol v1", "final transcript.segment sent through Protocol v1", "automatic npc.memory.candidate received with provider mock", "automatic session.event.candidate received with provider mock", "both candidate counters increase in /health/SQLite"]},
     "local_user_test_pending": true,
     "real_llm_provider_implemented": false
   },
-  "roadmap": ["1: Companion 0.5.0 vollständig lokal bestätigt", "2a: Companion 0.6.0 provider-neutrale AI/Mock-Extraktion auf GitHub implementiert und isoliert getestet", "2b: 0.6.0 auf Nutzer-PC mit npm.cmd run check + npm.cmd run test:ai regressionsprüfen", "2c: 0.6.0 automatische Protocol-Pipeline lokal mit AI_PROVIDER=mock testen", "2d: realen AI/LLM Provider auswählen und anbinden", "3: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen", "4: Undo/Change-Record Runtime", "5: optionale automatische NPC-Memory-Übernahme", "6: dauerhaft durchsuchbares Transkript", "7: Session-Historie, Recap und Discord-Kurzfassung", "8: >10 Teilnehmer/Backpressure/Provider/Cost Hardening und optional lokales STT"],
+  "roadmap": ["1: Companion 0.5.0 vollständig lokal bestätigt", "2a: Companion 0.6.0 provider-neutrale AI/Mock-Extraktion auf GitHub implementiert und isoliert getestet", "2b: 0.6.0 auf Nutzer-PC mit npm.cmd run check + npm.cmd run test:ai regressionsprüfen", "2c: Companion temporär mit AI_PROVIDER=mock starten und npm.cmd run test:ai-pipeline ausführen", "2d: realen AI/LLM Provider auswählen und anbinden", "3: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen", "4: Undo/Change-Record Runtime", "5: optionale automatische NPC-Memory-Übernahme", "6: dauerhaft durchsuchbares Transkript", "7: Session-Historie, Recap und Discord-Kurzfassung", "8: >10 Teilnehmer/Backpressure/Provider/Cost Hardening und optional lokales STT"],
   "resume_instructions": {
     "source_of_truth": true,
     "do_not_repeat": ["Discord-Bot neu anlegen", "Deepgram-Konto neu einrichten", "Deepgram-Key erneut anfordern", "Discord Bot Token erneut anfordern", "Companion 0.1-0.4 neu bauen", "0.5.0 Audio/STT/Foundry-Regression erneut testen", "bestätigte Foundry-Grundfunktionen neu implementieren", "Candidate-Persistenz/Broadcast-Smoke-Test erneut ausführen", "Companion 0.5.0 Baseline erneut testen"],
     "next_single_todo": "Companion 0.6.0 lokal aktualisieren und npm.cmd run check sowie npm.cmd run test:ai ausführen.",
-    "after_success": "AI_PROVIDER=mock temporär aktivieren und automatische Protocol-Pipeline mit echtem/finalem transcript.segment testen; weiterhin keine Actor-Writes."
+    "after_success": "Companion mit temporärem AI_PROVIDER=mock starten und in zweiter PowerShell npm.cmd run test:ai-pipeline ausführen; weiterhin keine Actor-Writes."
   }
 }
