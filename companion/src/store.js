@@ -29,6 +29,12 @@ export class CompanionStore {
     this.migrate();
   }
 
+  ensureColumn(table, column, definition) {
+    const columns = this.db.prepare(`PRAGMA table_info(${table})`).all();
+    if (columns.some(entry => String(entry.name) === column)) return;
+    this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+
   migrate() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS meta (
@@ -54,6 +60,7 @@ export class CompanionStore {
         discord_user_id TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,
         global_name TEXT,
+        server_nickname TEXT,
         is_bot INTEGER NOT NULL DEFAULT 0,
         updated_at TEXT NOT NULL
       );
@@ -63,6 +70,10 @@ export class CompanionStore {
         session_id TEXT,
         discord_user_id TEXT NOT NULL,
         speaker_name TEXT NOT NULL,
+        player_name TEXT,
+        actor_id TEXT,
+        actor_uuid TEXT,
+        character_name TEXT,
         started_at TEXT NOT NULL,
         ended_at TEXT NOT NULL,
         text TEXT NOT NULL,
@@ -75,6 +86,20 @@ export class CompanionStore {
 
       CREATE INDEX IF NOT EXISTS idx_transcript_session_time
         ON transcript_segments(session_id, started_at);
+
+      CREATE TABLE IF NOT EXISTS player_character_mappings (
+        world_id TEXT NOT NULL,
+        discord_user_id TEXT NOT NULL,
+        player_name TEXT,
+        actor_id TEXT NOT NULL,
+        actor_uuid TEXT,
+        character_name TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (world_id, discord_user_id)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_player_character_mapping_world
+        ON player_character_mappings(world_id, character_name);
 
       CREATE TABLE IF NOT EXISTS npc_context_events (
         id TEXT PRIMARY KEY,
@@ -139,6 +164,12 @@ export class CompanionStore {
         undone_at TEXT
       );
     `);
+
+    this.ensureColumn("speakers", "server_nickname", "TEXT");
+    this.ensureColumn("transcript_segments", "player_name", "TEXT");
+    this.ensureColumn("transcript_segments", "actor_id", "TEXT");
+    this.ensureColumn("transcript_segments", "actor_uuid", "TEXT");
+    this.ensureColumn("transcript_segments", "character_name", "TEXT");
   }
 
   upsertSession(sessionId, payload = {}, timestamp = new Date().toISOString()) {
@@ -180,33 +211,108 @@ export class CompanionStore {
   upsertSpeaker(payload, timestamp = new Date().toISOString()) {
     if (!payload?.discordUserId || !payload?.displayName) return;
     this.db.prepare(`
-      INSERT INTO speakers (discord_user_id, display_name, global_name, is_bot, updated_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO speakers (discord_user_id, display_name, global_name, server_nickname, is_bot, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(discord_user_id) DO UPDATE SET
         display_name = excluded.display_name,
         global_name = excluded.global_name,
+        server_nickname = excluded.server_nickname,
         is_bot = excluded.is_bot,
         updated_at = excluded.updated_at
     `).run(
       String(payload.discordUserId),
       String(payload.displayName),
       payload.globalName ?? null,
+      payload.serverNickname ?? null,
       payload.isBot ? 1 : 0,
       timestamp
     );
+  }
+
+  replacePlayerCharacterMappings(worldId, mappings, timestamp = new Date().toISOString()) {
+    const normalizedWorldId = String(worldId ?? "").trim();
+    if (!normalizedWorldId || !Array.isArray(mappings)) return false;
+
+    const normalized = [];
+    const byDiscordUser = new Map();
+    for (const raw of mappings) {
+      const discordUserId = String(raw?.discordUserId ?? "").trim();
+      const actorId = String(raw?.actorId ?? "").trim();
+      const characterName = String(raw?.characterName ?? "").trim();
+      if (!discordUserId || !actorId || !characterName) return false;
+      byDiscordUser.set(discordUserId, {
+        discordUserId,
+        playerName: String(raw?.playerName ?? "").trim() || null,
+        actorId,
+        actorUuid: String(raw?.actorUuid ?? "").trim() || null,
+        characterName,
+        updatedAt: String(raw?.updatedAt ?? "").trim() || timestamp
+      });
+    }
+    normalized.push(...byDiscordUser.values());
+
+    this.db.exec("BEGIN IMMEDIATE");
+    try {
+      this.db.prepare("DELETE FROM player_character_mappings WHERE world_id = ?").run(normalizedWorldId);
+      const insert = this.db.prepare(`
+        INSERT INTO player_character_mappings (
+          world_id, discord_user_id, player_name, actor_id, actor_uuid, character_name, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const mapping of normalized) {
+        insert.run(
+          normalizedWorldId,
+          mapping.discordUserId,
+          mapping.playerName,
+          mapping.actorId,
+          mapping.actorUuid,
+          mapping.characterName,
+          mapping.updatedAt
+        );
+      }
+      this.db.exec("COMMIT");
+      return true;
+    } catch (error) {
+      try { this.db.exec("ROLLBACK"); } catch (_rollbackError) {}
+      throw error;
+    }
+  }
+
+  listPlayerCharacterMappings(worldId) {
+    const normalizedWorldId = String(worldId ?? "").trim();
+    if (!normalizedWorldId) return [];
+    const rows = this.db.prepare(`
+      SELECT discord_user_id, player_name, actor_id, actor_uuid, character_name, updated_at
+      FROM player_character_mappings
+      WHERE world_id = ?
+      ORDER BY COALESCE(player_name, character_name) COLLATE NOCASE, discord_user_id
+    `).all(normalizedWorldId);
+    return rows.map(row => ({
+      discordUserId: String(row.discord_user_id),
+      playerName: row.player_name ?? null,
+      actorId: String(row.actor_id),
+      actorUuid: row.actor_uuid ?? null,
+      characterName: String(row.character_name),
+      updatedAt: String(row.updated_at)
+    }));
   }
 
   upsertTranscriptSegment(sessionId, payload, timestamp = new Date().toISOString()) {
     if (!payload?.segmentId || !payload?.text || payload.final === false) return false;
     this.db.prepare(`
       INSERT INTO transcript_segments (
-        segment_id, session_id, discord_user_id, speaker_name, started_at, ended_at,
+        segment_id, session_id, discord_user_id, speaker_name, player_name,
+        actor_id, actor_uuid, character_name, started_at, ended_at,
         text, final, language, provider, confidence, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(segment_id) DO UPDATE SET
         session_id = excluded.session_id,
         discord_user_id = excluded.discord_user_id,
         speaker_name = excluded.speaker_name,
+        player_name = excluded.player_name,
+        actor_id = excluded.actor_id,
+        actor_uuid = excluded.actor_uuid,
+        character_name = excluded.character_name,
         started_at = excluded.started_at,
         ended_at = excluded.ended_at,
         text = excluded.text,
@@ -219,6 +325,10 @@ export class CompanionStore {
       sessionId ?? null,
       String(payload.discordUserId ?? "unknown"),
       String(payload.speakerName ?? "Unbekannt"),
+      payload.playerName ?? null,
+      payload.actorId ?? null,
+      payload.actorUuid ?? null,
+      payload.characterName ?? null,
       String(payload.startedAt ?? timestamp),
       String(payload.endedAt ?? timestamp),
       String(payload.text),
@@ -398,12 +508,23 @@ export class CompanionStore {
     const sessions = this.db.prepare("SELECT COUNT(*) AS count FROM sessions").get().count;
     const speakers = this.db.prepare("SELECT COUNT(*) AS count FROM speakers").get().count;
     const segments = this.db.prepare("SELECT COUNT(*) AS count FROM transcript_segments").get().count;
+    const playerCharacterMappings = this.db.prepare("SELECT COUNT(*) AS count FROM player_character_mappings").get().count;
     const npcContexts = this.db.prepare("SELECT COUNT(*) AS count FROM npc_context_events").get().count;
     const npcCandidates = this.db.prepare("SELECT COUNT(*) AS count FROM npc_memory_candidates").get().count;
     const sessionEventCandidates = this.db.prepare("SELECT COUNT(*) AS count FROM session_event_candidates").get().count;
     const npcPending = this.db.prepare("SELECT COUNT(*) AS count FROM npc_memory_candidates WHERE status = 'pending'").get().count;
     const sessionEventPending = this.db.prepare("SELECT COUNT(*) AS count FROM session_event_candidates WHERE status = 'pending'").get().count;
-    return { sessions, speakers, segments, npcContexts, npcCandidates, sessionEventCandidates, npcPending, sessionEventPending };
+    return {
+      sessions,
+      speakers,
+      segments,
+      playerCharacterMappings,
+      npcContexts,
+      npcCandidates,
+      sessionEventCandidates,
+      npcPending,
+      sessionEventPending
+    };
   }
 
   close() {
