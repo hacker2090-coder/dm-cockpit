@@ -38,40 +38,34 @@ Auf dem Nutzer-PC vollständig bestätigt:
 - `npc.memory.candidate` Broadcast + SQLite-Persistenz
 - `session.event.candidate` Broadcast + SQLite-Persistenz
 
-0.5.0 Regressionstest:
+Bestätigter 0.5.0-Regressionstest:
 
 - 344 Opus-Pakete
 - 47.775 Bytes
 - 8.220 ms
-- erkannter Satz: `Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.`
-- Confidence: **0.961**
-- Satz im Foundry-Live-Transkript sichtbar
+- Confidence **0.961**
+- erkannter Satz im Foundry-Live-Transkript sichtbar
+- Candidate-Zähler erfolgreich von 0 → 1 für beide Candidate-Typen
 
-Candidate-Smoke-Test:
-
-- `npcCandidates`: 0 → 1
-- `sessionEventCandidates`: 0 → 1
-- Protocol v1, Broadcast und SQLite-Persistenz bestätigt
-
-## Companion 0.6.0 – auf GitHub, lokaler Nutzer-Test ausstehend
-
-Der aktuelle GitHub-Paketstand ist **0.6.0**.
+## Companion 0.6.0 – auf GitHub, Nutzer-PC-Test ausstehend
 
 Neu:
 
 - provider-neutraler `AiExtractionService`
 - sicherer Default `AI_PROVIDER=none`
-- deterministischer `MockAiExtractionProvider` für Tests
-- finale `transcript.segment`-Nachrichten werden über den Protocol-v1-Broadcast der Extraktionsschicht zugeführt
-- NPC-Kontext wird pro Session aus `npc.context` verfolgt
+- deterministischer `MockAiExtractionProvider` für lokale Tests
+- finale `transcript.segment`-Nachrichten gehen über Protocol v1 in die Extraktionsschicht
+- NPC-Kontext pro Session + Latest-Context-Fallback, damit eine Auswahl vor Sessionstart nicht verloren geht
 - strukturierte Ausgabe als `npc.memory.candidate` und `session.event.candidate`
-- `sourceSegmentIds` bleiben als Herkunftsnachweis erhalten
-- Provider/Modell/Confidence/Status werden am Kandidaten gespeichert
-- doppelte Segment-IDs werden unterdrückt
-- Partials werden nicht extrahiert
+- `sourceSegmentIds` als Herkunftsnachweis
+- Provider/Modell/Confidence/Status am Kandidaten
+- Deduplizierung per Segment-ID
+- Partials werden ignoriert
 - weiterhin **keine automatischen Actor-Schreibvorgänge**
 
-Der deterministische Test wurde außerhalb des Nutzer-PCs bereits erfolgreich ausgeführt. Der nächste Schritt ist die lokale Regression mit:
+Der isolierte AI-Test ist bereits erfolgreich gelaufen. Der End-to-End-Smoke-Test ist vorbereitet und syntaktisch geprüft.
+
+### Lokaler 0.6.0-Test
 
 ```powershell
 Ctrl+C
@@ -83,22 +77,25 @@ npm.cmd run check
 npm.cmd run test:ai
 ```
 
-Danach folgt ein lokaler Ende-zu-Ende-Test mit temporärem `AI_PROVIDER=mock`.
+Danach wird der Companion einmal temporär mit `AI_PROVIDER=mock` gestartet und in einer zweiten PowerShell ausgeführt:
 
-## Geplante AI-Pipeline
-
-```text
-Discord Voice
-→ DAVE / sprechergetrenntes Opus
-→ STT
-→ final transcript.segment
-→ AiExtractionService
-→ npc.memory.candidate / session.event.candidate
-→ SQLite + WebSocket
-→ später Foundry Candidate UI
+```powershell
+npm.cmd run test:ai-pipeline
 ```
 
-Zunächst nur strukturierte Vorschläge. Automatische Actor-Änderungen bleiben gesperrt, bis Undo/Change-Record sicher funktioniert.
+Der Pipeline-Test prüft automatisch:
+
+**npc.context + final transcript.segment → AiExtractionService → NPC-/Session-Kandidat → Protocol v1 → SQLite**
+
+## Geplante nächste Stufen
+
+1. 0.6.0 lokal bestätigen
+2. realen AI/LLM-Provider auswählen und anbinden
+3. Kandidaten-UI in Foundry mit Annehmen/Verwerfen
+4. Undo/Change-Record Runtime
+5. erst danach optionale automatische NPC-Memory-Übernahme
+6. durchsuchbares Transkript
+7. Session-Historie, Recap und Discord-Kurzfassung
 
 ## Datenschutz / Secrets
 
@@ -119,7 +116,7 @@ Historische Snapshots:
 
 `checkpoints/`
 
-Der aktuelle Checkpoint ist **Schema 3.3**.
+Aktueller Checkpoint: **Schema 3.5**.
 
 ## Installation / Updates
 
