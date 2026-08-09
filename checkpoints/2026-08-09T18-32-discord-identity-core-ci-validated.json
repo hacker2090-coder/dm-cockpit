@@ -1,0 +1,79 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_snapshot",
+  "schema_version": "3.28",
+  "created_at": "2026-08-09T18:32:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "branch": "main",
+  "milestone": "discord_identity_core_ci_validated",
+  "versions": {
+    "foundry_repository": "0.9.27",
+    "foundry_last_fully_user_confirmed": "0.9.24",
+    "foundry_last_visual_user_confirmed": "0.9.26",
+    "companion_repository": "0.11.0",
+    "companion_last_fully_user_confirmed": "0.10.0"
+  },
+  "validated_main": "971662a063fe3bd2b97efd6d0174ec4119c036b2",
+  "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27",
+  "discord_bot_expansion": {
+    "scope_document": "docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json",
+    "overall_status": "in_progress",
+    "milestone_1": {
+      "name": "Voice-Teilnehmer -> Spieler/Charakter-Mapping -> Sprecherattribution",
+      "status": "implemented_ci_validated_runtime_not_user_confirmed",
+      "implemented": [
+        "Voice-Teilnehmerliste des aktuell verfolgten Discord-Calls",
+        "Protocol-Nachrichten voice.participants und voice.participants.request",
+        "Protocol-Nachrichten player.character.mapping.set/request/result",
+        "Foundry-Karte Spieler & Charaktere",
+        "GM-bestätigte Discord-User-ID -> Foundry-Actor-Zuordnung",
+        "weltbezogene Foundry-Persistenz der Zuordnung",
+        "Companion-SQLite-Spiegelung der Zuordnung",
+        "additive SQLite-Migration für server_nickname sowie player_name/actor_id/actor_uuid/character_name",
+        "strukturierte Sprecherattribution in finalen Transkriptsegmenten",
+        "bestätigte Charakteridentität als Kontext für Ollama und optional OpenAI",
+        "keine Actor-/Charakterzuordnung durch KI-Raten",
+        "Korrektur der veralteten audioCaptureImplemented=false-Angabe"
+      ],
+      "automated_validation": [
+        "Foundry-Skripte node --check",
+        "Companion-Skripte node --check",
+        "Protocol-/Scope-JSON parse",
+        "Identity-Mapping-Smoke-Test: Legacy-Migration -> Mapping -> Registry -> Transcript-Attribution -> Clear",
+        "sauberer Foundry-Paketbuild 0.9.27"
+      ],
+      "runtime_not_yet_confirmed": [
+        "echte Voice-Teilnehmer erscheinen in Foundry",
+        "echte Zuordnung in der Foundry-Karte",
+        "echtes Live-Transkript zeigt richtige Charakteridentität",
+        "Call-Wechsel/Reconnect mit realem Discord"
+      ]
+    },
+    "next_block": "Kampagnen-/Session-Identitätsprofil und reversible Discord-Server-Nickname-Automatik"
+  },
+  "ci_incident": {
+    "status": "resolved_and_build_validated",
+    "observed_problem": "Viele schnelle main-Commits lösten parallele GitHub-Actions-Runs und wiederholte Paket-Push-Versuche aus; zusätzlich enthielt der neue Identity-Smoke-Test einen strict-deep-equal-Prototypfehler mit node:sqlite-Zeilen.",
+    "fixes": [
+      "Workflow concurrency mit cancel-in-progress",
+      "Companion-/Protocol-/Scope-Änderungen validieren ohne unnötigen Foundry-ZIP-Neubau",
+      "Foundry-Paket nur bei Foundry-relevanten Pfadänderungen bauen",
+      "node:sqlite-Testzeile vor Strict-Deep-Equal in normales Objekt normalisieren"
+    ],
+    "proof": "Kontrollierter Lauf erzeugte danach genau Build DM Cockpit v0.9.27 auf main."
+  },
+  "existing_confirmations_preserved": {
+    "companion_0_10_0": "fully_user_confirmed",
+    "foundry_0_9_24_npc_memory_undo": "fully_user_confirmed",
+    "foundry_0_9_26_visual_ui": "user_confirmed_positive_visual_runtime_feedback",
+    "foundry_0_9_25_recap_content_copy": "deferred_by_user"
+  },
+  "rules": [
+    "Keine Secrets in Checkpoints oder GitHub.",
+    "Keine dauerhafte Roh-Audio-Speicherung.",
+    "Keine Actor-/Weltänderung durch KI ohne GM/Undo-Regel.",
+    "CI-validiert ist nicht gleich echter Discord-/Foundry-Runtime-Test.",
+    "Bestätigte alte Tests nicht ohne konkrete Regression wiederholen.",
+    "Aufgeschobene 0.9.25-/0.9.26-Tests nicht ungefragt anfordern."
+  ]
+}
