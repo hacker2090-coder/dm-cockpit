@@ -28,6 +28,8 @@ Maschinenlesbares Schema:
 - Discord-Ausgaben prüfen den realen `View Channel`-/`Send Messages`-Zugriff vor Verwendung
 - direkte Recaps werden ausschließlich nach bewusster GM-Aktion gesendet
 - Discord-Erwähnungen werden bei DM-Cockpit-Ausgaben deaktiviert
+- Voice-Join allein startet keine logische DM-Cockpit-Session
+- Voice-Reconnect darf eine laufende logische Session nicht ersetzen oder duplizieren
 - keine automatische Foundry-Weltänderung ohne sicheren Undo/Change-Record oder ausdrückliche GM-Bestätigung
 
 ## Envelope
@@ -43,7 +45,7 @@ Maschinenlesbares Schema:
 }
 ```
 
-## Verbindung / Session
+## Verbindung / Capability Discovery
 
 Kernnachrichten:
 
@@ -55,7 +57,106 @@ Kernnachrichten:
 - `capture.status`
 - `speaker.upserted`
 
-`hello.ack` veröffentlicht die tatsächlich vom Companion unterstützten Features. Seit Companion 0.13.0 gehören persistente Identity-Profile, persistenter Nickname-Restore-Zustand sowie persistenter Discord-Ausgabe-Textkanal und idempotente Discord-Ausgaben dazu.
+`hello.ack` veröffentlicht die tatsächlich vom Companion unterstützten Features. Companion 0.14.0 kündigt zusätzlich die manuelle Session-Steuerung, Discord-Command-Bridge und Diagnosezustände an.
+
+## Manuelle Session-Steuerung
+
+Seit Foundry 0.9.30 / Companion 0.14.0 ist die logische Session von der Discord-Voice-Verbindung getrennt.
+
+### Semantik
+
+- der Bot kann dem konfigurierten GM weiterhin im Voice-Channel folgen
+- ein Voice-Join allein erzeugt **keine** `session.started`-Nachricht
+- eine Session wird bewusst gestartet
+- Start ist nur möglich, wenn Voice bereit ist
+- ein zweiter Start während einer aktiven Session erzeugt keine zweite Session
+- Voice-Verlust beendet eine aktive logische Session nicht
+- nach erfolgreichem Voice-Reconnect wird dieselbe `sessionId` weiterverwendet
+- Stop beendet die logische Session idempotent
+- Aufnahme/Transkription ist nur aktiv, wenn `active == true` und `voiceReady == true`
+
+### Nachrichten
+
+- `session.control.start`
+- `session.control.stop`
+- `session.control.state.request`
+- `session.control.state`
+- `session.control.result`
+
+Beispielzustand:
+
+```json
+{
+  "active": true,
+  "sessionId": "voice_01...",
+  "startedAt": "2026-08-09T20:00:00.000Z",
+  "startedByDiscordUserId": "1234567890",
+  "voiceReady": true,
+  "voiceChannelId": "voice_01",
+  "captureEnabled": true,
+  "lastVoiceReadyAt": "2026-08-09T20:00:00.000Z",
+  "lastVoiceLostAt": null,
+  "lastTransitionAt": "2026-08-09T20:00:00.000Z",
+  "lastReason": "manual_start"
+}
+```
+
+Mögliche `session.control.result.status`-Werte:
+
+- `started`
+- `already_active`
+- `voice_not_ready`
+- `stopped`
+- `already_idle`
+
+## Discord Slash Commands
+
+Companion 0.14.0 registriert serverbezogen:
+
+- `/dm status`
+- `/dm start`
+- `/dm stop`
+- `/dm recap`
+
+Im aktuellen Ausbau sind diese Befehle ausschließlich für die lokal konfigurierte `DISCORD_GM_USER_ID` freigegeben. Das ist ein enger V1-Guard und **kein** allgemeines Rollen-/Berechtigungsframework; dieses bleibt bewusst späterer Scope.
+
+`/dm start` und `/dm stop` verwenden dieselbe Session-State-Machine wie Foundry.
+
+`/dm recap` sendet:
+
+- `discord.command.recap.request`
+
+Foundry beantwortet die Anfrage nicht mit einem neuen KI-Recap, sondern verwendet die bestehende Discord-Kurzfassung aus manuell angenommenen `session.event.candidate` und den vorhandenen bewussten Discord-Ausgabepfad. Damit bleibt Recap-Versand eine ausdrückliche GM-Aktion.
+
+## Bot Presence / Diagnose
+
+`diagnostic.state` transportiert verständliche Betriebs- und Fehlerzustände zwischen Companion und Foundry.
+
+Typische Komponenten:
+
+- `discord_voice`
+- `discord_output`
+- `discord_commands`
+- `audio_receiver`
+- `runtime`
+
+Diagnose kann enthalten:
+
+- Discord-Gateway-Zustand
+- Voice-Zustand
+- Voice-Fehler
+- Discord-Ausgabe-Bereitschaft
+- Output-Fehler
+- zusammengefassten Fehlertext
+- Komponente, Zustand und Detail
+
+Die Discord-Presence unterscheidet mindestens:
+
+- bereit
+- Voice bereit
+- Session aktiv
+- Session pausiert
+- Diagnose nötig
 
 ## Voice-Teilnehmer
 
@@ -247,7 +348,7 @@ Eine bereits erfolgreich versandte identische Request-ID wird nicht erneut an Di
 
 ### Aufnahme-/Transkriptionshinweis
 
-Bei neu gestarteter Voice-Session versucht der Companion automatisch genau einen erfolgreichen Hinweis für diese Session in den aktuell konfigurierten Zielkanal zu senden.
+Bei neu gestarteter **logischer Session** versucht der Companion automatisch genau einen erfolgreichen Hinweis für diese Session in den aktuell konfigurierten Zielkanal zu senden.
 
 Standardinhalt informiert darüber, dass:
 
@@ -263,16 +364,15 @@ Der GM kann den Hinweis über die Cockpit-Karte `Discord-Ausgabe` zusätzlich be
 
 Die bestehende Discord-Kurzfassung bleibt lokal aus **manuell angenommenen** `session.event.candidate` erzeugt.
 
-Die Recap-Karte bietet weiterhin:
+Die Recap-Karte bietet:
 
 - vollständiges Recap kopieren
 - Discord-Kurzfassung kopieren
-
-Neu kommt hinzu:
-
 - `An Discord senden`
 
-Dieser Button ist eine ausdrückliche GM-Aktion. Es gibt **kein automatisches Recap-Posting**.
+Zusätzlich kann der konfigurierte GM mit `/dm recap` denselben bewussten Versandpfad auslösen.
+
+Es gibt **kein automatisches Recap-Posting**.
 
 Discord-Nachrichten sind auf 2000 Zeichen begrenzt; die bestehende Recap-Kurzfassung bleibt vorsorglich auf 1800 Zeichen begrenzt.
 
@@ -311,6 +411,8 @@ Regeln:
 4. Ohne Mapping bleiben Actor-/Charakterfelder `null`.
 5. Alte Segmente werden durch spätere Mapping-Änderungen nicht still umgeschrieben.
 6. Die KI erhält Spieler-/Charakterkontext, aber keine Freiheit zur Actor-Zuordnung.
+7. Ein Segment wird einer konkreten logischen `sessionId` zugeordnet; verspätete STT-Ergebnisse einer beendeten/ersetzten Session dürfen nicht mehr veröffentlicht werden.
+8. Kurzlebige Audiosegment-Deduplizierung vor STT reduziert doppelte Verarbeitung durch Reconnect-/Retry-Pfade.
 
 ## NPC-Kontext / KI-Kandidaten / Undo
 
@@ -321,7 +423,7 @@ Bestehende Regeln bleiben unverändert:
 - `npc.memory.candidate` und `session.event.candidate` bleiben manuell prüfbare Vorschläge
 - `candidate.review` / `candidate.reviewed` persistieren Annahme/Ablehnung
 - `npc.memory.applied`, `change.undo.request`, `change.undo.result` bilden den sicheren Change-/Undo-Pfad
-- keine automatische Foundry-Actor-Mutation durch Discord-Identity-/Output-Logik
+- keine automatische Foundry-Actor-Mutation durch Discord-Identity-/Output-/Session-Control-Logik
 
 ## Provider-Abstraktion
 
@@ -368,7 +470,10 @@ Roh-Audio bleibt nur temporär für Verarbeitung/Retry im RAM bzw. kurzfristigen
 - Profile und Nickname-Leases sind persistent
 - Discord-Ausgabekanal ist persistent
 - erfolgreiche Discord-Ausgabe-Request-IDs sind idempotent
-- Reconnect darf gespeicherte Daten und automatische Hinweise nicht duplizieren
+- Voice-Reconnect verwendet denselben Zielkanal und erhält eine aktive logische Session
+- Reconnect darf keine neue `sessionId` erzeugen
+- absichtliches Voice-Verlassen deaktiviert den Reconnect vor dem Destroy der Verbindung
+- Reconnect darf gespeicherte Daten, automatische Hinweise und bereits verarbeitete Audiosegmente nicht duplizieren
 - Candidate-Review bleibt persistent
 - Provider-/Discord-Fehler müssen sichtbar werden
 - Backpressure/Queue ist Segmentverlust vorzuziehen
@@ -396,22 +501,31 @@ Bereits früher vollständig bestätigt und nicht ohne konkrete Regression zu wi
 ### Session Identity 0.9.28 / Companion 0.12.0
 
 - implementiert
-- isolierter Smoke-Test bestanden
+- isolierter Smoke-Test vorhanden
 - CI-validiert mit `Build DM Cockpit v0.9.28`
 - echter Discord-/Foundry-Runtime-Test noch offen
 
 ### Discord Output 0.9.29 / Companion 0.13.0
 
+- implementiert
+- automatisiert geprüft
+- CI-validiert mit `10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29`
+- echter Discord-/Foundry-Runtime-Test noch offen
+
+### Session Control / Commands / Presence / Diagnostics / Reconnect 0.9.30 / Companion 0.14.0
+
 Auf dem Staging-Branch implementiert:
 
-- persistenter frei wechselbarer Zielkanal
-- reale Kanal-/Berechtigungsprüfung
-- Ausgabe-Karte in Foundry
-- automatischer idempotenter Aufnahmehinweis je Session
-- manuell erneut sendbarer Aufnahmehinweis
-- bewusstes direktes Recap-Posting
-- `allowedMentions.parse = []`
-- Versand-Audit ohne Nachrichtentext
-- isolierter `discord-output-smoke-test.js`
+- idempotente manuelle Session-State-Machine
+- `/dm status`, `/dm start`, `/dm stop`, `/dm recap`
+- konfigurierter-GM-Guard
+- Discord Presence
+- `diagnostic.state`
+- robuster Voice-Reconnect mit begrenztem Backoff
+- gleiche logische Session über Voice-Reconnect
+- Intentional-Leave-Reconnect-Sperre
+- Audiosegment-Deduplizierung
+- Foundry-Command-Bridge
+- Smoke-Tests für Session-Control, Discord-Commands und Voice-Reconnect
 
-Bis zum Merge und erfolgreichen Main-CI/Paketbuild gilt dieser Block **noch nicht als CI-validiert**. Echter Discord-/Foundry-Runtime-Test bleibt danach zusätzlich offen.
+Bis zum erfolgreichen Main-CI-/Paketlauf gilt dieser Block **nicht als CI-validiert**. Ein echter Discord-/Foundry-Runtime-Test bleibt danach zusätzlich offen.
