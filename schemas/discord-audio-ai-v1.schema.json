@@ -20,6 +20,14 @@
         "player.character.mapping.set",
         "player.character.mapping.request",
         "player.character.mapping.result",
+        "identity.profile.save",
+        "identity.profile.list.request",
+        "identity.profile.list.result",
+        "identity.profile.activate",
+        "identity.profile.deactivate",
+        "identity.profile.state.request",
+        "identity.profile.state",
+        "nickname.status",
         "capture.status",
         "transcript.segment",
         "npc.context",
@@ -137,6 +145,117 @@
         }
       },
       "additionalProperties": false
+    },
+    "identityProfile": {
+      "type": "object",
+      "required": ["profileId", "worldId", "name", "kind", "active", "createdAt", "updatedAt", "mappings"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1 },
+        "worldId": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "kind": { "enum": ["campaign", "oneshot", "session"] },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playerCharacterMapping" },
+          "maxItems": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "identityProfileSave": {
+      "type": "object",
+      "required": ["profileId", "worldId", "name", "kind", "mappings"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1 },
+        "worldId": { "type": "string", "minLength": 1 },
+        "worldName": { "type": ["string", "null"] },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "kind": { "enum": ["campaign", "oneshot", "session"] },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playerCharacterMapping" },
+          "maxItems": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "identityProfileListRequest": {
+      "type": "object",
+      "required": ["worldId"],
+      "properties": {
+        "worldId": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "identityProfileListResult": {
+      "type": "object",
+      "required": ["worldId", "profiles", "activeProfileId"],
+      "properties": {
+        "worldId": { "type": "string", "minLength": 1 },
+        "profiles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/identityProfile" },
+          "maxItems": 100
+        },
+        "activeProfileId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "identityProfileActivate": {
+      "type": "object",
+      "required": ["profileId"],
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "emptyPayload": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "nicknameOverride": {
+      "type": "object",
+      "required": ["guildId", "discordUserId", "profileId", "appliedNickname", "state", "createdAt", "updatedAt"],
+      "properties": {
+        "guildId": { "type": "string", "minLength": 1 },
+        "discordUserId": { "type": "string", "minLength": 1 },
+        "profileId": { "type": "string", "minLength": 1 },
+        "originalNickname": { "type": ["string", "null"] },
+        "appliedNickname": { "type": "string", "minLength": 1, "maxLength": 32 },
+        "state": { "enum": ["prepared", "applied", "apply_failed", "restore_failed", "restore_conflict", "conflict_released", "restored"] },
+        "lastError": { "type": ["string", "null"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "restoredAt": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "identityProfileState": {
+      "type": "object",
+      "required": ["activeProfile", "guildId", "nicknameOverrides", "nicknameStatus", "updatedAt"],
+      "properties": {
+        "activeProfile": {
+          "oneOf": [
+            { "$ref": "#/$defs/identityProfile" },
+            { "type": "null" }
+          ]
+        },
+        "guildId": { "type": ["string", "null"] },
+        "nicknameOverrides": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nicknameOverride" },
+          "maxItems": 100
+        },
+        "nicknameStatus": { "type": ["object", "null"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "nicknameStatus": {
+      "type": "object"
     },
     "transcriptSegment": {
       "type": "object",
@@ -317,6 +436,38 @@
     {
       "if": { "properties": { "type": { "const": "player.character.mapping.result" } } },
       "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingResult" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.save" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileSave" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.list.request" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileListRequest" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.list.result" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileListResult" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.activate" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileActivate" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.deactivate" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.state.request" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "identity.profile.state" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileState" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "nickname.status" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/nicknameStatus" } } }
     },
     {
       "if": { "properties": { "type": { "const": "npc.context" } } },
