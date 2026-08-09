@@ -1,0 +1,80 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.1-chat",
+  "created_at": "2026-08-09T13:37:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "foundry_version": "0.9.21",
+    "companion_github_version": "0.5.0",
+    "companion_local_version_confirmed": "0.5.0"
+  },
+  "chat_wide_user_rules_exact": [
+    "Fragen mit Auswahl, mit allem, werden über HTML-Dateien geführt, die mit einer Antwort, die mit einer Möglichkeit versehen sind, da ich das kopieren könnte und dir schicken kann.",
+    "du erstellst regelmäßig Checkpoints in einer JSON-Datei, damit man immer auf den letzten Stand zurückgreifen kann.",
+    "Diese JSON-Datei beziehungsweise diesen Checkpoint legst du einmal in die ChatGPT-Bibliothek und einmal aktualisierst du die Liste mit dem DM Cockpit Repository auf GitHub.",
+    "wenn du was von mir brauchst, sagst du das genau. Also du machst ein Segment, wo steht, ich möchte von dir das und das.",
+    "Der Command für vorige Chat sah immer so aus, also mit dem ab jetzt immer arbeiten. Ctrl+C / cd $HOME\\Desktop\\dm-cockpit / git pull / cd companion / npm.cmd start"
+  ],
+  "working_rules_interpreted": {
+    "selection_questions": "Wenn Auswahlfragen nötig sind, eine HTML-Datei bereitstellen, die Auswahlmöglichkeiten enthält und eine kopierbare Antwort erzeugt.",
+    "checkpointing": "Regelmäßig selbstständige JSON-Checkpoints erstellen.",
+    "checkpoint_targets": [
+      "ChatGPT-Bibliothek",
+      "GitHub Repository hacker2090-coder/dm-cockpit"
+    ],
+    "user_action_format": "Wenn Nutzeraktion erforderlich ist, klarer Abschnitt mit Überschrift „Ich möchte von dir“ und exakt den benötigten Schritten/Outputs.",
+    "local_command_baseline": [
+      "Ctrl+C (nur wenn alter Companion-Prozess läuft)",
+      "cd $HOME\\Desktop\\dm-cockpit",
+      "git pull",
+      "cd companion",
+      "npm.cmd start"
+    ],
+    "windows_npm": "npm.cmd statt npm verwenden."
+  },
+  "regression_0_5_0": {
+    "status": "partially_confirmed_waiting_for_foundry_display_confirmation",
+    "health_check": {
+      "ok": true,
+      "service": "dm-cockpit-companion",
+      "serviceVersion": "0.5.0",
+      "protocolVersion": "1.0",
+      "websocket": "ws://127.0.0.1:43170/v1",
+      "connectedClients": 1,
+      "databasePath": "C:\\Users\\meike\\Desktop\\dm-cockpit\\companion\\data\\dm-cockpit.sqlite",
+      "stats": {
+        "sessions": 3,
+        "speakers": 2,
+        "segments": 6,
+        "npcContexts": 1,
+        "npcCandidates": 0,
+        "sessionEventCandidates": 0
+      }
+    },
+    "real_discord_stt_test": {
+      "bot_ready": "DM Cockpit#0855",
+      "voice_channel": "Spieltisch 1",
+      "voice_channel_id": "1533193854935761137",
+      "dave_enabled": true,
+      "opus_buffering": "speaker-separated, RAM only",
+      "packets": 344,
+      "bytes": 47775,
+      "duration_ms": 8220,
+      "speaker": "hacker 2090",
+      "recognized_text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.",
+      "confidence": 0.961,
+      "result": "Discord Voice -> DAVE -> speaker-separated Opus -> Deepgram STT confirmed on Companion 0.5.0"
+    },
+    "not_yet_confirmed": [
+      "Dass dasselbe neue STT-Segment im Foundry-Live-Transkript sichtbar angekommen ist.",
+      "Direkter Persistenz-/Broadcast-Test für npc.memory.candidate.",
+      "Direkter Persistenz-/Broadcast-Test für session.event.candidate."
+    ]
+  },
+  "next_single_todo": "Nutzer bestätigt, ob der Regressionstest-Satz im Foundry-Live-Transkript sichtbar war. Danach Candidate-Persistenztests durchführen.",
+  "source_of_truth_relationship": "Dieser Checkpoint ergänzt PROJECT-CHECKPOINT.json um den neuesten lokalen Regressionstest und die chatweiten Arbeitsregeln. Beim vollständigen Abschluss von Companion 0.5.0 soll der kanonische PROJECT-CHECKPOINT.json konsolidiert werden."
+}
