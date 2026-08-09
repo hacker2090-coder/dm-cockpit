@@ -1,0 +1,105 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.24",
+  "created_at": "2026-08-09T16:34:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "foundry_repository_version": "0.9.25",
+    "foundry_last_user_confirmed_version": "0.9.24",
+    "companion_repository_version": "0.10.0",
+    "companion_last_user_confirmed_version": "0.10.0",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "pause_point": "Foundry 0.9.25 Session-Recap + Discord-Kurzfassung ist auf main implementiert und als dm-cockpit.zip gebaut. Die Recap-Karte ist im Cockpit sichtbar; der eigentliche Runtime-Test mit einem angenommenen Session-Kandidaten sowie die beiden Kopierfunktionen wurde vom Nutzer auf später verschoben. 0.9.25 bleibt daher implementiert, aber nicht vollständig runtime-bestätigt."
+  },
+  "working_rules": {
+    "github_source_of_truth": true,
+    "check_main_before_changes": true,
+    "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
+    "user_test_cadence": "Zusammengehörige lokale Prüfungen als vollständigen Testblock bündeln; keine Bestätigung nach jedem Mikroschritt verlangen.",
+    "selection_questions_rule": "Strukturierte Auswahlfragen über bearbeitbare HTML-Dateien mit kopierbarer Zusammenfassung; maximal etwa 15 grobe Fragen.",
+    "ui_rule": "Normale Bedienfunktionen müssen über das Cockpit erreichbar sein; Entwicklerkonsole nur für tatsächliches Debugging, nicht als normaler Bedienweg.",
+    "checkpoint_rule": "PROJECT-CHECKPOINT.json aktualisieren, historischen Snapshot unter checkpoints/ anlegen und regulären Checkpoint zusätzlich in ChatGPT Library /DM Cockpit/ speichern.",
+    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
+    "local_command_rule": "PowerShell: cd $HOME\\Desktop\\dm-cockpit; git pull; cd companion; npm.cmd ...; kein &&.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "change_rule": "Keine automatische Actor-/Weltänderung ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung."
+  },
+  "confirmed": {
+    "companion_0_10_0": "fully_user_confirmed",
+    "foundry_0_9_24_npc_memory_undo": "fully_user_confirmed",
+    "ollama_qwen3_4b": "fully_user_confirmed; quality 11/12 = 91.7%"
+  },
+  "implemented_unconfirmed": {
+    "foundry_0_9_25_session_recap": {
+      "status": "implemented_static_check_passed_ui_visible_runtime_test_deferred_by_user",
+      "source_files": [
+        "scripts/session-recap.js",
+        "styles/session-recap.css",
+        "module.json"
+      ],
+      "commits": [
+        "3d5945161a83949799a901ea53d48641d97ed4c3 feat(foundry): add session recap and Discord summary",
+        "13719016c4854021bf2a73f73884fa1d5f139033 style(foundry): add session recap styling",
+        "a776c7a6a8a1a53673f251a249174d05c1796d00 chore(foundry): bump 0.9.25 for session recap",
+        "a1ac768bac98cf465f863ec66f61de2c20bcaa1b Build DM Cockpit v0.9.25"
+      ],
+      "data_source": "Nur session.event.candidate mit status accepted aus der vorhandenen Candidate-Review-Laufzeit. Pending/rejected werden ausgeschlossen.",
+      "session_selection": "Neueste Session anhand des jüngsten angenommenen Session-Kandidaten.",
+      "recap_sections": [
+        "Entscheidungen",
+        "Quests & Aufgaben",
+        "Loot & Belohnungen",
+        "Kämpfe",
+        "Offene Fragen",
+        "Wichtige Ereignisse"
+      ],
+      "discord_summary": {
+        "source": "dieselben bestätigten Session-Kandidaten",
+        "max_items": 8,
+        "max_chars": 1800,
+        "copy_button": true
+      },
+      "full_recap_copy_button": true,
+      "refresh_reloads_candidates_from_companion": true,
+      "explicit_non_scope_v1": [
+        "kein automatisches Discord-Posting",
+        "keine freie LLM-Zusammenfassung/Halluzinationsquelle",
+        "kein Session-Historien-Browser",
+        "keine Änderung an Companion 0.10.0"
+      ],
+      "static_validation": "node --check scripts/session-recap.js passed before commit",
+      "user_observation": "Session-Recap-Karte ist in Foundry sichtbar; Inhalt noch leer, weil noch kein angenommener Session-Kandidat für den Test erzeugt wurde.",
+      "runtime_test": "deferred_by_user"
+    }
+  },
+  "packaging_note": {
+    "status": "open_maintenance_risk_not_blocking_this_additive_feature",
+    "finding": "Release-Workflow übernimmt weiterhin Altcode aus bestehendem dm-cockpit.zip und überlagert versionierte Dateien. Die neue 0.9.25-Datei und ihr CSS werden explizit über module.json geladen und durch den Workflow in das Paket kopiert.",
+    "future_maintenance": "Reproduzierbaren ZIP-Build separat bereinigen; nicht Teil des aktuellen Session-Recap-Blocks."
+  },
+  "do_not_repeat": [
+    "Companion 0.10.0 npm.cmd run check",
+    "Companion 0.10.0 npm.cmd run test:change-record",
+    "Ollama Adapter/Preflight/E2E/Qualitätsbenchmark",
+    "Foundry 0.9.24 normaler NPC-Memory-Undo-E2E-Test"
+  ],
+  "roadmap": [
+    "6: Change-Record/Undo für NPC Memory abgeschlossen und real bestätigt",
+    "9a: Session-Recap + Discord-Kurzfassung V1 implementiert; Karte sichtbar; vollständiger Runtime-Test vom Nutzer auf später verschoben",
+    "9b: späterer Runtime-Test: angenommenen Session-Kandidaten -> Recap-Inhalt -> Discord-Kurzfassung -> beide Kopierbuttons; danach 0.9.25 final bestätigen",
+    "8: dauerhaft durchsuchbares Transkript",
+    "7: optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
+    "10: optional lokales STT und Performance-/Skalierungs-Hardening"
+  ],
+  "resume_instructions": {
+    "status": "session_recap_runtime_test_deferred_by_user",
+    "deferred_test": "Foundry 0.9.25: einen echten Session-Kandidaten über den normalen Discord/Ollama-Ablauf erzeugen und annehmen; prüfen, dass er im Session-Recap erscheint; Discord-Kurzfassung prüfen; Recap kopieren und Discord kopieren prüfen.",
+    "current_block_requires_more_user_testing": true,
+    "blocking_next_development": false,
+    "rule": "Den aufgeschobenen Test nicht automatisch erneut verlangen. Erst wieder aufnehmen, wenn der Nutzer ihn ausdrücklich testen möchte oder bevor 0.9.25 als vollständig bestätigt markiert werden soll."
+  }
+}
