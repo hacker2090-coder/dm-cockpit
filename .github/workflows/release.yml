@@ -72,6 +72,13 @@ jobs:
           test -f templates/cockpit.hbs
           find scripts -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
+      - name: Install companion dependencies
+        working-directory: companion
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+
       - name: Validate companion and protocol
         shell: bash
         run: |
