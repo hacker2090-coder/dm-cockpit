@@ -114,6 +114,8 @@ Aktueller Workflow:
 - Companion-/Protocol-/Scope-Änderungen werden validiert, lösen aber keinen unnötigen Foundry-ZIP-Neubau aus;
 - ein neues `dm-cockpit.zip` wird nur bei Foundry-Paketänderungen bzw. einem manuellen Workflow-Lauf gebaut.
 
+Frühe parallele CI-Runs während des 0.9.27-Ausbaus wurden durch die neue Serialisierung und die Trennung von Companion-Validierung und Foundry-Packaging abgesichert.
+
 ## Companion 0.11.0
 
 Der bereits bestätigte 0.10.0-Kern bleibt unverändert bestätigt:
