@@ -1,0 +1,40 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_snapshot",
+  "schema_version": "3.5",
+  "created_at": "2026-08-09T14:03:00+02:00",
+  "canonical_checkpoint": "PROJECT-CHECKPOINT.json",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "foundry_version": "0.9.21",
+  "companion_github_version": "0.6.0",
+  "last_fully_user_confirmed_companion": "0.5.0",
+  "status": "0.6.0 implemented, isolated tests passed, user-PC regression pending",
+  "implemented": [
+    "provider-neutral AiExtractionService",
+    "deterministic MockAiExtractionProvider",
+    "AI_PROVIDER=none safe default",
+    "Protocol-v1 final transcript extraction",
+    "per-session NPC context plus latest-context fallback",
+    "npc.memory.candidate generation",
+    "session.event.candidate generation",
+    "sourceSegmentIds provenance",
+    "duplicate and partial suppression",
+    "test:ai",
+    "test:ai-pipeline",
+    "no Actor writes"
+  ],
+  "validation": {
+    "isolated_ai_test": "passed",
+    "pipeline_smoke_test_syntax": "passed",
+    "user_pc_test": "pending"
+  },
+  "working_rules": {
+    "selection_questions": "HTML file with selectable options and copyable answer",
+    "checkpoints": "regular JSON checkpoints in ChatGPT Library and GitHub",
+    "user_action_section": "Ich möchte von dir",
+    "local_repo": "$HOME\\Desktop\\dm-cockpit",
+    "windows_npm": "npm.cmd",
+    "secrets": "never store in chat/GitHub/checkpoints"
+  },
+  "next_single_todo": "User PC: Ctrl+C if needed; cd $HOME\\Desktop\\dm-cockpit; git pull; cd companion; npm.cmd install; npm.cmd run check; npm.cmd run test:ai.",
+  "after_success": "Start Companion with temporary AI_PROVIDER=mock, then run npm.cmd run test:ai-pipeline in second PowerShell."
+}
