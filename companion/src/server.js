@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
+import { IdentityProfileStore } from "./identity-profile-store.js";
 import {
   changeRecordStats,
   getChangeRecord,
@@ -13,7 +14,7 @@ import {
 } from "./change-record-runtime.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.11.0";
+const SERVICE_VERSION = "0.12.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
@@ -25,13 +26,23 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
 }
 
 const store = new CompanionStore(DB_PATH);
+export const identityProfileStore = new IdentityProfileStore(DB_PATH);
 const clients = new Set();
+const shutdownHandlers = new Set();
+let shutdownStarted = false;
 let latestVoiceParticipants = {
   guildId: null,
   channelId: null,
   observedAt: new Date().toISOString(),
   participants: []
 };
+let latestNicknameStatus = null;
+
+export function registerShutdownHandler(handler) {
+  if (typeof handler !== "function") throw new TypeError("Shutdown-Handler muss eine Funktion sein.");
+  shutdownHandlers.add(handler);
+  return () => shutdownHandlers.delete(handler);
+}
 
 function now() {
   return new Date().toISOString();
@@ -72,7 +83,8 @@ function sendError(ws, message, code = "bad_request", sessionId = null) {
 function combinedStats() {
   return {
     ...store.stats(),
-    changeRecords: changeRecordStats(store)
+    changeRecords: changeRecordStats(store),
+    identityProfiles: identityProfileStore.stats()
   };
 }
 
@@ -113,6 +125,33 @@ function mappingResult(worldId, worldName = null) {
   };
 }
 
+function profileListResult(worldId) {
+  const normalizedWorldId = String(worldId ?? "").trim();
+  const activeProfile = identityProfileStore.activeProfile();
+  return {
+    worldId: normalizedWorldId,
+    profiles: identityProfileStore.listProfiles(normalizedWorldId),
+    activeProfileId: activeProfile?.profileId ?? null
+  };
+}
+
+function profileStatePayload() {
+  const activeProfile = identityProfileStore.activeProfile();
+  return {
+    activeProfile,
+    guildId: latestVoiceParticipants.guildId ?? null,
+    nicknameOverrides: identityProfileStore.listUnrestoredNicknameOverrides(latestVoiceParticipants.guildId ?? null),
+    nicknameStatus: latestNicknameStatus,
+    updatedAt: now()
+  };
+}
+
+function broadcastProfileState(sessionId = null) {
+  const payload = profileStatePayload();
+  broadcast("identity.profile.state", payload, sessionId);
+  return payload;
+}
+
 function handleProtocolMessage(ws, message) {
   if (!validEnvelope(message)) {
     sendError(ws, `Nur Protocol v${PROTOCOL_VERSION} wird unterstützt.`, "invalid_envelope");
@@ -139,6 +178,14 @@ function handleProtocolMessage(ws, message) {
           "player.character.mapping.set",
           "player.character.mapping.request",
           "player.character.mapping.result",
+          "identity.profile.save",
+          "identity.profile.list.request",
+          "identity.profile.list.result",
+          "identity.profile.activate",
+          "identity.profile.deactivate",
+          "identity.profile.state.request",
+          "identity.profile.state",
+          "nickname.status",
           "capture.status",
           "transcript.segment",
           "npc.context",
@@ -158,7 +205,9 @@ function handleProtocolMessage(ws, message) {
         persistentCandidates: true,
         persistentCandidateReviews: true,
         persistentChangeRecords: true,
-        persistentPlayerCharacterMappings: true
+        persistentPlayerCharacterMappings: true,
+        persistentIdentityProfiles: true,
+        persistentNicknameRestoreState: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -168,6 +217,8 @@ function handleProtocolMessage(ws, message) {
         legalAuthorizationConfirmedExternally: false
       }, sessionId);
       send(ws, "voice.participants", latestVoiceParticipants, sessionId);
+      send(ws, "identity.profile.state", profileStatePayload(), sessionId);
+      if (latestNicknameStatus) send(ws, "nickname.status", latestNicknameStatus, sessionId);
       for (const record of listActiveChangeRecords(store, 100)) {
         send(ws, "npc.memory.applied", record, sessionId);
       }
@@ -227,6 +278,56 @@ function handleProtocolMessage(ws, message) {
       send(ws, "player.character.mapping.result", mappingResult(worldId), sessionId);
       break;
     }
+
+    case "identity.profile.save": {
+      const worldId = String(payload.worldId ?? "").trim();
+      if (!worldId || !identityProfileStore.saveProfile(payload, receivedAt)) {
+        sendError(ws, "Session-/Kampagnenprofil ist ungültig.", "invalid_identity_profile", sessionId);
+        break;
+      }
+      send(ws, "identity.profile.list.result", profileListResult(worldId), sessionId);
+      const active = identityProfileStore.activeProfile();
+      if (active?.profileId === String(payload.profileId ?? "").trim()) broadcastProfileState(sessionId);
+      break;
+    }
+
+    case "identity.profile.list.request": {
+      const worldId = String(payload.worldId ?? "").trim();
+      if (!worldId) {
+        sendError(ws, "worldId fehlt für Session-/Kampagnenprofile.", "missing_world_id", sessionId);
+        break;
+      }
+      send(ws, "identity.profile.list.result", profileListResult(worldId), sessionId);
+      break;
+    }
+
+    case "identity.profile.activate": {
+      const profileId = String(payload.profileId ?? "").trim();
+      const profile = profileId ? identityProfileStore.activateProfile(profileId, receivedAt) : null;
+      if (!profile) {
+        sendError(ws, "Session-/Kampagnenprofil wurde nicht gefunden.", "identity_profile_not_found", sessionId);
+        break;
+      }
+      broadcastProfileState(sessionId);
+      break;
+    }
+
+    case "identity.profile.deactivate":
+      identityProfileStore.deactivateAll(receivedAt);
+      broadcastProfileState(sessionId);
+      break;
+
+    case "identity.profile.state.request":
+      send(ws, "identity.profile.state", profileStatePayload(), sessionId);
+      break;
+
+    case "nickname.status":
+      latestNicknameStatus = {
+        ...payload,
+        updatedAt: String(payload.updatedAt ?? "").trim() || receivedAt
+      };
+      broadcast("nickname.status", latestNicknameStatus, sessionId);
+      break;
 
     case "transcript.segment":
       if (payload.final !== false) store.upsertTranscriptSegment(sessionId, payload, receivedAt);
@@ -438,8 +539,19 @@ httpServer.listen(PORT, HOST, () => {
   console.log(`  SQLite:    ${DB_PATH}`);
 });
 
-function shutdown(signal) {
+async function shutdown(signal) {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
   console.log(`\n[companion] ${signal} – fahre herunter …`);
+
+  for (const handler of [...shutdownHandlers]) {
+    try {
+      await handler(signal);
+    } catch (error) {
+      console.warn(`[companion] Shutdown-Handler fehlgeschlagen: ${error?.message ?? error}`);
+    }
+  }
+
   for (const ws of clients) {
     try {
       ws.close(1001, "Companion shutdown");
@@ -450,10 +562,11 @@ function shutdown(signal) {
   wss.close();
   httpServer.close(() => {
     store.close();
+    identityProfileStore.close();
     process.exit(0);
   });
   setTimeout(() => process.exit(1), 5000).unref();
 }
 
-process.once("SIGINT", () => shutdown("SIGINT"));
-process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => void shutdown("SIGINT"));
+process.once("SIGTERM", () => void shutdown("SIGTERM"));
