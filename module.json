@@ -1,13 +1,13 @@
 {
   "id": "dm-cockpit",
   "title": "DM Cockpit",
-  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte, Enemy Reserve Bench, Handout Queue, Loot-/Belohnungspakete, Item-Suche, Compendium-Schnellsuche, NPC-Schnellgenerator, Actor-basiertes NPC Memory und Discord-Live-Transkript Mock/Transport-Client.",
+  "description": "DM Cockpit für Foundry VTT V14: kompakte Live-UI, Abenteuer-Flowchart, spontane Szenen, Szenen-Presets, Gegner-Spawnpunkte, Enemy Reserve Bench, Handout Queue, Loot-/Belohnungspakete, Item-Suche, Compendium-Schnellsuche, NPC-Schnellgenerator, Actor-basiertes NPC Memory, Discord-Live-Transkript und manuelle KI-Kandidatenprüfung.",
   "authors": [
     {
       "name": "DM Cockpit"
     }
   ],
-  "version": "0.9.21",
+  "version": "0.9.22",
   "compatibility": {
     "minimum": "14",
     "verified": "14.365"
@@ -21,11 +21,13 @@
     "scripts/npc-generator.js",
     "scripts/npc-action-memory.js",
     "scripts/live-transcript.js",
+    "scripts/ai-candidate-review.js",
     "scripts/npc-context-bridge.js"
   ],
   "styles": [
     "styles/dm-cockpit.css",
-    "styles/live-transcript.css"
+    "styles/live-transcript.css",
+    "styles/ai-candidate-review.css"
   ],
   "url": "https://github.com/hacker2090-coder/dm-cockpit",
   "manifest": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/module.json",
