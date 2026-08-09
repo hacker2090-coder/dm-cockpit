@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.4",
+  "schema_version": "1.5",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T19:15:00+02:00",
+  "updated_at": "2026-08-09T19:40:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
@@ -64,23 +64,7 @@
       "automated_validation": {
         "isolated_local_smoke": "passed",
         "main_ci_and_packaging": "passed",
-        "validated_build_commit": "5bc18698a0dad8bfd2bb1a914313888d9e000a20",
-        "covered": [
-          "Profil-Persistenz",
-          "ein aktives Profil",
-          "32-Zeichen-Nickname-Formatter",
-          "Join Apply",
-          "kein doppelter Write bei identischem Snapshot",
-          "Leave Restore",
-          "Restore-Konfliktschutz",
-          "atomarer Rejoin nach Konflikt",
-          "Profilwechsel",
-          "Deaktivierung",
-          "Restart-/Crash-Recovery",
-          "Foundry-/Companion-JS-Syntax",
-          "Protocol-/Scope-JSON",
-          "sauberer Foundry-Paketbuild"
-        ]
+        "validated_build_commit": "5bc18698a0dad8bfd2bb1a914313888d9e000a20"
       },
       "runtime_pending": [
         "Profil in echtem Foundry speichern/aktivieren",
@@ -93,17 +77,46 @@
   ],
   "current_implementation_block": {
     "name": "discord_output_channel_notice_and_recap_posting",
-    "status": "starting",
-    "order": [
-      "verfügbare Discord-Textkanäle mit tatsächlichem View-/Send-Zugriff bereitstellen",
-      "Zielkanal im Cockpit jederzeit neu auswählbar persistent speichern",
-      "Aufnahme-/Transkriptionshinweis bewusst an den Zielkanal senden",
-      "bestehende Discord-Kurzfassung nach bewusster GM-Aktion direkt posten",
-      "kein automatisches Recap-Posting"
+    "status": "implemented_on_staging_review_pending_main_ci",
+    "target_foundry_version": "0.9.29",
+    "target_companion_version": "0.13.0",
+    "staging_branch": "work/discord-output-channel-v1",
+    "implemented": [
+      "verfügbare Discord-Textkanäle werden mit realem View-Channel-/Send-Messages-Zugriff ermittelt",
+      "Zielkanal ist im Cockpit jederzeit neu auswählbar oder entfernbar",
+      "Zielkanal wird pro Discord-Guild persistent in SQLite gespeichert",
+      "vor jedem Versand wird der gespeicherte Kanal erneut gegen Discord und aktuelle Rechte validiert",
+      "Foundry-Karte Discord-Ausgabe mit Kanalwahl, Refresh und manuellem Aufnahmehinweis",
+      "automatischer Aufnahme-/Transkriptionshinweis bei neu gestarteter Voice-Session, höchstens einmal erfolgreich pro Session-Request-ID",
+      "capture.status.noticeShown folgt einem tatsächlich erfolgreichen Hinweis",
+      "Session-Recap-Karte behält Copy-Funktionen und erhält bewussten Button An Discord senden",
+      "Recap wird niemals automatisch gepostet",
+      "Discord allowedMentions.parse ist für DM-Cockpit-Ausgaben leer",
+      "Versand-Audit persistiert Metadaten, aber keinen Nachrichtentext",
+      "erfolgreiche Request-IDs sind idempotent gegen doppelte Reconnect-/Retry-Ausgaben",
+      "isolierter Discord-Output-Smoke-Test deckt Kanalliste, Persistenz, Recap, Idempotenz, Hinweis, Reload und Clear ab"
+    ],
+    "review_pending": [
+      "Foundry-/Companion-JavaScript-Syntax über Main-CI",
+      "Protocol-/Scope-JSON Parse über Main-CI",
+      "discord-output-smoke-test.js über Main-CI",
+      "Foundry-Paketbuild 0.9.29"
+    ],
+    "runtime_pending": [
+      "echte Discord-Textkanalliste in Foundry",
+      "echten Zielkanal auswählen und nach Reload wiedersehen",
+      "realen automatischen Aufnahmehinweis im ausgewählten Kanal",
+      "Kanal während der Nutzung wechseln",
+      "echtes bewusstes Recap-Posting",
+      "fehlende Senderechte / gelöschter Kanal im echten Discord",
+      "kein doppelter automatischer Hinweis bei realem Reconnect"
     ],
     "explicitly_not_in_this_block": [
       "Slash-Commands",
       "manuelle Session-Steuerung",
+      "Presence",
+      "allgemeiner Diagnosebildschirm",
+      "Reconnect-Hardening über die für Output nötige Idempotenz hinaus",
       "mehrere GMs",
       "Befehlsberechtigungsmodell"
     ]
