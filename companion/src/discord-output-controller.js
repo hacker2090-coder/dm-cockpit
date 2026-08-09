@@ -41,6 +41,7 @@ export class DiscordOutputController {
     this.store = store;
     this.onState = onState;
     this.onResult = onResult;
+    this.lastValidation = null;
   }
 
   get guildId() {
@@ -53,6 +54,16 @@ export class DiscordOutputController {
 
   persistedSelection() {
     return this.guildId ? this.store.selectedChannel(this.guildId) : null;
+  }
+
+  snapshot() {
+    return {
+      guildId: this.guildId,
+      gatewayReady: this.gatewayReady(),
+      selectedChannel: this.persistedSelection(),
+      validation: this.lastValidation ? { ...this.lastValidation } : null,
+      updatedAt: new Date().toISOString()
+    };
   }
 
   async guildContext() {
@@ -143,6 +154,7 @@ export class DiscordOutputController {
         };
       }
     }
+    this.lastValidation = validation;
 
     return {
       guildId: this.guildId,
@@ -164,6 +176,7 @@ export class DiscordOutputController {
     if (!this.guildId) throw new Error("Discord Guild ist nicht konfiguriert.");
     if (!id) {
       this.store.clearSelectedChannel(this.guildId);
+      this.lastValidation = null;
       return this.emitState();
     }
     const { channel } = await this.resolveChannel(id);
