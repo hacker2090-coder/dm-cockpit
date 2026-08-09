@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "1.5",
-  "created_at": "2026-08-09T11:48:00+02:00",
+  "schema_version": "1.6",
+  "created_at": "2026-08-09T11:58:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -12,108 +12,110 @@
     "default_branch": "main",
     "current_foundry_version": "0.9.21",
     "current_foundry_version_status": "functionally_confirmed_in_foundry",
-    "companion_version": "0.1.0",
-    "companion_status": "implemented_needs_local_integration_test"
+    "companion_version": "0.2.0",
+    "companion_status": "voice_skeleton_implemented_needs_real_discord_test"
   },
   "working_rules": {
     "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur bei echten externen Tests, Zugängen oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
     "one_todo_at_a_time": true,
     "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Foundry-Runtime-/Release-Änderungen zusätzlich mit Manifest, Installationspaket und Projektstatus synchronisieren.",
-    "checkpoint_rule": "In sinnvollen Abständen GitHub-Checkpoint plus JSON-Checkpoint im Chat bereitstellen."
+    "checkpoint_rule": "In sinnvollen Abständen GitHub-Checkpoint plus JSON-Checkpoint im Chat bereitstellen.",
+    "secret_rule": "Discord Bot Token, API Keys, Passwörter und sonstige Secrets niemals im Chat oder GitHub speichern."
   },
-  "confirmed_foundry_features": [
-    "LIVE-Dashboard",
-    "Abenteuer-Flowchart",
-    "Spontane Szenen",
-    "Szenen-Presets",
-    "Gegner-Spawnpunkte",
-    "Enemy Reserve Bench",
-    "Handout Queue",
-    "Loot-/Belohnungspakete",
-    "Item-Suche für Loot-/Belohnungspakete",
-    "Compendium-Schnellsuche",
-    "NPC-Schnellgenerator",
-    "Actor-basiertes NPC Memory",
-    "Discord Live-Transkript Mock/Transport-Client",
-    "NPC-Kontext aus sichtbarer NPC-Memory-Auswahl",
-    "Foundry/GitHub Update-System"
-  ],
-  "foundry_live_transcript": {
-    "status": "confirmed_working",
+  "confirmed_foundry": {
     "version": "0.9.21",
-    "confirmed_in_foundry": {
-      "section_visible": true,
-      "mock_capture_status": true,
-      "mock_segments": true,
-      "clear_feed": true,
-      "npc_context": true
-    },
-    "npc_context_expected_and_confirmed": "Actorname wird oben angezeigt und als Cockpit-Kontext übernommen.",
-    "files": [
-      "scripts/live-transcript.js",
-      "styles/live-transcript.css",
-      "scripts/npc-context-bridge.js"
+    "status": "confirmed_working",
+    "features": [
+      "LIVE-Dashboard",
+      "Abenteuer-Flowchart",
+      "Spontane Szenen",
+      "Szenen-Presets",
+      "Gegner-Spawnpunkte",
+      "Enemy Reserve Bench",
+      "Handout Queue",
+      "Loot-/Belohnungspakete",
+      "Item-Suche für Loot-/Belohnungspakete",
+      "Compendium-Schnellsuche",
+      "NPC-Schnellgenerator",
+      "Actor-basiertes NPC Memory",
+      "Discord Live-Transkript Mock/Transport-Client",
+      "NPC-Kontext aus sichtbarer NPC-Memory-Auswahl",
+      "Foundry/GitHub Update-System"
     ]
   },
   "companion_service": {
-    "version": "0.1.0",
-    "status": "implemented_needs_user_pc_integration_test",
-    "path": "companion/",
-    "runtime": "Node.js >=22.16.0",
-    "dependency": "ws 8.21.1",
+    "confirmed_baseline": {
+      "version": "0.1.0",
+      "status": "end_to_end_confirmed_on_user_pc",
+      "node_version_on_user_pc": "24.18.1",
+      "websocket_connected": true,
+      "mock_success": true,
+      "foundry_received_companion_mock": true,
+      "sqlite_health_stats": {
+        "sessions": 1,
+        "speakers": 1,
+        "segments": 1,
+        "npcContexts": 1
+      },
+      "confirmed_path": "Foundry <-> local WebSocket <-> Companion <-> SQLite"
+    },
+    "current_version": "0.2.0",
+    "runtime": "Node.js >=24.17.0",
     "default_host": "127.0.0.1",
     "default_port": 43170,
     "websocket_url": "ws://127.0.0.1:43170/v1",
     "health_url": "http://127.0.0.1:43170/health",
     "sqlite_default": "companion/data/dm-cockpit.sqlite",
-    "implemented": [
-      "lokaler HTTP/WebSocket-Server",
-      "Protocol-v1 hello/hello.ack Handshake",
-      "capture.status Transport",
-      "session.started und session.ended",
-      "speaker.upserted",
-      "finale transcript.segment Persistenz",
-      "npc.context Persistenz",
-      "SQLite Tabellen für Sessions, Sprecher, Segmente, NPC-Kontext und Change-Records",
-      "idempotente Segment-Upserts",
-      "Health-Endpunkt mit SQLite-Statistik",
-      "lokaler npm run mock End-to-End-Mock"
-    ],
-    "local_validation": {
-      "sqlite_database_open": true,
-      "wal": true,
-      "table_create": true,
-      "upsert": true,
-      "read": true,
-      "note": "SQLite-Basis wurde lokal mit Node 22.16 validiert. Voller WebSocket-End-to-End-Test benötigt npm install/ws und wird auf dem Nutzer-PC durchgeführt."
+    "dependencies": {
+      "ws": "8.21.1",
+      "discord.js": "14.27.0",
+      "@discordjs/voice": "0.19.2"
     },
-    "files": [
-      "companion/package.json",
-      "companion/src/server.js",
-      "companion/src/store.js",
-      "companion/src/mock-client.js",
-      "companion/README.md",
-      "companion/.gitignore"
-    ]
+    "discord_voice_skeleton": {
+      "status": "implemented_needs_real_discord_test",
+      "files": [
+        "companion/src/main.js",
+        "companion/src/discord-voice.js"
+      ],
+      "implemented": [
+        "Discord Gateway login",
+        "Guilds and GuildVoiceStates intents only",
+        "configured GM by Discord User ID",
+        "auto-join when GM is in voice",
+        "follow GM when GM changes voice channel",
+        "leave voice when GM leaves",
+        "DAVE/E2EE enabled explicitly",
+        "selfDeaf false for future audio receive",
+        "selfMute true while bot sends no audio",
+        "voice state/error/debug logging",
+        "Discord configuration optional so WebSocket/SQLite baseline keeps working without credentials"
+      ],
+      "local_configuration": [
+        "DISCORD_BOT_TOKEN",
+        "DISCORD_GUILD_ID",
+        "DISCORD_GM_USER_ID"
+      ],
+      "secrets_must_stay_local": true,
+      "audio_capture_implemented": false
+    },
+    "ci": {
+      "workflow": ".github/workflows/companion-ci.yml",
+      "node": "24.x",
+      "checks": [
+        "npm install",
+        "npm run check"
+      ]
+    }
   },
-  "discord_audio_ai_architecture": {
-    "protocol_version": "1.0",
-    "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
-    "schema": "schemas/discord-audio-ai-v1.schema.json",
-    "participant_target": "more_than_10",
-    "latency_target": "5-15_seconds",
-    "provider_strategy": "provider_neutral_compare_later",
-    "transcript_storage": "local_SQLite",
-    "raw_audio_retention_future": "delete_after_successful_transcription",
-    "capture_policy_preference": "notice_only_technical_setting",
-    "direct_ai_save_future": true,
-    "undo_required_future": true
+  "discord_voice_external_basis": {
+    "discord_dave_required_since": "2026-03-01",
+    "design": "Use current @discordjs/voice DAVE support; no custom DAVE protocol implementation in DM Cockpit.",
+    "known_receive_bug_history": "@discordjs/voice 0.19.0 had a DAVE/audio receive issue; upstream fix was merged 2026-03-13. Current pinned voice dependency is 0.19.2."
   },
   "not_yet_implemented": [
-    "Discord Voice Bot",
-    "DAVE/E2EE Voice integration",
-    "Audio-Buffering",
-    "Speech-to-Text Provider",
+    "Discord audio receive/buffering",
+    "separate per-speaker audio streams",
+    "Speech-to-Text provider",
     "AI extraction",
     "automatic NPC-memory persistence from speech",
     "Undo runtime",
@@ -123,27 +125,32 @@
   ],
   "current_user_assistance_needed": {
     "required_now": true,
-    "task": "Companion Service auf dem eigenen PC installieren/starten und echten WebSocket+SQLite-Mock gegen Foundry testen",
-    "steps": [
-      "Repository lokal verfügbar machen bzw. companion Ordner öffnen",
-      "cd companion",
-      "node --version prüfen: mindestens 22.16.0",
-      "npm install",
-      "npm run check",
-      "npm start in Terminal 1",
-      "Foundry DM Cockpit Live-Transkript mit ws://127.0.0.1:43170/v1 verbinden",
-      "npm run mock in Terminal 2",
-      "prüfen, ob Companion Mock im Foundry-Transkript erscheint",
-      "http://127.0.0.1:43170/health öffnen und stats prüfen"
+    "task": "Discord Voice Skeleton 0.2.0 auf einem echten Discord-Server testen",
+    "reason": "Für den ersten echten Discord-Login/Voice-Join werden ein Bot auf dem Zielserver und lokale Zugangsdaten/IDs benötigt.",
+    "never_send_in_chat": [
+      "DISCORD_BOT_TOKEN"
     ],
-    "secrets_needed": false,
-    "discord_needed": false,
-    "api_key_needed": false,
-    "cloud_cost": 0
+    "needed_local_values": [
+      "Discord Bot Token",
+      "Discord Guild/Server ID",
+      "Discord User ID des GM"
+    ],
+    "expected_test": [
+      "Bot meldet sich an",
+      "Bot joint den Voice-Channel des GM automatisch",
+      "Bot folgt beim Channel-Wechsel",
+      "Bot verlässt Voice, wenn GM Voice verlässt",
+      "keine DAVE/4017-Fehler"
+    ]
   },
-  "next_single_todo_after_successful_test": {
-    "task": "Discord Voice Bot Skeleton mit Auto-Join beim konfigurierten GM vorbereiten",
-    "constraint": "DAVE/E2EE-Unterstützung zuerst sauber lösen; noch keinen STT-Provider fest verdrahten."
+  "next_single_todo_after_successful_voice_test": {
+    "task": "Discord Audio Receive/Buffering pro Sprecher implementieren",
+    "constraints": [
+      "DAVE-Verbindung beibehalten",
+      "Discord User ID als Sprecheridentität",
+      "noch kein STT-Provider fest verdrahten",
+      "Roh-Audio nur temporär bis erfolgreiche Transkription"
+    ]
   },
-  "handoff_instruction_for_next_ai": "DM Cockpit V0.9.21 inklusive Live-Transkript und NPC-Kontext ist in Foundry bestätigt. Companion Service 0.1.0 mit lokalem WebSocket und SQLite-Basis ist implementiert. Als nächstes den Companion lokal gegen Foundry mit npm start + npm run mock testen. Erst nach diesem Erfolg Discord Voice/DAVE angehen."
+  "handoff_instruction_for_next_ai": "DM Cockpit V0.9.21 ist in Foundry bestätigt. Companion 0.1.0 wurde auf dem Nutzer-PC vollständig Ende-zu-Ende mit WebSocket und SQLite bestätigt. Companion 0.2.0 enthält den Discord-Voice-Skeleton mit DAVE und automatischem Folgen des konfigurierten GM. Der nächste externe Test benötigt einen Discord-Bot auf dem Zielserver sowie lokal gesetzte DISCORD_BOT_TOKEN, DISCORD_GUILD_ID und DISCORD_GM_USER_ID; der Token darf niemals im Chat oder GitHub landen. Erst nach erfolgreichem Join/Follow/Leave-Test Audio Receive/Buffering implementieren."
 }
