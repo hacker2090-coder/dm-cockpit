@@ -120,7 +120,7 @@ try {
     WHERE segment_id = ?
   `).get("segment-test");
 
-  assert.deepEqual(transcript, {
+  assert.deepEqual({ ...transcript }, {
     discord_user_id: "discord-42",
     speaker_name: "Mira Discord",
     player_name: "Mira",
