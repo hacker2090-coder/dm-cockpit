@@ -13,7 +13,7 @@ import {
 } from "./change-record-runtime.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.10.0";
+const SERVICE_VERSION = "0.11.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
@@ -26,6 +26,12 @@ if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
 
 const store = new CompanionStore(DB_PATH);
 const clients = new Set();
+let latestVoiceParticipants = {
+  guildId: null,
+  channelId: null,
+  observedAt: new Date().toISOString(),
+  participants: []
+};
 
 function now() {
   return new Date().toISOString();
@@ -80,6 +86,33 @@ function validEnvelope(value) {
     && typeof value.payload === "object";
 }
 
+function normalizeVoiceParticipants(payload = {}) {
+  const participants = Array.isArray(payload.participants)
+    ? payload.participants.slice(0, 100).map(entry => ({
+        discordUserId: String(entry?.discordUserId ?? "").trim(),
+        displayName: String(entry?.displayName ?? entry?.discordUserId ?? "Unbekannt").trim() || "Unbekannt",
+        globalName: String(entry?.globalName ?? "").trim() || null,
+        serverNickname: String(entry?.serverNickname ?? "").trim() || null,
+        isBot: Boolean(entry?.isBot),
+        channelId: String(entry?.channelId ?? payload.channelId ?? "").trim() || null
+      })).filter(entry => entry.discordUserId)
+    : [];
+  return {
+    guildId: String(payload.guildId ?? "").trim() || null,
+    channelId: String(payload.channelId ?? "").trim() || null,
+    observedAt: String(payload.observedAt ?? "").trim() || now(),
+    participants
+  };
+}
+
+function mappingResult(worldId, worldName = null) {
+  return {
+    worldId,
+    worldName: String(worldName ?? "").trim() || null,
+    mappings: store.listPlayerCharacterMappings(worldId)
+  };
+}
+
 function handleProtocolMessage(ws, message) {
   if (!validEnvelope(message)) {
     sendError(ws, `Nur Protocol v${PROTOCOL_VERSION} wird unterstützt.`, "invalid_envelope");
@@ -101,6 +134,11 @@ function handleProtocolMessage(ws, message) {
           "session.started",
           "session.ended",
           "speaker.upserted",
+          "voice.participants",
+          "voice.participants.request",
+          "player.character.mapping.set",
+          "player.character.mapping.request",
+          "player.character.mapping.result",
           "capture.status",
           "transcript.segment",
           "npc.context",
@@ -119,7 +157,8 @@ function handleProtocolMessage(ws, message) {
         persistentTranscript: true,
         persistentCandidates: true,
         persistentCandidateReviews: true,
-        persistentChangeRecords: true
+        persistentChangeRecords: true,
+        persistentPlayerCharacterMappings: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -128,6 +167,7 @@ function handleProtocolMessage(ws, message) {
         noticeShown: false,
         legalAuthorizationConfirmedExternally: false
       }, sessionId);
+      send(ws, "voice.participants", latestVoiceParticipants, sessionId);
       for (const record of listActiveChangeRecords(store, 100)) {
         send(ws, "npc.memory.applied", record, sessionId);
       }
@@ -158,6 +198,35 @@ function handleProtocolMessage(ws, message) {
       store.upsertSpeaker(payload, receivedAt);
       broadcast("speaker.upserted", payload, sessionId);
       break;
+
+    case "voice.participants":
+      latestVoiceParticipants = normalizeVoiceParticipants(payload);
+      broadcast("voice.participants", latestVoiceParticipants, sessionId);
+      break;
+
+    case "voice.participants.request":
+      send(ws, "voice.participants", latestVoiceParticipants, sessionId);
+      break;
+
+    case "player.character.mapping.set": {
+      const worldId = String(payload.worldId ?? "").trim();
+      if (!worldId || !store.replacePlayerCharacterMappings(worldId, payload.mappings, receivedAt)) {
+        sendError(ws, "Spieler-/Charakterzuordnung ist ungültig.", "invalid_player_character_mapping", sessionId);
+        break;
+      }
+      broadcast("player.character.mapping.result", mappingResult(worldId, payload.worldName), sessionId);
+      break;
+    }
+
+    case "player.character.mapping.request": {
+      const worldId = String(payload.worldId ?? "").trim();
+      if (!worldId) {
+        sendError(ws, "worldId fehlt für Spieler-/Charakterzuordnung.", "missing_world_id", sessionId);
+        break;
+      }
+      send(ws, "player.character.mapping.result", mappingResult(worldId), sessionId);
+      break;
+    }
 
     case "transcript.segment":
       if (payload.final !== false) store.upsertTranscriptSegment(sessionId, payload, receivedAt);
