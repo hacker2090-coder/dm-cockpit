@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.6",
+  "schema_version": "1.7",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T20:20:00+02:00",
+  "updated_at": "2026-08-09T22:06:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
-  "branch": "main",
+  "branch": "session_control_commands_presence_diagnostics_reconnect",
   "scope_id": "discord-bot-expansion-v1",
   "status": "in_progress",
   "source": "user_checklist_selection_plus_identity_refinement",
@@ -42,7 +42,7 @@
         "Zielkanal wird pro Discord-Guild persistent in SQLite gespeichert",
         "vor jedem Versand wird der gespeicherte Kanal erneut gegen Discord und aktuelle Rechte validiert",
         "Foundry-Karte Discord-Ausgabe mit Kanalwahl, Refresh und manuellem Aufnahmehinweis",
-        "automatischer Aufnahme-/Transkriptionshinweis bei neu gestarteter Voice-Session, idempotent gegen Retry/Reconnect",
+        "automatischer Aufnahme-/Transkriptionshinweis bei neu gestarteter logischer Session, idempotent gegen Retry/Reconnect",
         "capture.status.noticeShown folgt einem tatsächlich erfolgreichen Hinweis",
         "Session-Recap-Karte behält Copy-Funktionen und erhält bewussten Button An Discord senden",
         "Recap wird niemals automatisch gepostet",
@@ -71,22 +71,44 @@
   ],
   "current_implementation_block": {
     "name": "session_control_commands_presence_diagnostics_reconnect",
-    "status": "starting_on_staging_branch",
+    "status": "implemented_on_staging_pre_merge_review_ci_pending",
     "staging_branch": "session_control_commands_presence_diagnostics_reconnect",
-    "planned_features": [
-      "manuelle Session-Steuerung getrennt vom bloßen Discord-Voice-Join",
+    "target_foundry_version": "0.9.30",
+    "target_companion_version": "0.14.0",
+    "implemented": [
+      "manuelle logische Session-Steuerung getrennt vom bloßen Discord-Voice-Join",
+      "idempotenter Session-Start und Session-Stop",
       "Discord Slash Command /dm status",
       "Discord Slash Command /dm start",
       "Discord Slash Command /dm stop",
       "Discord Slash Command /dm recap",
+      "Slash-Commands auf die konfigurierte GM-Discord-User-ID begrenzt",
       "sichtbarer Bot-Presence-/Sessionstatus",
-      "verständliche Diagnose- und Fehlerzustände",
-      "robuster Voice-Reconnect",
-      "Wiederherstellung des Sessionzustands nach Reconnect",
-      "keine doppelten Sessions",
-      "keine doppelten Aufnahmehinweise",
-      "keine doppelten Transkriptsegmente durch Reconnect"
+      "diagnostic.state für verständliche Gateway-/Voice-/Output-/Command-Fehlerzustände",
+      "robuster Voice-Reconnect mit begrenztem Backoff",
+      "Wiederherstellung derselben logischen Session nach Voice-Reconnect",
+      "Intentional-Leave-Sperre vor Voice destroy, sodass bewusster Leave keinen Reconnect erzeugt",
+      "Audio-Receiver nur bei aktiver Session plus Voice-ready",
+      "späte STT-Ergebnisse einer beendeten oder ersetzten Session werden verworfen",
+      "kurzlebige Audiosegment-Deduplizierung vor STT",
+      "Foundry-Bridge für Session-Control-Zustand und /dm recap über den bestehenden bestätigten Recap-/Discord-Ausgabepfad",
+      "Foundry module.json lädt die neue Discord-Command-Bridge",
+      "Companion/Server/Publisher melden konsistent Version 0.14.0 bzw. die neuen Protokollfeatures"
     ],
+    "automated_tests_authored": [
+      "session-control-smoke-test.js: Start/Stop-Idempotenz, Voice-Verlust, gleiche sessionId nach Reconnect",
+      "discord-command-controller-smoke-test.js: Registrierung, Status, GM-Guard, Start, Presence, Listener-Cleanup",
+      "discord-voice-reconnect-smoke-test.js: absichtlicher Leave ohne Reconnect versus unerwartetes Destroyed mit Reconnect",
+      "bestehender discord-output-smoke-test.js bleibt Teil des Release-Workflows"
+    ],
+    "validation_status": {
+      "implemented": true,
+      "automated_tested": false,
+      "ci_validated": false,
+      "local_confirmed": false,
+      "fully_confirmed": false,
+      "note": "Die neuen Tests sind versioniert und im Main-Release-Workflow eingetragen, wurden für den Staging-Stand aber noch nicht durch GitHub Actions ausgeführt."
+    },
     "constraints": [
       "Voice-Join allein startet keine manuell gesteuerte Session.",
       "Recap-Posting bleibt eine bewusste GM-Aktion.",
@@ -95,7 +117,14 @@
       "Reconnect darf keine neue logische Session erzeugen, wenn eine bestehende Session wiederhergestellt wird.",
       "Reconnect darf keinen bereits erfolgreich gesendeten Aufnahmehinweis erneut automatisch senden.",
       "Reconnect darf bereits verarbeitete Transkriptsegmente nicht duplizieren.",
+      "Absichtliches Voice-Verlassen darf keinen Reconnect auf den alten Kanal auslösen.",
       "keine dauerhafte Roh-Audio-Speicherung"
+    ],
+    "remaining_before_main": [
+      "vollständigen Staging-Diff gegen aktuellen main reviewen",
+      "Versions-, Manifest-, Protokoll- und Dokumentkonsistenz prüfen",
+      "nur bei sauberem Review main per Fast-Forward aktualisieren",
+      "Main-CI inklusive neuer Smoke-Tests und Paketbuild 0.9.30 prüfen"
     ]
   },
   "identity_semantics": {
