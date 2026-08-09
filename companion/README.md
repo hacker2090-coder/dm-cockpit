@@ -1,70 +1,114 @@
-# DM Cockpit Companion Service 0.1.0
+# DM Cockpit Companion Service 0.2.0
 
-Lokaler Zwischendienst zwischen Foundry/DM Cockpit und den späteren Discord-, Speech-to-Text- und KI-Komponenten.
+Lokaler Zwischendienst zwischen Foundry/DM Cockpit und Discord-, Speech-to-Text- und KI-Komponenten.
 
-Dieser Stand enthält **noch keinen Discord-Bot und keine Cloud-KI**. Er dient ausschließlich dazu, den bereits definierten Protocol-v1-Vertrag über einen echten lokalen WebSocket umzusetzen und persistente SQLite-Grundlagen bereitzustellen.
+## Bestätigter Stand
+
+Companion 0.1.0 wurde auf dem Ziel-PC vollständig Ende-zu-Ende bestätigt:
+
+- Foundry verbindet sich mit `ws://127.0.0.1:43170/v1`
+- `npm run mock` durchläuft den echten WebSocket
+- der Mock erscheint im Foundry-Live-Transkript
+- SQLite speichert Session, Sprecher, Segment und NPC-Kontext
+
+## Neu in 0.2.0 – Discord Voice Skeleton
+
+Dateien:
+
+- `src/main.js`
+- `src/discord-voice.js`
+
+Enthalten:
+
+- Discord Gateway Login über `discord.js`
+- nur `Guilds` und `GuildVoiceStates` als Gateway-Intents
+- konfigurierter GM über Discord User ID
+- automatischer Beitritt in den Voice-Channel des GM
+- automatisches Folgen, wenn der GM den Voice-Channel wechselt
+- Voice verlassen, wenn der GM Voice verlässt
+- DAVE/E2EE in `@discordjs/voice` ausdrücklich aktiviert
+- Bot joint mit `selfDeaf: false`, damit später Audio-Empfang möglich ist
+- Bot bleibt `selfMute: true`, da noch kein Audio gesendet wird
+- Join-/Ready-/Fehlerstatus im Companion-Terminal
+- Discord-Konfiguration ist optional: Ohne lokale Variablen funktionieren WebSocket, SQLite und Mock weiterhin wie bisher
+
+**Noch keine Audioaufnahme.** Wenn die Voice-Verbindung Ready ist, meldet der Skeleton den Capture-Zustand intern als `paused`. Audio-Buffering und STT kommen erst nach bestätigtem Voice-Test.
 
 ## Voraussetzungen
 
-- Node.js 22.16.0 oder neuer
+- Node.js **24.17.0 oder neuer**
 - npm
 - DM Cockpit V0.9.21 oder neuer
 
-## Installation
+Der höhere Node-Mindeststand kommt von der aktuellen `@discordjs/voice`-Version mit DAVE-Unterstützung.
 
-Im Repository:
+## Installation / Update
 
 ```powershell
+cd $HOME\Desktop\dm-cockpit
+git pull
 cd companion
-npm install
-npm run check
+npm.cmd install
+npm.cmd run check
 ```
 
-## Start
+Bei einer PowerShell ohne Skriptausführungsfreigabe `npm.cmd` statt `npm` verwenden.
+
+## Start ohne Discord
 
 ```powershell
-npm start
+npm.cmd start
 ```
 
-Standardmäßig startet der Service nur auf dem lokalen Rechner:
+Ohne Discord-Konfiguration erscheint eine Meldung wie:
+
+```text
+[discord-voice] Deaktiviert. Lokal konfigurieren: DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_GM_USER_ID
+```
+
+Der WebSocket-/SQLite-Service läuft trotzdem normal weiter.
+
+## Discord Voice lokal konfigurieren
+
+Die Werte **nur lokal im PowerShell-Fenster setzen**. Den Bot-Token niemals in GitHub committen und nicht in Chat-Nachrichten einfügen.
+
+```powershell
+$env:DISCORD_BOT_TOKEN="DEIN_TOKEN_NUR_LOKAL"
+$env:DISCORD_GUILD_ID="DEINE_SERVER_ID"
+$env:DISCORD_GM_USER_ID="DEINE_DISCORD_USER_ID"
+npm.cmd start
+```
+
+Optional für ausführliche Voice-Debuglogs:
+
+```powershell
+$env:DM_COCKPIT_DISCORD_DEBUG="1"
+```
+
+### Erwartetes Verhalten
+
+1. Companion startet.
+2. Bot meldet sich bei Discord an.
+3. Wenn der konfigurierte GM bereits in einem Voice-Channel ist, joint der Bot diesen Channel.
+4. Wechselt der GM den Channel, folgt der Bot.
+5. Verlässt der GM Voice, verlässt auch der Bot den Voice-Channel.
+6. Bei erfolgreicher Verbindung erscheint im Terminal sinngemäß `Folge GM in '<Channel>'; DAVE aktiviert.`
+
+## Lokaler WebSocket + SQLite Mock
+
+Der bereits bestätigte Mock bleibt erhalten:
+
+```powershell
+npm.cmd run mock
+```
+
+Standardmäßig:
 
 - WebSocket: `ws://127.0.0.1:43170/v1`
 - Health: `http://127.0.0.1:43170/health`
 - SQLite: `companion/data/dm-cockpit.sqlite`
 
-Der WebSocket-Port ist damit nicht automatisch im LAN oder Internet erreichbar.
-
-## Foundry-Verbindung testen
-
-1. Companion mit `npm start` laufen lassen.
-2. Foundry-Testwelt öffnen.
-3. DM Cockpit → **Discord Live-Transkript** öffnen.
-4. URL auf `ws://127.0.0.1:43170/v1` lassen.
-5. **Verbinden** klicken.
-6. Der Status muss auf **Verbunden** wechseln.
-
-Beim Handshake antwortet der Companion mit `hello.ack` und einem `capture.status` mit Zustand `idle`.
-
-## Echten Transport + SQLite mit Mock testen
-
-Während Companion und Foundry verbunden sind, in einem zweiten Terminal:
-
-```powershell
-cd companion
-npm run mock
-```
-
-Erwartet:
-
-- Terminal meldet `Handshake OK`.
-- Terminal meldet `Mock-Test erfolgreich`.
-- Im Foundry-Live-Transkript erscheint ein Sprecher **Companion Mock**.
-- Text: `Dieser Satz kam über den echten lokalen Companion-WebSocket und wurde in SQLite gespeichert.`
-- `http://127.0.0.1:43170/health` zeigt danach mindestens eine Session, einen Sprecher und ein Transkriptsegment in `stats`.
-
-Damit werden WebSocket-Transport und SQLite-Persistenz gemeinsam getestet, ohne Discord oder kostenpflichtige Provider.
-
-## Bereits persistiert
+## Persistiert
 
 SQLite enthält Tabellen für:
 
@@ -78,22 +122,32 @@ Partielle Transkriptsegmente werden nicht dauerhaft gespeichert.
 
 ## Konfiguration über Umgebungsvariablen
 
+Companion:
+
 - `DM_COCKPIT_HOST` – Standard `127.0.0.1`
 - `DM_COCKPIT_PORT` – Standard `43170`
 - `DM_COCKPIT_WS_PATH` – Standard `/v1`
 - `DM_COCKPIT_DB_PATH` – optional eigener SQLite-Pfad
-- `DM_COCKPIT_WS_URL` – nur für `npm run mock`, Standard `ws://127.0.0.1:43170/v1`
+- `DM_COCKPIT_WS_URL` – nur für `npm run mock`
 
-Für einen späteren Remote/VPS-Betrieb reicht dieser lokale Sicherheitsmodus noch nicht aus; dafür sind WSS und Authentifizierung vorgesehen.
+Discord Voice:
+
+- `DISCORD_BOT_TOKEN` – Bot-Token, nur lokal
+- `DISCORD_GUILD_ID` – Discord-Server-ID
+- `DISCORD_GM_USER_ID` – Discord-User-ID des GM, dem der Bot folgen soll
+- `DM_COCKPIT_DISCORD_DEBUG=1` – optionale Debugausgabe
 
 ## Noch nicht enthalten
 
-- Discord Gateway / Voice
-- DAVE/E2EE
-- Audio-Buffer
+- Audio-Buffering / Audio-Aufzeichnung
+- Sprecher-Audiostreams
 - Speech-to-Text
 - KI-Extraktion
 - automatische NPC-Memory-Änderungen
 - Undo-Ausführung
 - Transkript-Suche
 - Recap / Discord-Kurzfassung
+
+## Nächster einzelner Test
+
+**Discord Voice 0.2.0 gegen einen echten Discord-Server testen:** Bot lokal konfigurieren, GM einem Voice-Channel beitreten lassen und prüfen, ob der Bot automatisch joint, folgt und wieder verlässt.
