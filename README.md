@@ -48,7 +48,7 @@ Implementiert, Runtime-Test weiterhin vom Nutzer auf später verschoben:
 
 ### 0.9.26 – UI-/Layout-Umbau
 
-Implementiert und als sauberes Paket gebaut; Foundry-Runtime-Bestätigung steht noch aus:
+Implementiert und als sauberes Paket gebaut. Der Nutzer hat das neue UI am 2026-08-09 in Foundry gesehen und den visuellen Eindruck mit „Sieht super aus“ bestätigt. Das gilt als visuelle Runtime-Bestätigung; Drag-/Persistenz-/Resize-/Filter-Interaktionen sind damit nicht automatisch vollständig getestet.
 
 - technische Dashboard-Optik mit klarer visueller Hierarchie
 - Zonen `Live`, `Spielleitung`, `Werkzeuge`, `Nachbereitung`
