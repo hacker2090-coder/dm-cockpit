@@ -1,0 +1,56 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "1.8",
+  "created_at": "2026-08-09T12:23:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "current_foundry_version": "0.9.21",
+    "current_foundry_version_status": "functionally_confirmed_in_foundry",
+    "companion_version": "0.4.0",
+    "companion_status": "provider_neutral_stt_implemented_needs_deepgram_integration_test"
+  },
+  "confirmed": {
+    "foundry_0_9_21": true,
+    "companion_0_1_0_websocket_sqlite": true,
+    "companion_0_2_0_discord_voice_dave_follow": true,
+    "companion_0_3_0_real_audio_receive": true,
+    "audio_test_segments": [
+      {"packet_count": 362, "byte_length": 49801, "duration_ms": 9363},
+      {"packet_count": 105, "byte_length": 14643, "duration_ms": 3289}
+    ]
+  },
+  "companion_0_4_0": {
+    "provider_neutral_stt": true,
+    "safe_default": "STT_PROVIDER=none",
+    "first_adapter": "deepgram",
+    "model": "nova-3",
+    "language": "de",
+    "endpoint": "wss://api.eu.deepgram.com/v1/listen",
+    "audio_input": "raw Discord Opus 48kHz stereo",
+    "return_path": "Protocol v1 -> SQLite -> Foundry",
+    "raw_audio_persistence": false,
+    "files": [
+      "companion/src/stt-service.js",
+      "companion/src/stt-deepgram.js",
+      "companion/src/companion-publisher.js",
+      "companion/src/main.js",
+      "docs/STT-PROVIDER-EVALUATION-2026-08-09.md"
+    ]
+  },
+  "current_external_test": {
+    "need": "Deepgram test API key",
+    "never_share_in_chat": true,
+    "local_env": [
+      "STT_PROVIDER=deepgram",
+      "DEEPGRAM_API_KEY=<local secret>"
+    ],
+    "success": [
+      "terminal prints recognized German text",
+      "same text appears in Foundry Live-Transkript",
+      "SQLite segments count increases"
+    ]
+  },
+  "next_after_success": "AI extraction candidate pipeline; no automatic Actor write until Undo/change runtime is ready."
+}
