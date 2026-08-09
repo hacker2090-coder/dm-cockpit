@@ -6,7 +6,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.2.0";
+const SERVICE_VERSION = "0.5.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
@@ -90,10 +90,13 @@ function handleProtocolMessage(ws, message) {
           "capture.status",
           "transcript.segment",
           "npc.context",
+          "npc.memory.candidate",
+          "session.event.candidate",
           "sqlite"
         ],
         database: "sqlite",
-        persistentTranscript: true
+        persistentTranscript: true,
+        persistentCandidates: true
       }, null);
       send(ws, "capture.status", {
         state: "idle",
@@ -117,14 +120,17 @@ function handleProtocolMessage(ws, message) {
 
     case "session.started":
       store.upsertSession(sessionId ?? payload.sessionId, payload, receivedAt);
+      broadcast("session.started", payload, sessionId ?? payload.sessionId ?? null);
       break;
 
     case "session.ended":
       store.endSession(sessionId ?? payload.sessionId, payload, receivedAt);
+      broadcast("session.ended", payload, sessionId ?? payload.sessionId ?? null);
       break;
 
     case "speaker.upserted":
       store.upsertSpeaker(payload, receivedAt);
+      broadcast("speaker.upserted", payload, sessionId);
       break;
 
     case "transcript.segment":
@@ -134,6 +140,23 @@ function handleProtocolMessage(ws, message) {
 
     case "npc.context":
       store.addNpcContext(message.id, sessionId, payload, receivedAt);
+      broadcast("npc.context", payload, sessionId);
+      break;
+
+    case "npc.memory.candidate":
+      if (!store.addNpcMemoryCandidate(sessionId, payload, receivedAt)) {
+        sendError(ws, "Ungültiger NPC-Memory-Kandidat.", "invalid_npc_memory_candidate", sessionId);
+        break;
+      }
+      broadcast("npc.memory.candidate", payload, sessionId);
+      break;
+
+    case "session.event.candidate":
+      if (!store.addSessionEventCandidate(sessionId, payload, receivedAt)) {
+        sendError(ws, "Ungültiger Session-Event-Kandidat.", "invalid_session_event_candidate", sessionId);
+        break;
+      }
+      broadcast("session.event.candidate", payload, sessionId);
       break;
 
     case "capture.status":
@@ -141,7 +164,7 @@ function handleProtocolMessage(ws, message) {
       break;
 
     default:
-      sendError(ws, `Nachrichtentyp '${message.type}' ist im Companion-Skeleton noch nicht implementiert.`, "unsupported_type", sessionId);
+      sendError(ws, `Nachrichtentyp '${message.type}' ist im Companion noch nicht implementiert.`, "unsupported_type", sessionId);
       break;
   }
 }
@@ -191,7 +214,7 @@ httpServer.on("upgrade", (req, socket, head) => {
 
 wss.on("connection", ws => {
   clients.add(ws);
-  console.log(`[companion] Foundry verbunden (${clients.size} Client${clients.size === 1 ? "" : "s"}).`);
+  console.log(`[companion] Client verbunden (${clients.size} Client${clients.size === 1 ? "" : "s"}).`);
 
   ws.on("message", raw => {
     let message;
@@ -213,7 +236,7 @@ wss.on("connection", ws => {
   ws.on("error", error => console.warn("[companion] WebSocket-Fehler", error.message));
   ws.on("close", () => {
     clients.delete(ws);
-    console.log(`[companion] Foundry getrennt (${clients.size} Clients).`);
+    console.log(`[companion] Client getrennt (${clients.size} Clients).`);
   });
 });
 
