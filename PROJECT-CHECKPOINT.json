@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "1.2",
-  "created_at": "2026-08-09T11:24:00+02:00",
+  "schema_version": "1.3",
+  "created_at": "2026-08-09T11:31:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -10,77 +10,47 @@
     "module_id": "dm-cockpit",
     "repository": "hacker2090-coder/dm-cockpit",
     "default_branch": "main",
-    "current_version": "0.9.19",
-    "current_version_status": "published_needs_foundry_functional_test",
-    "last_confirmed_version": "0.9.18",
-    "runtime_changed_by_this_checkpoint": true
+    "current_version": "0.9.20",
+    "current_version_status": "published_needs_single_npc_context_retest",
+    "last_fully_confirmed_version": "0.9.18"
   },
   "working_rules": {
-    "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur einbeziehen, wenn ein echter externer Test, Zugang oder nicht sinnvoll ableitbare Entscheidung erforderlich ist.",
+    "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur bei echten externen Tests, Zugängen oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
     "one_todo_at_a_time": true,
     "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Runtime-/Release-Änderungen mit Manifest, Installationspaket und Projektstatus synchronisieren.",
     "checkpoint_rule": "In sinnvollen Abständen GitHub-Checkpoint plus JSON-Checkpoint im Chat bereitstellen."
   },
-  "confirmed_features_through_0_9_18": [
-    "LIVE-Dashboard",
-    "Abenteuer-Flowchart",
-    "Spontane Szenen",
-    "Szenen-Presets",
-    "Gegner-Spawnpunkte",
-    "Enemy Reserve Bench",
-    "Handout Queue",
-    "Loot-/Belohnungspakete",
-    "Item-Suche für Loot-/Belohnungspakete",
-    "Compendium-Schnellsuche",
-    "NPC-Schnellgenerator",
-    "Actor-basiertes NPC Memory",
-    "Foundry/GitHub Update-System"
-  ],
   "discord_audio_ai": {
-    "status": "foundry_live_transcript_v1_implemented_needs_runtime_test",
     "protocol_version": "1.0",
-    "completed_todos": [
-      "Datenmodell und API-Vertrag v1 definieren",
-      "Foundry Live-Transkript V1 als Mock/Transport-Client implementieren"
-    ],
-    "files": {
-      "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
-      "schema": "schemas/discord-audio-ai-v1.schema.json",
-      "foundry_client": "scripts/live-transcript.js",
-      "foundry_styles": "styles/live-transcript.css"
-    },
-    "foundry_live_transcript_v1": {
-      "version": "0.9.19",
-      "websocket_default": "ws://127.0.0.1:43170/v1",
-      "provider_neutral": true,
-      "mock_mode": true,
-      "cloud_cost_for_mock_test": 0,
-      "implemented": [
-        "WebSocket connect/disconnect",
-        "hello handshake",
-        "transcript.segment ingest",
-        "capture.status ingest",
-        "speaker metadata display",
-        "segment deduplication by segmentId",
-        "volatile transcript buffer up to 120 segments",
-        "NPC context from selected cockpit actor",
-        "fallback NPC context from selected token",
-        "automatic npc.context send while connected",
-        "mock capture status",
-        "mock transcript segments",
-        "clear transcript",
-        "visible capture-policy notice",
-        "global integration/debug API"
-      ],
-      "not_persistent_yet": true,
-      "not_functionally_confirmed_in_foundry_yet": true
+    "architecture_contract_complete": true,
+    "foundry_live_transcript": {
+      "status": "implemented_and_partially_runtime_confirmed",
+      "initial_version": "0.9.19",
+      "fix_version": "0.9.20",
+      "confirmed_in_foundry": {
+        "section_visible": true,
+        "mock_capture_status": true,
+        "mock_segments": true,
+        "clear_feed": true,
+        "npc_context": false
+      },
+      "npc_context_bug": {
+        "root_cause": "NPC Memory konnte den ersten Actor sichtbar auswählen, ohne diese automatische Auswahl sofort in npcMemorySelectedActorId zu persistieren. Live-Transkript und sichtbare UI konnten dadurch unterschiedliche Actor-Kontexte verwenden.",
+        "fix": "Neue scripts/npc-context-bridge.js synchronisiert sichtbare NPC-Memory-Auswahl mit dem gespeicherten Actor-Kontext und dem Live-Transkript.",
+        "retest_required": true
+      },
+      "files": [
+        "scripts/live-transcript.js",
+        "styles/live-transcript.css",
+        "scripts/npc-context-bridge.js"
+      ]
     },
     "architecture": {
       "foundry_and_discord_host": "same_pc_currently",
       "bot_hosting": "open",
       "participant_target": "more_than_10",
       "latency_target": "5-15_seconds",
-      "provider_strategy": "compare_and_keep_adapters_provider_neutral",
+      "provider_strategy": "provider_neutral_compare_later",
       "transcript_storage_future": "local_SQLite",
       "raw_audio_retention_future": "delete_after_successful_transcription",
       "capture_policy_preference": "notice_only_technical_setting",
@@ -103,19 +73,19 @@
   },
   "current_user_assistance_needed": {
     "required_now": true,
-    "task": "Foundry V14 Testwelt anlegen und V0.9.19 Mock-Test ausführen",
+    "task": "Nur NPC-Kontext in V0.9.20 erneut testen",
+    "steps": [
+      "V0.9.20 aktualisieren",
+      "Actor im NPC Memory sichtbar auswählen",
+      "NPC-Kontext im Live-Transkript klicken",
+      "prüfen, ob oben Actorname plus Cockpit erscheint",
+      "prüfen, ob Benachrichtigung Actorname nennt"
+    ],
     "secrets_needed": false,
     "discord_needed": false,
-    "api_key_needed": false,
-    "expected_test": [
-      "Discord Live-Transkript Bereich sichtbar",
-      "Mock-Status toggelt Live/Inaktiv",
-      "Mock-Segment erzeugt Feed-Einträge",
-      "NPC-Kontext zeigt ausgewählten Actor",
-      "Leeren entfernt Feed-Einträge"
-    ]
+    "api_key_needed": false
   },
-  "next_single_todo_after_successful_test": {
+  "next_single_todo_after_successful_retest": {
     "task": "Lokalen Companion-Service-Skeleton mit WebSocket und SQLite-Basis implementieren",
     "constraints": [
       "noch kein echter Discord Voice Bot",
@@ -123,5 +93,5 @@
       "Contract v1 unverändert verwenden"
     ]
   },
-  "handoff_instruction_for_next_ai": "V0.9.19 enthält den Foundry Live-Transkript Mock/Transport-Client und ist auf GitHub veröffentlicht, aber noch nicht in Foundry funktional bestätigt. Vor weiterer Runtime-Integration den Mock-Test in einer separaten Foundry-V14-Testwelt bestätigen. Nach Erfolg Companion-Service-Skeleton mit lokalem WebSocket und SQLite-Basis bauen."
+  "handoff_instruction_for_next_ai": "V0.9.19 wurde in Foundry für Bereich, Mock-Status, Mock-Segmente und Leeren bestätigt. Der NPC-Kontext-Test deckte eine Synchronisierungslücke auf. V0.9.20 enthält scripts/npc-context-bridge.js als gezielten Fix und braucht nur noch diesen einen Retest. Nach Erfolg den Foundry-Live-Transkript-Schritt als bestätigt markieren und mit dem lokalen Companion-Service-Skeleton samt WebSocket und SQLite fortfahren."
 }
