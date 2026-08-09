@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.14",
-  "created_at": "2026-08-09T14:44:00+02:00",
+  "schema_version": "3.15",
+  "created_at": "2026-08-09T14:46:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -10,9 +10,9 @@
     "foundry_version": "0.9.21",
     "foundry_status": "functionally_confirmed",
     "companion_github_version": "0.8.0",
-    "companion_last_fully_user_tested_stage": "0.8.0_ollama_e2e_confirmed",
+    "companion_last_fully_user_tested_stage": "0.8.0_ollama_quality_confirmed",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
-    "pause_point": "Companion 0.8.0 ist auf dem Nutzer-PC bis zur echten lokalen Ollama-End-to-End-Pipeline bestätigt. Ollama ist erreichbar, qwen3:4b lokal vorhanden (4.0B, Q4_K_M, 2.5 GB), und npm.cmd run test:ai-pipeline-ollama war erfolgreich: NPC promise, Session decision, NPC Candidates 2 -> 3, Session Event Candidates 2 -> 3. Damit ist transcript.segment -> qwen3:4b -> Kandidaten -> Protocol v1 -> Broadcast -> SQLite lokal bestätigt. Noch ausstehend: 12-Fälle-Qualitätsbenchmark qwen3:4b; danach bei Bedarf Vergleich mit qwen3:8b. Keine automatischen Actor-Writes."
+    "pause_point": "Companion 0.8.0 ist auf dem Nutzer-PC vollständig bis einschließlich lokalem qwen3:4b Qualitätsbenchmark bestätigt. Benchmark: 11/12 = 91.7 %, Durchschnitt 1066 ms, P95 1935 ms, Qualitätsgrenze 80 %. Einziger Fehlfall: npc-relationship wurde als statement statt relationship klassifiziert. qwen3:4b wird daher als kostenloser lokaler Standard für DM Cockpit festgelegt; qwen3:8b ist derzeit nicht erforderlich und bleibt optionaler Vergleich. Nächster Entwicklungsblock: Foundry-Kandidaten-UI mit manuellem Annehmen/Verwerfen. Keine automatischen Actor-Writes."
   },
   "working_rules": {
     "one_todo_at_a_time": true,
@@ -55,10 +55,10 @@
     "0.5.0": "Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite vollständig lokal bestätigt",
     "0.6.0": "provider-neutrale AI/Mock-Extraktion und End-to-End Candidate-Pipeline vollständig lokal bestätigt",
     "0.7.0": "OpenAI-Adapter lokal mit Fake-HTTP bestätigt; kein echter OpenAI-Aufruf",
-    "0.8.0": "Syntax, Ollama-Adapter, Preflight und echter lokaler qwen3:4b End-to-End-Lauf bis Protocol v1/Broadcast/SQLite bestätigt; Qualitätsbenchmark noch ausstehend"
+    "0.8.0": "Syntax, Ollama-Adapter, Preflight, echter lokaler qwen3:4b End-to-End-Lauf und 12-Fälle-Qualitätsbenchmark bestätigt; 91.7 % bei Ø 1066 ms / P95 1935 ms"
   },
   "companion_0_8": {
-    "status": "ollama_e2e_user_confirmed_quality_pending",
+    "status": "fully_user_confirmed_qwen3_4b_selected",
     "provider": "ollama",
     "default_model": "qwen3:4b",
     "default_endpoint": "http://127.0.0.1:11434/api/chat",
@@ -67,7 +67,8 @@
       "npm_cmd_run_check": "passed",
       "npm_cmd_run_test_ai_ollama": "passed",
       "npm_cmd_run_test_ollama_preflight": "passed",
-      "npm_cmd_run_test_ai_pipeline_ollama": "passed"
+      "npm_cmd_run_test_ai_pipeline_ollama": "passed",
+      "npm_cmd_run_test_ollama_quality": "passed"
     },
     "preflight": {
       "endpoint_reachable": true,
@@ -96,9 +97,7 @@
       "12-case German TTRPG quality benchmark",
       "test:ollama-quality"
     ],
-    "next_tests": [
-      "npm.cmd run test:ollama-quality"
-    ],
+    "next_tests": [],
     "e2e_pipeline": {
       "status": "passed",
       "provider": "ollama",
@@ -120,10 +119,28 @@
         "Protocol v1 transport",
         "SQLite persistence"
       ]
+    },
+    "quality_benchmark": {
+      "status": "passed",
+      "model": "qwen3:4b",
+      "cases": 12,
+      "passed": 11,
+      "failed": 1,
+      "score_percent": 91.7,
+      "minimum_percent": 80,
+      "average_latency_ms": 1066,
+      "p95_latency_ms": 1935,
+      "failed_case": {
+        "id": "npc-relationship",
+        "expected": "relationship",
+        "observed": "statement"
+      },
+      "decision": "qwen3:4b_selected_as_default",
+      "qwen3_8b_required": false
     }
   },
   "cost_strategy": {
-    "llm_extraction": "Ollama/qwen3:4b lokal; keine nutzungsabhängigen LLM-API-Gebühren.",
+    "llm_extraction": "qwen3:4b über lokales Ollama ist als Standard bestätigt; keine nutzungsabhängigen LLM-API-Gebühren.",
     "openai": "Nur optionaler Fallback; bisher kein echter bezahlter API-Aufruf.",
     "speech_to_text": "Aktuell weiterhin Deepgram in der bestätigten Pipeline; lokales STT noch nicht implementiert."
   },
@@ -131,12 +148,9 @@
     "1: Companion 0.5.0 vollständig lokal bestätigt",
     "2: Companion 0.6.0 Mock-AI-Pipeline vollständig lokal bestätigt",
     "3: Companion 0.7.0 OpenAI-Adapter lokal ohne echten API-Aufruf bestätigt",
-    "4a: Companion 0.8.0 Ollama-Adapter + Syntax lokal bestätigt",
-    "4b: Ollama-Runtime + qwen3:4b + Preflight lokal bestätigt",
-    "4c: echter Ollama-End-to-End-Test lokal bestätigt",
-    "4d: 12-Fälle-Qualitätsbenchmark qwen3:4b",
-    "4e: bei Bedarf qwen3:8b vergleichen und Standard festlegen",
-    "5: Kandidaten-UI in Foundry mit manuellem Annehmen/Verwerfen",
+    "4: Companion 0.8.0 Ollama/qwen3:4b vollständig lokal bestätigt; Qualitätsbenchmark 91.7 %",
+    "5a: Foundry-Kandidaten-UI implementieren",
+    "5b: manuelles Annehmen/Verwerfen lokal testen",
     "6: Undo/Change-Record Runtime",
     "7: optionale automatische NPC-Memory-Übernahme",
     "8: dauerhaft durchsuchbares Transkript",
@@ -145,7 +159,7 @@
   ],
   "resume_instructions": {
     "source_of_truth": true,
-    "next_single_external_test": "Im Ordner companion npm.cmd run test:ollama-quality ausführen. Danach anhand Trefferquote, Fehlalarmen, Durchschnitts- und P95-Latenz entscheiden, ob qwen3:4b als Standard reicht oder qwen3:8b verglichen werden soll.",
+    "next_single_external_test": "Kein externer Test unmittelbar nötig. Zuerst Foundry-Kandidaten-UI implementieren. Erst danach Nutzer-PC-Test für manuelles Annehmen/Verwerfen anfordern.",
     "do_not_repeat": [
       "Discord-Bot neu anlegen",
       "Deepgram-Konto neu einrichten",
@@ -155,7 +169,9 @@
       "0.8.0 npm.cmd run check erneut ausführen, außer neue Codeänderungen erfordern Regression",
       "0.8.0 npm.cmd run test:ai-ollama erneut ausführen",
       "0.8.0 Ollama-Preflight erneut ausführen",
-      "0.8.0 npm.cmd run test:ai-pipeline-ollama erneut ausführen"
+      "0.8.0 npm.cmd run test:ai-pipeline-ollama erneut ausführen",
+      "0.8.0 npm.cmd run test:ollama-quality erneut ausführen",
+      "qwen3:8b testen, solange kein konkreter Qualitätsgrund vorliegt"
     ]
   }
 }
