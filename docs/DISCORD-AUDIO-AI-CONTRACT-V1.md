@@ -188,10 +188,11 @@ Regeln:
 1. Der Charaktername steht zuerst.
 2. Der Nickname wird auf maximal 32 Unicode-Zeichen begrenzt.
 3. Der Charaktername hat bei Platzmangel Priorität; der Spielername wird zuerst gekürzt bzw. weggelassen.
-4. Ziel ist ausschließlich der serverbezogene Discord-Nickname.
-5. Vor dem ersten Write wird `originalNickname` persistent gespeichert.
-6. `Manage Nicknames` und Discord-Rollenhierarchie müssen die Änderung erlauben.
-7. Ein identischer gewünschter Nickname verursacht keinen unnötigen weiteren Write.
+4. Für den Spieleranteil wird der aktuell beobachtete Discord-Anzeigename bevorzugt; ein älterer gespeicherter Mapping-Name ist nur Fallback.
+5. Ziel ist ausschließlich der serverbezogene Discord-Nickname.
+6. Vor dem ersten Write wird `originalNickname` persistent gespeichert.
+7. `Manage Nicknames` und Discord-Rollenhierarchie müssen die Änderung erlauben.
+8. Ein identischer gewünschter Nickname verursacht keinen unnötigen weiteren Write.
 
 ## Persistenter Nickname-Lease
 
@@ -209,14 +210,13 @@ Ein Lease enthält mindestens:
 - Zustand
 - Fehler-/Zeitstempel
 
-Relevante Zustände:
+Relevante persistente Zustände:
 
 - `prepared`
 - `applied`
 - `apply_failed`
 - `restore_failed`
 - `restore_conflict`
-- `conflict_released`
 - `restored`
 
 ### Apply
@@ -228,6 +228,8 @@ Ablauf:
 3. Lease mit Originalzustand **vor** Discord-Mutation persistieren.
 4. Session-Nickname setzen.
 5. Lease als `applied` markieren.
+
+Nach einem früheren `restore_conflict` wird beim nächsten bewussten Apply der aktuelle manuelle Nickname im selben persistierenden Prepare-Schritt atomar zur neuen Restore-Basis. Es gibt dafür keinen Recovery-blinden Zwischenzustand.
 
 ### Restore
 
@@ -244,8 +246,6 @@ Sicherheitslogik:
 - aktueller Nickname entspricht bereits `originalNickname` → Restore als No-op erfolgreich markieren
 - aktueller Nickname entspricht dem von DM Cockpit gesetzten `appliedNickname` → Original wiederherstellen
 - aktueller Nickname entspricht **weder** Original noch DM-Cockpit-Nickname → `restore_conflict`; manuelle Änderung nicht überschreiben
-
-Bei einem späteren bewussten Rejoin/Apply kann ein vorheriger Restore-Konflikt freigegeben werden; der nun aktuelle manuelle Name wird dann zur neuen Restore-Basis.
 
 ## `nickname.status`
 
@@ -395,8 +395,9 @@ Automatisiert ohne echten Discord-Server erfolgreich geprüft:
 - Join Apply
 - Leave Restore
 - doppelte Snapshot-Idempotenz
+- aktueller Discord-Anzeigename vor altem gespeicherten Spielernamen
 - manuelle Änderung → Restore-Konflikt
-- Rejoin nach Konflikt
+- atomarer Rejoin nach Konflikt
 - Profilwechsel
 - Deaktivierung
 - Restart-Recovery
