@@ -37,7 +37,7 @@ const result = await provider.extract({
 assert.equal(captured.url, "https://api.openai.com/v1/responses");
 assert.equal(captured.options.headers.authorization, "Bearer test-key");
 assert.equal(captured.body.store, false);
-assert.equal(captured.body.model, "gpt-5.4-nano");
+assert.equal(captured.body.model, "gpt-5-nano");
 assert.equal(captured.body.text.format.type, "json_schema");
 assert.equal(captured.body.text.format.strict, true);
 assert.equal(result.npcCandidates[0].actorId, "actor-1");
