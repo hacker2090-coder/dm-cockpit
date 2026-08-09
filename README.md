@@ -1,6 +1,8 @@
-# DM Cockpit V0.9.29
+# DM Cockpit V0.9.30
 
-Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext, strukturierte KI-Kandidaten, sicheren Change-Record/Undo, Session-Recaps sowie Discord-Spieler-/Foundry-Charakter-Zuordnung mit Session-/Kampagnenprofilen, reversiblen Server-Nicknames und frei wählbarem Discord-Ausgabe-Textkanal.
+Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext, strukturierte KI-Kandidaten, sicheren Change-Record/Undo, Session-Recaps sowie Discord-Spieler-/Foundry-Charakter-Zuordnung mit Session-/Kampagnenprofilen, reversiblen Server-Nicknames, frei wählbarem Discord-Ausgabe-Textkanal und manueller Session-Steuerung über Discord/Foundry.
+
+> **Release-Status:** 0.9.30 / Companion 0.14.0 ist auf dem Staging-Branch implementiert und befindet sich vor Main-Review/CI. Der letzte CI-validierte Release auf `main` bleibt 0.9.29 / Companion 0.13.0.
 
 ## Für neue Chats / andere KIs
 
@@ -12,7 +14,7 @@ Zuerst lesen:
 4. `docs/UI-REDESIGN-SCOPE-V1.json` – Scope des UI-Umbaus.
 5. `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json` – verbindlicher Scope des laufenden Discord-Bot-Ausbaus.
 
-Bei Widerspruch zwischen Dokumentation und Code ist der aktuelle Repository-Code auf `main` technische Source of Truth; der Checkpoint muss anschließend korrigiert werden.
+Bei Widerspruch zwischen Dokumentation und Code ist der aktuelle Repository-Code auf `main` technische Source of Truth; für noch nicht integrierte Arbeit ist der benannte Staging-Branch der Arbeitsstand. Der Checkpoint muss anschließend korrigiert werden.
 
 ## Bestätigter Baseline-Kern
 
@@ -98,7 +100,11 @@ CI-validierter Build:
 
 ## 0.9.29 / Companion 0.13.0 – Discord-Ausgabe
 
-Implementierter und auf `main` integrierter neuer Block. Der automatisierte Main-/Paketlauf wird über den kanonischen Checkpoint festgehalten; ein echter Discord-/Foundry-Runtime-Test bleibt bis zum gebündelten Nutzertest offen.
+Status: **implementiert, automatisiert geprüft und CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+
+CI-validierter Build:
+
+`10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29`
 
 ### Frei wechselbarer Zielkanal
 
@@ -111,7 +117,7 @@ Implementierter und auf `main` integrierter neuer Block. Der automatisierte Main
 
 ### Aufnahme-/Transkriptionshinweis
 
-- bei einer neu gestarteten Voice-Session versucht der Companion einen transparenten Hinweis in den ausgewählten Kanal zu senden
+- bei einer neu gestarteten Session versucht der Companion einen transparenten Hinweis in den ausgewählten Kanal zu senden
 - erfolgreicher automatischer Hinweis ist pro Session idempotent und wird bei Retry/Reconnect nicht doppelt gesendet
 - `capture.status.noticeShown` wird nur nach tatsächlich erfolgreichem Versand `true`
 - Hinweis kann im Cockpit zusätzlich bewusst erneut gesendet werden
@@ -120,7 +126,7 @@ Implementierter und auf `main` integrierter neuer Block. Der automatisierte Main
 
 ### Recap direkt an Discord
 
-Die bestehende Recap-Karte behält ihre Copy-Funktionen und erhält zusätzlich:
+Die bestehende Recap-Karte behält ihre Copy-Funktionen und besitzt zusätzlich:
 
 - `An Discord senden`
 
@@ -149,9 +155,69 @@ Noch real zu prüfen:
 - Verhalten bei gelöschtem Kanal bzw. verlorenen Senderechten
 - kein doppelter automatischer Hinweis bei realem Reconnect
 
+## 0.9.30 / Companion 0.14.0 – Session-Steuerung, Commands, Presence, Diagnose und Reconnect
+
+Status auf diesem Staging-Branch: **implementiert; automatisierte Tests sind versioniert, Main-CI und realer Runtime-Test stehen noch aus.**
+
+### Manuelle logische Session
+
+- Discord-Voice-Join allein startet keine DM-Cockpit-Session mehr
+- Session und Voice-Verbindung sind getrennte Zustände
+- Sessionstart setzt genau eine logische `sessionId`
+- doppelter Start ist idempotent und erzeugt keine zweite Session
+- doppelter Stop ist idempotent
+- Audio-Receiver wird nur bei aktiver Session und bereiter Voice-Verbindung angebunden
+- verspätete STT-Ergebnisse einer bereits beendeten/ersetzten Session werden nicht mehr veröffentlicht
+
+### Discord Slash Commands
+
+Registriert werden serverbezogen:
+
+- `/dm status`
+- `/dm start`
+- `/dm stop`
+- `/dm recap`
+
+Im aktuellen Ausbau sind die Befehle auf die konfigurierte GM-Discord-User-ID begrenzt. Ein allgemeines Rollen-/Berechtigungsframework bleibt bewusst ein späterer Scope-Punkt.
+
+`/dm recap` erzeugt keinen separaten KI-Recap. Der Befehl fordert in Foundry die bestehende, ausschließlich aus angenommenen Session-Ereignissen gebildete Discord-Kurzfassung an und nutzt den bereits vorhandenen bewussten Discord-Ausgabepfad.
+
+### Bot Presence und Diagnose
+
+Der Bot kann seinen Betriebszustand sichtbar machen:
+
+- bereit
+- Voice bereit
+- Session aktiv
+- Session pausiert / Voice-Reconnect
+- Diagnose nötig
+
+`/dm status` berichtet Session, Capture, Gateway, Voice, Reconnect und gewählten Ausgabekanal. `diagnostic.state` transportiert verständliche Gateway-/Voice-/Output-Fehlerzustände an Foundry.
+
+### Robuster Voice-Reconnect
+
+- begrenzte Reconnect-Versuche mit Backoff
+- Reconnect verwendet denselben Ziel-Voice-Channel
+- eine laufende logische Session behält beim Voice-Reconnect dieselbe `sessionId`
+- Reconnect startet keine zweite logische Session
+- bereits erfolgreich gesendeter automatischer Aufnahmehinweis bleibt über seine Session-Request-ID idempotent
+- kurzlebige Audiosegment-Deduplizierung schützt zusätzlich gegen doppelte STT-Verarbeitung
+- absichtliches Voice-Verlassen deaktiviert Reconnect **vor** `connection.destroy()`, damit ein `Destroyed`-Event keinen unerwünschten Wiederbeitritt auslöst
+
+### Automatisierte Absicherung für 0.9.30
+
+Versioniert sind:
+
+- `session-control-smoke-test.js`
+- `discord-command-controller-smoke-test.js`
+- `discord-voice-reconnect-smoke-test.js`
+- bestehender `discord-output-smoke-test.js`
+
+Der neue Reconnect-Smoke prüft explizit den Unterschied zwischen absichtlichem Leave und unerwartetem `Destroyed`.
+
 ## Source of Truth / Packaging
 
-GitHub `main` ist technische Source of Truth.
+GitHub `main` ist technische Source of Truth. Nicht integrierte größere Arbeitsblöcke liegen auf einem benannten Staging-Branch.
 
 Der Release-Workflow:
 
@@ -159,14 +225,14 @@ Der Release-Workflow:
 - validiert Manifest-referenzierte Skripte/Styles und alle Foundry-JavaScript-Dateien
 - installiert die Companion-Abhängigkeiten vor den Companion-Smoke-Tests
 - validiert Companion-JavaScript sowie Protocol-/Scope-JSON
-- führt Identity-, Identity-Profile- und Discord-Output-Smoke-Tests aus
+- führt Identity-, Identity-Profile-, Discord-Output-, Session-Control-, Discord-Command- und Voice-Reconnect-Smoke-Tests aus
 - serialisiert `main`-Runs per GitHub-Actions-`concurrency`
 - baut das Foundry-ZIP nur bei Foundry-relevanten Änderungen
 - Companion-/Protocol-/Scope-only Änderungen erzeugen kein unnötiges ZIP
 
-Größere autonome Blöcke werden auf einem Staging-Branch gebündelt und `main` anschließend einmalig fast-forward aktualisiert.
+Größere autonome Blöcke werden auf einem Staging-Branch gebündelt und `main` anschließend nach Review möglichst einmalig fast-forward aktualisiert.
 
-## Companion 0.13.0
+## Companion 0.14.0
 
 Der vollständig bestätigte 0.10.0-Baseline-Kern bleibt unverändert bestätigt:
 
@@ -182,6 +248,7 @@ Spätere Companion-Stufen:
 - 0.11.0: Spieler-/Charakter-Sprecheridentität
 - 0.12.0: Identity-Profile + reversible Discord-Server-Nicknames
 - 0.13.0: persistenter Discord-Ausgabekanal + Aufnahmehinweis + bewusstes Recap-Posting
+- 0.14.0: manuelle Session-State-Machine + `/dm`-Commands + Presence/Diagnose + robuster Voice-Reconnect
 
 OpenAI bleibt optionaler Fallback; kein echter bezahlter OpenAI-Aufruf wurde bestätigt.
 
@@ -195,6 +262,7 @@ OpenAI bleibt optionaler Fallback; kein echter bezahlter OpenAI-Aufruf wurde bes
 - Spieler-/Charakterzuordnungen werden vom GM bestätigt; die KI darf keine Actor-ID raten.
 - Discord-Nickname-Automatik greift nur bei aktivem Profil.
 - Discord-Recaps werden nur nach bewusster GM-Aktion gepostet.
+- Reconnect darf keine neue logische Session, keinen zweiten automatischen Aufnahmehinweis und keine doppelten Transkriptsegmente erzeugen.
 
 ## Installation / Updates
 
