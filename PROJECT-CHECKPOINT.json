@@ -1,9 +1,9 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.5",
-  "created_at": "2026-08-09T14:03:00+02:00",
+  "schema_version": "3.6",
+  "created_at": "2026-08-09T14:08:00+02:00",
   "language": "de",
-  "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit. Source of Truth für neue Chats; trennt bestätigt, implementiert aber noch nicht getestet, historisch implementiert und geplant.",
+  "purpose": "Kanonischer chatübergreifender Wissensstand für DM Cockpit.",
   "project": {
     "name": "DM Cockpit",
     "type": "Foundry VTT Modul + lokaler Discord/Audio/KI Companion Service",
@@ -14,103 +14,131 @@
     "foundry_version": "0.9.21",
     "foundry_status": "functionally_confirmed",
     "companion_github_version": "0.6.0",
-    "companion_last_fully_user_tested_stage": "0.5.0_fully_confirmed",
-    "pause_point": "Companion 0.5.0 vollständig lokal bestätigt. Companion 0.6.0 AI-Extraction-Grundgerüst auf GitHub implementiert und isoliert getestet. Automatischer End-to-End-Smoke-Test test:ai-pipeline ist vorbereitet und syntaktisch geprüft. NPC-Kontext besitzt jetzt einen Latest-Context-Fallback, damit eine Auswahl vor Sessionstart erhalten bleibt. Lokaler Nutzer-PC-Test von 0.6.0 steht aus. AI_PROVIDER bleibt standardmäßig none; kein realer LLM-Provider und keine Actor-Writes.",
-    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
-    "manifest": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/module.json",
-    "download": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip"
+    "companion_last_fully_user_tested_stage": "0.6.0_isolated_ai_extraction_confirmed",
+    "pause_point": "Companion 0.5.0 vollständig lokal bestätigt. Companion 0.6.0 Syntaxprüfung und lokaler AI-Extraction-Test auf Nutzer-PC erfolgreich. Provider-neutraler Service, deterministischer Mock, NPC-/Session-Kandidaten, Quellenbindung, NPC-Kontext, Final-only und Deduplizierung bestätigt. Noch ausstehend: automatischer End-to-End-Pipeline-Test transcript.segment -> AI extraction -> candidates -> Protocol v1 -> SQLite mit AI_PROVIDER=mock. Kein realer LLM-Provider und keine Actor-Writes.",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit"
   },
   "working_rules": {
     "one_todo_at_a_time": true,
-    "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur bei echten externen Tests, Zugängen, Secrets oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
+    "autonomy": "Möglichst autonom weiterarbeiten; Nutzer nur bei echten externen Tests, Zugängen, Secrets oder nicht sinnvoll ableitbaren Entscheidungen einbeziehen.",
     "do_not_reask_known_answers": true,
-    "github_sync": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Foundry-Runtime-/Release-Änderungen zusätzlich mit module.json, ZIP und Status synchronisieren.",
-    "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen. Den kanonischen PROJECT-CHECKPOINT.json pflegen und historische Checkpoints unter checkpoints/ sichern.",
-    "checkpoint_dual_storage": "Jeder reguläre Checkpoint wird sowohl im GitHub-Repository DM Cockpit als auch in der ChatGPT-Bibliothek unter /DM Cockpit/ abgelegt.",
-    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten werden über HTML-Dateien geführt. Die HTML-Datei enthält alle Auswahlmöglichkeiten und erzeugt eine kopierbare Antwort, die der Nutzer in den Chat zurückschicken kann.",
-    "user_action_rule": "Wenn eine Handlung oder Information vom Nutzer benötigt wird, immer einen klar abgegrenzten Abschnitt mit der Überschrift 'Ich möchte von dir' verwenden und dort exakt angeben, was gebraucht wird.",
-    "local_command_rule": "Für lokale Companion-Arbeit standardmäßig mit dem bekannten Ablauf arbeiten: Ctrl+C (nur falls Prozess läuft), cd $HOME\\Desktop\\dm-cockpit, git pull, cd companion, npm.cmd ...",
-    "secret_rule": "Discord Bot Token, Deepgram API Key, spätere AI/API Keys und Passwörter niemals in Chat, GitHub oder Checkpoints speichern.",
-    "windows_rule": "Auf dem Nutzer-PC npm.cmd statt npm verwenden; npm.ps1 wird durch PowerShell Execution Policy blockiert.",
-    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung; nur temporäre RAM-Verarbeitung.",
-    "legal_rule": "notice_only ist eine technische Capture-Policy und keine rechtliche Einwilligung/Erlaubnis.",
-    "change_rule": "Automatische Weltänderungen erst mit sicherem Undo/Change-Record bzw. klarer GM-Bestätigung."
+    "selection_questions_rule": "Fragen mit Auswahlmöglichkeiten über HTML-Dateien mit kopierbarem Ergebnis führen.",
+    "checkpoint_rule": "Regelmäßig JSON-Checkpoints erstellen; kanonischen PROJECT-CHECKPOINT.json und historische Checkpoints pflegen.",
+    "checkpoint_dual_storage": "Jeden regulären Checkpoint sowohl in ChatGPT Library /DM Cockpit/ als auch im GitHub-Repository speichern.",
+    "user_action_rule": "Wenn etwas vom Nutzer benötigt wird, Abschnitt 'Ich möchte von dir' mit exakter Anweisung verwenden.",
+    "local_command_rule": "Lokale Companion-Arbeit auf $HOME\\Desktop\\dm-cockpit; npm.cmd statt npm verwenden.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints speichern.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung; nur RAM-Verarbeitung.",
+    "change_rule": "Keine automatischen Welt-/Actor-Änderungen ohne Undo/Change-Record oder klare GM-Bestätigung."
   },
-  "confirmed_foundry_0_9_21": {
-    "features": ["LIVE-Dashboard", "Abenteuer-Flowchart", "Spontane Szenen", "Szenen-Presets", "Gegner-Spawnpunkte", "Enemy Reserve Bench", "Handout Queue", "Loot-/Belohnungspakete", "Item-Suche", "Compendium-Schnellsuche", "NPC-Schnellgenerator", "Actor-basiertes NPC Memory", "Discord Live-Transkript UI/Transport-Client", "NPC-Kontext", "Foundry/GitHub Update-System"]
+  "confirmed_foundry": {
+    "version": "0.9.21",
+    "features": [
+      "LIVE-Dashboard",
+      "Abenteuer-Flowchart",
+      "Spontane Szenen",
+      "Szenen-Presets",
+      "Gegner-Spawnpunkte",
+      "Enemy Reserve Bench",
+      "Handout Queue",
+      "Loot-/Belohnungspakete",
+      "Item-Suche",
+      "Compendium-Schnellsuche",
+      "NPC-Schnellgenerator",
+      "Actor-basiertes NPC Memory",
+      "Discord Live-Transkript",
+      "NPC-Kontext",
+      "Foundry/GitHub Update-System"
+    ]
   },
-  "companion": {
-    "runtime": "Node.js >=24.17.0",
-    "confirmed_user_node": "24.18.1",
-    "websocket": "ws://127.0.0.1:43170/v1",
-    "health": "http://127.0.0.1:43170/health",
-    "sqlite": "companion/data/dm-cockpit.sqlite",
-    "history": {
-      "0.1.0": "Foundry <-> WebSocket <-> Companion <-> SQLite bestätigt",
-      "0.2.0": "Discord Voice/DAVE/GM Follow bestätigt",
-      "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
-      "0.4.0": "Deepgram Nova-3 STT bestätigt",
-      "0.5.0": "vollständig lokal bestätigt: Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite",
-      "0.6.0": "AI-Extraction-Grundgerüst auf GitHub, isoliert getestet; Nutzer-PC-Test ausstehend"
+  "companion_history": {
+    "0.1.0": "Foundry <-> WebSocket <-> Companion <-> SQLite bestätigt",
+    "0.2.0": "Discord Voice/DAVE/GM Follow bestätigt",
+    "0.3.0": "sprechergetrennter Discord-Opus-Empfang bestätigt",
+    "0.4.0": "Deepgram Nova-3 STT bestätigt",
+    "0.5.0": "vollständig lokal bestätigt: Health, Discord/DAVE/Deepgram/Foundry sowie Candidate Broadcast + SQLite",
+    "0.6.0": "Syntax + isolierte AI-Extraction lokal bestätigt; End-to-End-AI-Pipeline-Test noch ausstehend"
+  },
+  "companion_0_5_confirmed": {
+    "health_service_version": "0.5.0",
+    "voice_regression": {
+      "packets": 344,
+      "bytes": 47775,
+      "duration_ms": 8220,
+      "recognized_text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.",
+      "confidence": 0.961,
+      "foundry_live_transcript_visible": true
     },
-    "0_5_regression": {
-      "health_confirmed": true,
-      "real_voice_test": {"packets": 344, "bytes": 47775, "duration_ms": 8220, "recognized_text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.", "confidence": 0.961, "foundry_live_transcript_visible": true},
-      "candidate_smoke_test": {"confirmed": true, "npc_candidates": {"before": 0, "after": 1}, "session_event_candidates": {"before": 0, "after": 1}}
+    "candidate_smoke_test": {
+      "npc_candidates": {"before": 0, "after": 1},
+      "session_event_candidates": {"before": 0, "after": 1},
+      "protocol_v1": true,
+      "sqlite_persistence": true
     }
   },
-  "protocol_v1": {
-    "endpoint": "ws://127.0.0.1:43170/v1",
-    "message_types": ["hello", "hello.ack", "health", "session.started", "session.ended", "speaker.upserted", "capture.status", "transcript.segment", "npc.context", "npc.memory.candidate", "session.event.candidate", "npc.memory.applied", "change.undo.request", "change.undo.result", "error"],
-    "npc_candidate_kinds": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"],
-    "session_candidate_kinds": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
-  },
-  "github_0_6_0": {
-    "status": "implemented_and_isolated_test_passed_user_test_pending",
-    "version": "0.6.0",
+  "companion_0_6": {
+    "status": "isolated_user_test_confirmed_pipeline_e2e_pending",
     "implemented": [
       "AiExtractionService provider-neutral",
       "MockAiExtractionProvider deterministic-v1",
       "AI_PROVIDER safe default none",
-      "final transcript.segment -> extraction via Protocol-v1 broadcast",
-      "per-session npc.context tracking with latest-context fallback",
-      "npc.memory.candidate output",
-      "session.event.candidate output",
+      "final transcript.segment -> extraction",
+      "per-session npc.context + latest-context fallback",
+      "npc.memory.candidate",
+      "session.event.candidate",
       "sourceSegmentIds provenance",
       "provider/model/confidence/status metadata",
       "duplicate segment suppression",
       "partial transcript suppression",
       "no automatic Actor writes",
       "npm test:ai",
-      "package/server serviceVersion 0.6.0",
-      "ai-pipeline-smoke-test.js",
       "npm test:ai-pipeline"
     ],
-    "isolated_validation": {
-      "node_syntax_check": true,
-      "test_ai": true,
-      "expected_mock_case": "promise + task from 'Ich verspreche dem Händler, morgen zurückzukommen.'",
-      "duplicate_ignored": true,
-      "partial_ignored": true,
-      "session_decision_without_npc_context": true
+    "local_validation": {
+      "npm_cmd_run_check": "passed",
+      "npm_cmd_run_test_ai": "passed",
+      "output": [
+        "[ai] Provider 'mock' bereit.",
+        "[ai] Segment seg_ai_test_001: 2 Kandidaten erzeugt.",
+        "[ai] Segment seg_ai_no_npc: 1 Kandidat erzeugt.",
+        "AI-Extraction-Test erfolgreich."
+      ],
+      "confirmed": [
+        "provider-neutraler Service",
+        "Mock-Provider",
+        "NPC-Kandidaten",
+        "Session-Kandidaten",
+        "Quellenbindung",
+        "NPC-Kontext",
+        "Final-only",
+        "Deduplizierung"
+      ]
     },
-    "integration_smoke_test": {
+    "pipeline_smoke_test": {
       "status": "prepared_not_user_run",
-      "syntax_checked": true,
       "command": "npm.cmd run test:ai-pipeline",
-      "requires": "Companion 0.6.0 running with AI_PROVIDER=mock",
-      "checks": ["npc.context via Protocol v1", "final transcript.segment via Protocol v1", "automatic npc.memory.candidate", "automatic session.event.candidate", "candidate counters increase in SQLite"]
+      "requires": "Companion 0.6.0 laufend mit AI_PROVIDER=mock",
+      "checks": [
+        "npc.context via Protocol v1",
+        "final transcript.segment via Protocol v1",
+        "automatic npc.memory.candidate",
+        "automatic session.event.candidate",
+        "candidate counters increase in SQLite"
+      ]
     },
-    "documentation_synced": ["README.md", "companion/README.md", "companion/.env.example", "PROJECT-CHECKPOINT.json"],
-    "local_user_test_pending": true,
     "real_llm_provider_implemented": false
   },
-  "sqlite_tables": ["meta", "sessions", "speakers", "transcript_segments", "npc_context_events", "npc_memory_candidates", "session_event_candidates", "change_records"],
+  "protocol_v1": {
+    "endpoint": "ws://127.0.0.1:43170/v1",
+    "candidate_types": ["npc.memory.candidate", "session.event.candidate"],
+    "npc_candidate_kinds": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"],
+    "session_candidate_kinds": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
+  },
   "roadmap": [
     "1: Companion 0.5.0 vollständig lokal bestätigt",
-    "2a: Companion 0.6.0 AI/Mock-Extraktion implementiert und isoliert getestet",
-    "2b: Nutzer-PC: npm.cmd run check + npm.cmd run test:ai",
-    "2c: Companion temporär mit AI_PROVIDER=mock starten + npm.cmd run test:ai-pipeline",
+    "2a: Companion 0.6.0 AI/Mock-Extraktion implementiert",
+    "2b: 0.6.0 Syntax + isolierter AI-Test lokal bestätigt",
+    "2c: End-to-End AI-Pipeline mit AI_PROVIDER=mock lokal bestätigen",
     "2d: realen AI/LLM Provider auswählen und anbinden",
     "3: Kandidaten-UI in Foundry",
     "4: Undo/Change-Record Runtime",
@@ -121,8 +149,16 @@
   ],
   "resume_instructions": {
     "source_of_truth": true,
-    "do_not_repeat": ["Discord-Bot neu anlegen", "Deepgram-Konto neu einrichten", "Keys erneut anfordern", "Companion 0.1-0.5 neu bauen/testen", "bestätigte Foundry-Grundfunktionen neu implementieren"],
-    "next_single_todo": "Companion 0.6.0 lokal aktualisieren und npm.cmd run check sowie npm.cmd run test:ai ausführen.",
-    "after_success": "Companion mit temporärem AI_PROVIDER=mock starten und in zweiter PowerShell npm.cmd run test:ai-pipeline ausführen; weiterhin keine Actor-Writes."
+    "do_not_repeat": [
+      "Discord-Bot neu anlegen",
+      "Deepgram-Konto neu einrichten",
+      "Keys erneut anfordern",
+      "Companion 0.1-0.5 neu bauen/testen",
+      "0.6.0 Syntaxprüfung erneut ausführen",
+      "0.6.0 isolierten test:ai erneut ausführen",
+      "bestätigte Foundry-Grundfunktionen neu implementieren"
+    ],
+    "next_single_todo": "Companion 0.6.0 mit AI_PROVIDER=mock starten und in einer zweiten PowerShell npm.cmd run test:ai-pipeline ausführen.",
+    "after_success": "0.6.0 Mock-Pipeline vollständig bestätigen; danach Auswahl und Implementierung eines realen AI/LLM-Providers. Weiterhin keine Actor-Writes."
   }
 }
