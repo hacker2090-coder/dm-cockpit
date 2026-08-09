@@ -19,6 +19,7 @@
         "transcript.segment",
         "npc.context",
         "npc.memory.candidate",
+        "session.event.candidate",
         "npc.memory.applied",
         "change.undo.request",
         "change.undo.result",
@@ -91,7 +92,31 @@
         "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
         "createdAt": { "type": "string", "format": "date-time" },
         "provider": { "type": ["string", "null"] },
-        "model": { "type": ["string", "null"] }
+        "model": { "type": ["string", "null"] },
+        "status": { "type": "string", "default": "pending" }
+      },
+      "additionalProperties": false
+    },
+    "sessionEventCandidate": {
+      "type": "object",
+      "required": ["candidateId", "text", "kind", "sourceSegmentIds", "createdAt"],
+      "properties": {
+        "candidateId": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
+        },
+        "sourceSegmentIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "provider": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "status": { "type": "string", "default": "pending" }
       },
       "additionalProperties": false
     },
@@ -138,6 +163,10 @@
     {
       "if": { "properties": { "type": { "const": "npc.memory.candidate" } } },
       "then": { "properties": { "payload": { "$ref": "#/$defs/npcMemoryCandidate" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "session.event.candidate" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/sessionEventCandidate" } } }
     },
     {
       "if": { "properties": { "type": { "const": "capture.status" } } },
