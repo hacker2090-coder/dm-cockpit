@@ -1,0 +1,161 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.31",
+  "created_at": "2026-08-09T20:20:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "source_of_truth": "GitHub main",
+    "latest_checked_main_commit": "1a2dc9d3734b3e8bc98d15e93baa98a1cc9b1c97",
+    "latest_checked_main_message": "docs: advance Discord bot scope after 0.9.29 CI validation",
+    "foundry_repository_version": "0.9.29",
+    "foundry_last_fully_user_confirmed_version": "0.9.24",
+    "foundry_last_visual_user_confirmed_version": "0.9.26",
+    "companion_repository_version": "0.13.0",
+    "companion_last_fully_user_confirmed_version": "0.10.0"
+  },
+  "critical_resume_state": {
+    "status": "discord_output_ci_validated_next_block_ready",
+    "summary": "0.9.29/0.13.0 Discord-Ausgabe ist implementiert, automatisiert geprüft und nach Behebung des Main-CI-Abhängigkeitsfehlers erfolgreich paketiert. Validierter Build ist 10a8aa21483aed55f187df3839aefc5d27bda14f. Reale Discord-/Foundry-Runtime-Bestätigung bleibt für einen gebündelten Nutzertest offen. Nächster autonomer Block ist session_control_commands_presence_diagnostics_reconnect auf einem eigenen Staging-Branch."
+  },
+  "repository_health": {
+    "checked_at": "2026-08-09T20:20:00+02:00",
+    "module_manifest": "0.9.29",
+    "companion_package": "0.13.0",
+    "latest_ci_validated_package_build": "10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29",
+    "ci_incident": {
+      "affected_trigger": "26e6babfd011610129698a6f1539042b780b3745",
+      "symptom": "Build DM Cockpit v0.9.29 fehlte und dm-cockpit.zip blieb identisch zum 0.9.28-Build.",
+      "root_cause": "Der neue discord-output-smoke-test.js importiert discord.js, aber der frische GitHub-Actions-Checkout installierte vor der Companion-Validierung keine Companion-Abhängigkeiten.",
+      "fix_commit": "a46b64e7bd23b5e61085954d235036484e11fb20",
+      "fix_message": "ci: install companion dependencies before validation",
+      "controlled_revalidation_trigger": "b12913c1de84f0d2945ae85c80d3d079e75918d4",
+      "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f"
+    },
+    "blocking_issue": null
+  },
+  "working_rules": {
+    "github_source_of_truth": true,
+    "check_main_before_changes": true,
+    "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
+    "user_test_cadence": "Insgesamt ungefähr drei gebündelte reale Discord-/Foundry-Testblöcke für den Discord-Bot-Ausbau; keine Mikrotests nach jedem Commit.",
+    "checkpoint_rule": "Nach sinnvollen Wiederaufnahmepunkten PROJECT-CHECKPOINT.json aktualisieren und historischen Snapshot unter checkpoints/ anlegen.",
+    "staging_rule": "Größere autonome Blöcke auf temporärem Branch bündeln; main erst nach Review möglichst einmalig aktualisieren.",
+    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
+    "powershell_rule": "PowerShell-Befehle getrennt; npm.cmd verwenden; kein &&.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "world_change_rule": "Keine automatische Foundry-Actor-/Weltmutation ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung.",
+    "status_rule": "implemented, automated_tested, ci_validated, local_confirmed und fully_confirmed strikt trennen."
+  },
+  "confirmed_baseline_do_not_repeat_without_regression": {
+    "companion_0_10_0": [
+      "Discord Login / DAVE / GM Follow",
+      "speaker-getrennte Audioverarbeitung",
+      "Deepgram End-to-End",
+      "Candidate Review Persistenz",
+      "Change-Record/Undo Backend"
+    ],
+    "ai": [
+      "Ollama qwen3:4b Adapter/Preflight/E2E",
+      "Qualitätsbenchmark 11/12 = 91.7%"
+    ],
+    "foundry": [
+      "0.9.24 NPC-Memory Undo E2E vollständig bestätigt",
+      "0.9.26 UI visuell positiv bestätigt"
+    ],
+    "deferred_do_not_resurface_unsolicited": [
+      "0.9.25 Recap-Inhalts-/Copy-Test",
+      "0.9.26 Drag/Persistenz/Resize/Filter-Interaktions-Smoke"
+    ]
+  },
+  "discord_bot_expansion": {
+    "status": "in_progress",
+    "scope_document": "docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json",
+    "completed_milestones": [
+      {
+        "name": "discord_identity_core",
+        "foundry": "0.9.27",
+        "companion": "0.11.0",
+        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+        "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2"
+      },
+      {
+        "name": "campaign_session_identity_and_nickname",
+        "foundry": "0.9.28",
+        "companion": "0.12.0",
+        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+        "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20"
+      },
+      {
+        "name": "discord_output_channel_notice_and_recap_posting",
+        "foundry": "0.9.29",
+        "companion": "0.13.0",
+        "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+        "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f",
+        "runtime_pending": [
+          "reale Discord-Kanalliste in Foundry",
+          "reale Kanalauswahl und Persistenz",
+          "realer Aufnahmehinweis",
+          "realer Recap-Versand",
+          "Permissions-/gelöschter-Kanal-Fehlerfälle",
+          "kein doppelter automatischer Hinweis bei realem Reconnect"
+        ]
+      }
+    ],
+    "current_block": {
+      "name": "session_control_commands_presence_diagnostics_reconnect",
+      "status": "ready_to_start_on_staging",
+      "staging_branch": "session_control_commands_presence_diagnostics_reconnect",
+      "planned_features": [
+        "manuelle Session-Steuerung getrennt vom bloßen Discord-Voice-Join",
+        "/dm status",
+        "/dm start",
+        "/dm stop",
+        "/dm recap",
+        "sichtbarer Bot-Presence-/Sessionstatus",
+        "verständliche Diagnose- und Fehlerzustände",
+        "robuster Voice-Reconnect",
+        "Wiederherstellung des Sessionzustands nach Reconnect",
+        "keine doppelten Sessions",
+        "keine doppelten Aufnahmehinweise",
+        "keine doppelten Transkriptsegmente durch Reconnect"
+      ]
+    },
+    "deferred_scope_ids": [5, 14],
+    "deferred_features": [
+      "mehrere GMs",
+      "eigenes Befehlsberechtigungs-Framework"
+    ]
+  },
+  "runtime_test_strategy": {
+    "user_tests_should_remain_rare": true,
+    "planned_bundled_blocks": [
+      "Spieler <-> Charakter <-> Sprecher",
+      "Discord-Eingriffe: Nicknames, Zielkanal, Hinweis/Recap, Reconnect",
+      "finaler End-to-End-Test"
+    ],
+    "current_instruction": "Noch keinen Nutzertest nur wegen des CI-Abschlusses verlangen; den nächsten autonomen Block zunächst auf Staging implementieren und automatisiert absichern."
+  },
+  "important_design_semantics": {
+    "speaker_truth": "Discord User ID aus der getrennten Voice-Audiospur.",
+    "character_truth": "Nur GM-bestätigte Foundry-Actor-Zuordnung.",
+    "ic_ooc": "Mapping bedeutet nicht automatisch In-Character; keine stille IC/OOC-Klassifikation in V1.",
+    "nickname_target": "Nur serverbezogener Discord-Nickname, niemals globaler Username.",
+    "recap_rule": "Nur bewusste GM-Aktion darf Recap an Discord senden.",
+    "notice_rule": "Aufnahme-/Transkriptionshinweis ersetzt keine rechtliche Einwilligungs-/Datenschutzklärung."
+  },
+  "next_actions_exact_order": [
+    "Aktuellen main erneut prüfen.",
+    "Staging-Branch session_control_commands_presence_diagnostics_reconnect von aktuellem main erstellen.",
+    "Bestehende Discord-Voice-, Server-, Output- und Protocol-Architektur vollständig prüfen.",
+    "Session-Lifecycle als idempotente State Machine getrennt vom Voice-Join implementieren.",
+    "Slash Commands /dm status|start|stop|recap anbinden.",
+    "Presence und Diagnosezustände anbinden.",
+    "Voice-Reconnect und Session-Wiederherstellung gegen Duplikate härten.",
+    "Automatisierte Tests bündeln; keinen realen Nutzertest nach Mikroschritten verlangen.",
+    "Nach Review Staging möglichst einmalig nach main integrieren."
+  ]
+}
