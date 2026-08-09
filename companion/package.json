@@ -1,6 +1,6 @@
 {
   "name": "dm-cockpit-companion",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Lokaler Discord Audio/KI Companion Service für DM Cockpit",
   "type": "module",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.js",
-    "check": "node --check src/main.js && node --check src/server.js && node --check src/store.js && node --check src/mock-client.js && node --check src/discord-voice.js && node --check src/audio-receive.js",
+    "check": "node --check src/main.js && node --check src/server.js && node --check src/store.js && node --check src/mock-client.js && node --check src/discord-voice.js && node --check src/audio-receive.js && node --check src/companion-publisher.js && node --check src/stt-service.js && node --check src/stt-deepgram.js",
     "mock": "node src/mock-client.js"
   },
   "dependencies": {
