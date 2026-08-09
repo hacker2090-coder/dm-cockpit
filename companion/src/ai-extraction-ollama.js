@@ -49,6 +49,8 @@ Analysiere genau ein finales Transkriptsegment und extrahiere nur spielrelevante
 Erfinde nichts, ergänze keine Weltfakten und leite keine versteckten Absichten ab.
 Wenn etwas unsicher, beiläufig oder nicht spielrelevant ist, erzeuge keinen Kandidaten.
 
+Eine angegebene Spieler-/Charakterzuordnung stammt ausschließlich aus einer GM-bestätigten Foundry-Zuordnung. Nutze sie nur als Sprecherkontext. Erfinde oder verändere niemals selbst eine Charakter- oder Actor-Zuordnung. Die Zuordnung beweist nicht, dass jede Aussage in-character gesprochen wurde.
+
 NPC-Kandidaten sind nur erlaubt, wenn ein aktueller NPC-Kontext angegeben ist und der Inhalt tatsächlich diesen NPC betrifft.
 NPC-Kategorien: statement=Aussage/Fakt, knowledge=erlangtes Wissen, action=Handlung, relationship=Beziehung, promise=Versprechen/Zusage, lie=explizit als Lüge belegbar, deadline=Frist, consequence=Konsequenz, other=nur wenn keine Kategorie passt.
 
@@ -85,9 +87,15 @@ function cleanText(value) {
 
 function buildInput({ segment, sessionId, npcContext }) {
   const npcActive = Boolean(npcContext?.actorId);
+  const playerName = cleanText(segment?.playerName)
+    || cleanText(segment?.speakerName)
+    || cleanText(segment?.discordUserId)
+    || "unbekannt";
+  const characterName = cleanText(segment?.characterName);
   return [
     `Session-ID: ${sessionId ?? "nicht gesetzt"}`,
-    `Sprecher: ${cleanText(segment?.speakerName) || cleanText(segment?.discordUserId) || "unbekannt"}`,
+    `Spieler/Sprecher: ${playerName}`,
+    `GM-bestätigter Spielercharakter: ${characterName || "nicht zugeordnet"}`,
     `Aktueller NPC-Kontext: ${npcActive ? "ja" : "nein"}`,
     npcActive ? `NPC-Name: ${cleanText(npcContext?.actorName) || "unbekannt"}` : null,
     npcActive ? `NPC-Quelle: ${cleanText(npcContext?.source) || "unbekannt"}` : null,
@@ -152,7 +160,13 @@ export class OllamaExtractionProvider {
       temperature: 0,
       numCtx: this.numCtx,
       keepAlive: this.keepAlive,
-      sentData: ["final transcript text", "speaker display name", "session id", "NPC display context when active"]
+      sentData: [
+        "final transcript text",
+        "speaker/player display name",
+        "GM-confirmed mapped character display name when available",
+        "session id",
+        "NPC display context when active"
+      ]
     };
   }
 
