@@ -1,0 +1,53 @@
+{
+  "checkpoint_type": "dm_cockpit_staging_handoff",
+  "schema_version": "1.0",
+  "created_at": "2026-08-09T20:30:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "source_of_truth": "GitHub main for released state; named staging branch for this in-progress block",
+  "released_main_baseline": {
+    "main_commit_before_staging": "9af9172b3b220eb2782e34cccee5d1611645f718",
+    "foundry": "0.9.29",
+    "companion": "0.13.0",
+    "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29",
+    "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed"
+  },
+  "staging": {
+    "branch": "session_control_commands_presence_diagnostics_reconnect",
+    "status": "implementation_in_progress_not_ready_for_main",
+    "implemented_so_far": [
+      "eigene idempotente SessionControl-State-Machine",
+      "Voice-Join startet keine logische Session mehr automatisch",
+      "Voice-Verlust beendet die logische Session nicht",
+      "Reconnect behält dieselbe sessionId",
+      "Audio-Receiver wird nur bei aktiver Session + Voice-ready angebunden",
+      "kurzlebige Audiosegment-Deduplizierung vor STT",
+      "Slash-Command-Controller für /dm status, /dm start, /dm stop, /dm recap",
+      "Slash-Commands standardmäßig auf den konfigurierten GM begrenzt",
+      "Bot-Presence für bereit, Voice bereit, Session aktiv, Session pausiert und Diagnose",
+      "Voice-Reconnect mit begrenzten Backoff-Versuchen",
+      "Protocol-Routing für session.control.*, discord.command.recap.request und diagnostic.state",
+      "Foundry-Bridge für /dm recap über den bestehenden bestätigten Recap-/Discord-Ausgabepfad",
+      "Session-Control- und Discord-Command-Smoke-Tests angelegt",
+      "Release-Workflow auf die neuen Smoke-Tests vorbereitet"
+    ],
+    "automated_validation_status": "not_yet_executed_on_github_actions",
+    "local_confirmation_status": "not_requested",
+    "main_merge_status": "not_started"
+  },
+  "known_review_item_before_main": {
+    "severity": "must_fix_on_staging",
+    "component": "companion/src/discord-voice.js",
+    "issue": "Beim absichtlichen leaveVoice/destroy muss garantiert werden, dass der Destroyed-State keinen Reconnect-Timer erzeugt. Der aktuelle Staging-Stand soll vor Review mit einer intentional-leave-Sperre bzw. früherem channelId-Clear gehärtet werden."
+  },
+  "remaining_block_work": [
+    "intentional-leave-vs-reconnect Edge Case beheben",
+    "Foundry-Bridge in module.json aufnehmen und Versionsstrategie für 0.9.30/0.14.0 sauber anwenden",
+    "Protocol-/Scope-Dokumentation für neue Nachrichtentypen aktualisieren",
+    "Staging-Diff vollständig reviewen",
+    "Staging nach main fast-forwarden erst wenn Review sauber ist",
+    "Main-CI inklusive neuer Smoke-Tests abwarten und Paketbuild prüfen",
+    "erst danach Statusdokumente auf CI-validiert setzen",
+    "noch keinen realen Nutzertest nach diesem Zwischenstand verlangen"
+  ]
+}
