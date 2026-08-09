@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "1.1",
-  "created_at": "2026-08-09T11:11:00+02:00",
+  "schema_version": "1.2",
+  "created_at": "2026-08-09T11:24:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -10,17 +10,18 @@
     "module_id": "dm-cockpit",
     "repository": "hacker2090-coder/dm-cockpit",
     "default_branch": "main",
-    "current_version": "0.9.18",
-    "current_version_status": "functionally_confirmed_in_foundry",
-    "runtime_changed_by_this_checkpoint": false
+    "current_version": "0.9.19",
+    "current_version_status": "published_needs_foundry_functional_test",
+    "last_confirmed_version": "0.9.18",
+    "runtime_changed_by_this_checkpoint": true
   },
   "working_rules": {
-    "autonomy": "Möglichst autonom weiterarbeiten und nur bei nicht sinnvoll ableitbaren Entscheidungen nachfragen.",
+    "autonomy": "Möglichst autonom weiterarbeiten. Nutzer nur einbeziehen, wenn ein echter externer Test, Zugang oder nicht sinnvoll ableitbare Entscheidung erforderlich ist.",
     "one_todo_at_a_time": true,
-    "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Runtime-/Release-Änderungen zusätzlich mit Manifest, Installationspaket und Projektstatus synchronisieren.",
-    "checkpoint_rule": "In sinnvollen Abständen einen aktuellen Checkpoint auf GitHub und zusätzlich als JSON-Datei im Chat bereitstellen."
+    "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Runtime-/Release-Änderungen mit Manifest, Installationspaket und Projektstatus synchronisieren.",
+    "checkpoint_rule": "In sinnvollen Abständen GitHub-Checkpoint plus JSON-Checkpoint im Chat bereitstellen."
   },
-  "confirmed_features": [
+  "confirmed_features_through_0_9_18": [
     "LIVE-Dashboard",
     "Abenteuer-Flowchart",
     "Spontane Szenen",
@@ -36,80 +37,91 @@
     "Foundry/GitHub Update-System"
   ],
   "discord_audio_ai": {
-    "status": "architecture_contract_v1_defined_not_runtime_implemented",
-    "completed_todo": "Datenmodell und API-Vertrag v1 für Discord Audio & KI definieren",
+    "status": "foundry_live_transcript_v1_implemented_needs_runtime_test",
+    "protocol_version": "1.0",
+    "completed_todos": [
+      "Datenmodell und API-Vertrag v1 definieren",
+      "Foundry Live-Transkript V1 als Mock/Transport-Client implementieren"
+    ],
     "files": {
       "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
-      "schema": "schemas/discord-audio-ai-v1.schema.json"
+      "schema": "schemas/discord-audio-ai-v1.schema.json",
+      "foundry_client": "scripts/live-transcript.js",
+      "foundry_styles": "styles/live-transcript.css"
     },
-    "protocol_version": "1.0",
+    "foundry_live_transcript_v1": {
+      "version": "0.9.19",
+      "websocket_default": "ws://127.0.0.1:43170/v1",
+      "provider_neutral": true,
+      "mock_mode": true,
+      "cloud_cost_for_mock_test": 0,
+      "implemented": [
+        "WebSocket connect/disconnect",
+        "hello handshake",
+        "transcript.segment ingest",
+        "capture.status ingest",
+        "speaker metadata display",
+        "segment deduplication by segmentId",
+        "volatile transcript buffer up to 120 segments",
+        "NPC context from selected cockpit actor",
+        "fallback NPC context from selected token",
+        "automatic npc.context send while connected",
+        "mock capture status",
+        "mock transcript segments",
+        "clear transcript",
+        "visible capture-policy notice",
+        "global integration/debug API"
+      ],
+      "not_persistent_yet": true,
+      "not_functionally_confirmed_in_foundry_yet": true
+    },
     "architecture": {
       "foundry_and_discord_host": "same_pc_currently",
-      "companion_service": "separate_process_between_discord_voice_stt_ai_sqlite_and_foundry",
-      "transport_local": "WebSocket on loopback, configurable port",
-      "transport_remote_future": "WSS plus authentication",
-      "provider_strategy": "STT and AI provider neutral adapters",
-      "speaker_identity": "Discord User ID",
-      "transcript_storage": "local SQLite",
-      "raw_audio_retention": "temporary until successful transcription then delete",
-      "latency_target": "5-15 seconds",
-      "participant_target": "more than 10; protocol has no hard participant cap",
-      "npc_context_priority": [
-        "explicit active NPC in DM Cockpit",
-        "selected Foundry token",
-        "none"
-      ],
-      "direct_ai_save": true,
-      "undo_required": true
-    },
-    "user_decisions": {
       "bot_hosting": "open",
-      "auto_join": "follow configured GM voice channel automatically",
-      "cloud_ai": "open_compare_providers",
-      "capture_policy_preference": "notice_only",
-      "foundry_test_world": "not_created_needs_short_instructions"
+      "participant_target": "more_than_10",
+      "latency_target": "5-15_seconds",
+      "provider_strategy": "compare_and_keep_adapters_provider_neutral",
+      "transcript_storage_future": "local_SQLite",
+      "raw_audio_retention_future": "delete_after_successful_transcription",
+      "capture_policy_preference": "notice_only_technical_setting",
+      "direct_ai_save_future": true,
+      "undo_required_future": true
     },
-    "capture_policy_note": "notice_only ist nur eine technische Workflow-Einstellung und wird nicht als automatische rechtliche Freigabe interpretiert.",
-    "defined_message_types": [
-      "hello",
-      "hello.ack",
-      "health",
-      "session.started",
-      "session.ended",
-      "speaker.upserted",
-      "capture.status",
-      "transcript.segment",
-      "npc.context",
-      "npc.memory.candidate",
-      "npc.memory.applied",
-      "change.undo.request",
-      "change.undo.result",
-      "error"
-    ],
     "not_yet_implemented": [
-      "Foundry Live-Transkript UI/Transport Client",
+      "Companion Service runtime",
+      "SQLite runtime persistence",
       "Discord Voice Bot",
       "DAVE/E2EE Voice integration",
-      "Speech-to-Text Provider",
-      "SQLite runtime persistence",
+      "Speech-to-Text provider",
       "AI extraction",
-      "automatic NPC-memory persistence",
+      "automatic NPC-memory persistence from speech",
       "Undo runtime",
       "transcript search",
       "session recap",
       "Discord short summary"
     ]
   },
-  "next_single_todo": {
-    "task": "Foundry Live-Transkript V1 als Mock/Transport-Client implementieren",
-    "scope": [
-      "simulierte transcript.segment Nachrichten verarbeiten",
-      "capture.status anzeigen",
-      "npc.context aus Foundry bereitstellen",
-      "noch kein echter Discord Voice Bot",
-      "noch kein kostenpflichtiger Cloud Provider"
-    ],
-    "test_prerequisite": "Kurze Anleitung zum Anlegen einer separaten Foundry-V14-Testwelt bereitstellen, bevor Runtime-Tests nötig werden."
+  "current_user_assistance_needed": {
+    "required_now": true,
+    "task": "Foundry V14 Testwelt anlegen und V0.9.19 Mock-Test ausführen",
+    "secrets_needed": false,
+    "discord_needed": false,
+    "api_key_needed": false,
+    "expected_test": [
+      "Discord Live-Transkript Bereich sichtbar",
+      "Mock-Status toggelt Live/Inaktiv",
+      "Mock-Segment erzeugt Feed-Einträge",
+      "NPC-Kontext zeigt ausgewählten Actor",
+      "Leeren entfernt Feed-Einträge"
+    ]
   },
-  "handoff_instruction_for_next_ai": "Behandle diesen Checkpoint als aktuellen Stand. Der API-/Datenvertrag v1 ist abgeschlossen und auf GitHub dokumentiert. Die Modulversion bleibt 0.9.18, weil noch kein Runtime-Code geändert wurde. Als nächstes ausschließlich das Foundry Live-Transkript V1 als Mock/Transport-Client umsetzen. Danach GitHub synchronisieren und bei sinnvoller Etappe erneut einen JSON-Checkpoint erzeugen."
+  "next_single_todo_after_successful_test": {
+    "task": "Lokalen Companion-Service-Skeleton mit WebSocket und SQLite-Basis implementieren",
+    "constraints": [
+      "noch kein echter Discord Voice Bot",
+      "noch kein kostenpflichtiger Cloud Provider",
+      "Contract v1 unverändert verwenden"
+    ]
+  },
+  "handoff_instruction_for_next_ai": "V0.9.19 enthält den Foundry Live-Transkript Mock/Transport-Client und ist auf GitHub veröffentlicht, aber noch nicht in Foundry funktional bestätigt. Vor weiterer Runtime-Integration den Mock-Test in einer separaten Foundry-V14-Testwelt bestätigen. Nach Erfolg Companion-Service-Skeleton mit lokalem WebSocket und SQLite-Basis bauen."
 }
