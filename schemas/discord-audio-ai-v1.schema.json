@@ -15,6 +15,11 @@
         "session.started",
         "session.ended",
         "speaker.upserted",
+        "voice.participants",
+        "voice.participants.request",
+        "player.character.mapping.set",
+        "player.character.mapping.request",
+        "player.character.mapping.result",
         "capture.status",
         "transcript.segment",
         "npc.context",
@@ -46,7 +51,90 @@
         "discordUserId": { "type": "string", "minLength": 1 },
         "displayName": { "type": "string", "minLength": 1 },
         "globalName": { "type": ["string", "null"] },
+        "serverNickname": { "type": ["string", "null"] },
         "isBot": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "voiceParticipant": {
+      "type": "object",
+      "required": ["discordUserId", "displayName", "isBot"],
+      "properties": {
+        "discordUserId": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "globalName": { "type": ["string", "null"] },
+        "serverNickname": { "type": ["string", "null"] },
+        "isBot": { "type": "boolean" },
+        "channelId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "voiceParticipants": {
+      "type": "object",
+      "required": ["observedAt", "participants"],
+      "properties": {
+        "guildId": { "type": ["string", "null"] },
+        "channelId": { "type": ["string", "null"] },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "participants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/voiceParticipant" },
+          "maxItems": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "voiceParticipantsRequest": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "playerCharacterMapping": {
+      "type": "object",
+      "required": ["discordUserId", "actorId", "characterName"],
+      "properties": {
+        "discordUserId": { "type": "string", "minLength": 1 },
+        "playerName": { "type": ["string", "null"] },
+        "actorId": { "type": "string", "minLength": 1 },
+        "actorUuid": { "type": ["string", "null"] },
+        "characterName": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "playerCharacterMappingSet": {
+      "type": "object",
+      "required": ["worldId", "mappings"],
+      "properties": {
+        "worldId": { "type": "string", "minLength": 1 },
+        "worldName": { "type": ["string", "null"] },
+        "updatedAt": { "type": ["string", "null"], "format": "date-time" },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playerCharacterMapping" },
+          "maxItems": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "playerCharacterMappingRequest": {
+      "type": "object",
+      "required": ["worldId"],
+      "properties": {
+        "worldId": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "playerCharacterMappingResult": {
+      "type": "object",
+      "required": ["worldId", "mappings"],
+      "properties": {
+        "worldId": { "type": "string", "minLength": 1 },
+        "worldName": { "type": ["string", "null"] },
+        "mappings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playerCharacterMapping" },
+          "maxItems": 100
+        }
       },
       "additionalProperties": false
     },
@@ -57,6 +145,10 @@
         "segmentId": { "type": "string", "minLength": 1 },
         "discordUserId": { "type": "string", "minLength": 1 },
         "speakerName": { "type": "string", "minLength": 1 },
+        "playerName": { "type": ["string", "null"] },
+        "actorId": { "type": ["string", "null"] },
+        "actorUuid": { "type": ["string", "null"] },
+        "characterName": { "type": ["string", "null"] },
         "startedAt": { "type": "string", "format": "date-time" },
         "endedAt": { "type": "string", "format": "date-time" },
         "text": { "type": "string" },
@@ -205,6 +297,26 @@
     {
       "if": { "properties": { "type": { "const": "speaker.upserted" } } },
       "then": { "properties": { "payload": { "$ref": "#/$defs/speaker" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "voice.participants" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipants" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "voice.participants.request" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipantsRequest" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "player.character.mapping.set" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingSet" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "player.character.mapping.request" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingRequest" } } }
+    },
+    {
+      "if": { "properties": { "type": { "const": "player.character.mapping.result" } } },
+      "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingResult" } } }
     },
     {
       "if": { "properties": { "type": { "const": "npc.context" } } },
