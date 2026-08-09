@@ -1,0 +1,94 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_snapshot",
+  "schema_version": "3.29",
+  "created_at": "2026-08-09T19:15:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "branch": "main",
+  "milestone": "session_identity_nickname_ci_validated",
+  "versions": {
+    "foundry_repository": "0.9.28",
+    "foundry_last_fully_user_confirmed": "0.9.24",
+    "foundry_last_visual_user_confirmed": "0.9.26",
+    "companion_repository": "0.12.0",
+    "companion_last_fully_user_confirmed": "0.10.0"
+  },
+  "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28",
+  "discord_bot_expansion": {
+    "overall_status": "in_progress",
+    "completed_blocks": [
+      {
+        "name": "discord_identity_core",
+        "status": "implemented_ci_validated_runtime_not_user_confirmed",
+        "foundry": "0.9.27",
+        "companion": "0.11.0"
+      },
+      {
+        "name": "campaign_session_identity_and_nickname",
+        "status": "implemented_ci_validated_runtime_not_user_confirmed",
+        "foundry": "0.9.28",
+        "companion": "0.12.0"
+      }
+    ],
+    "next_block": "discord_output_channel_notice_and_recap_posting"
+  },
+  "session_identity_nickname": {
+    "implemented": [
+      "persistente Kampagnen-/One-Shot-/Sessionprofile",
+      "Foundry-Karte Session-Identität",
+      "Profil-Snapshot aus GM-bestätigten Spieler-/Charakterzuordnungen",
+      "nur ein aktives Profil",
+      "Nickname-Automatik nur bei ausdrücklich aktivem Profil",
+      "Charaktername zuerst, aktueller Discord-Anzeigename als Spieleranteil",
+      "32-Zeichen-Limit",
+      "persistente Original-Nickname-Sicherung vor Mutation",
+      "Join/Rejoin Apply",
+      "Leave/Profilewechsel/Deaktivierung Restore",
+      "Shutdown-Restore vor Discord-/SQLite-Ende",
+      "Restart-/Crash-Recovery",
+      "Restore-Konflikt schützt manuelle externe Namensänderungen",
+      "atomarer neuer Restore-Basisname nach Konflikt",
+      "Manage-Nicknames- und Rollen-Hierarchie-Prüfung",
+      "DAVE-Join-Konfiguration erhalten"
+    ],
+    "automated_validation": [
+      "isolierter Identity-Profile-Smoke-Test bestanden",
+      "Foundry-JS node --check",
+      "Companion-JS node --check",
+      "Protocol-/Scope-JSON parse",
+      "Identity-Mapping-Smoke-Test",
+      "Identity-Profile-Smoke-Test",
+      "sauberer Foundry-Paketbuild 0.9.28"
+    ],
+    "runtime_not_yet_confirmed": [
+      "Profil in echtem Foundry speichern/aktivieren",
+      "echte Discord-Nickname-Mutation",
+      "Leave/Rejoin im echten Voice-Call",
+      "Restore nach echtem Companion-Neustart",
+      "Mapping -> Profil -> Nickname -> Live-Transkript End-to-End"
+    ]
+  },
+  "ci_workflow": {
+    "status": "healthy_after_incident_fix",
+    "behavior": [
+      "main-Runs serialisiert",
+      "Companion-/Protocol-Änderungen validieren ohne unnötigen ZIP-Build",
+      "Foundry-ZIP nur bei Foundry-relevanten Änderungen",
+      "größere autonome Blöcke auf Staging-Branch bündeln und main einmalig fast-forwarden"
+    ]
+  },
+  "existing_confirmations_preserved": {
+    "companion_0_10_0": "fully_user_confirmed",
+    "foundry_0_9_24_npc_memory_undo": "fully_user_confirmed",
+    "foundry_0_9_26_visual_ui": "user_confirmed_positive_visual_runtime_feedback",
+    "foundry_0_9_25_recap_content_copy": "deferred_by_user"
+  },
+  "rules": [
+    "Keine Secrets in GitHub/Chat/Checkpoints.",
+    "Keine dauerhafte Roh-Audio-Speicherung.",
+    "Keine KI-generierte Actor-/Spielerzuordnung.",
+    "CI-validiert ist nicht gleich echter Discord-/Foundry-Runtime-Test.",
+    "Bestätigte alte Tests nicht ohne Regression wiederholen.",
+    "Aufgeschobene Recap-/UI-Tests nicht ungefragt anfordern."
+  ]
+}
