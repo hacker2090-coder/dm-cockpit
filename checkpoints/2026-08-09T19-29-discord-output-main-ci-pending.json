@@ -1,0 +1,221 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.30",
+  "created_at": "2026-08-09T19:29:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "source_of_truth": "GitHub main",
+    "latest_checked_main_commit": "26e6babfd011610129698a6f1539042b780b3745",
+    "latest_checked_main_message": "ci: trigger controlled 0.9.29 package validation",
+    "foundry_repository_version": "0.9.29",
+    "foundry_last_fully_user_confirmed_version": "0.9.24",
+    "foundry_last_visual_user_confirmed_version": "0.9.26",
+    "companion_repository_version": "0.13.0",
+    "companion_last_fully_user_confirmed_version": "0.10.0"
+  },
+  "critical_resume_state": {
+    "status": "discord_output_block_on_main_ci_confirmation_pending",
+    "summary": "Discord-Bot-Ausbau läuft. 0.9.27/0.11.0 Identity-Core und 0.9.28/0.12.0 Session-/Nickname-Block sind CI-validiert, aber noch nicht real lokal durch den Nutzer bestätigt. 0.9.29/0.13.0 mit wechselbarem Discord-Ausgabe-Textkanal, Aufnahme-/Transkriptionshinweis und bewusstem Recap-Posting liegt bereits auf main. Der isolierte Discord-Output-Smoke-Test wurde erfolgreich reproduziert. Der erwartete automatische Commit 'Build DM Cockpit v0.9.29' war beim letzten Check jedoch noch nicht vorhanden. Deshalb muss der nächste Chat zuerst den GitHub-Actions-/Packaging-Zustand von Commit 26e6bab prüfen und gegebenenfalls reparieren, bevor neue Features begonnen werden."
+  },
+  "repository_health": {
+    "checked_at": "2026-08-09T19:29:00+02:00",
+    "module_manifest": "0.9.29",
+    "companion_package": "0.13.0",
+    "latest_fully_validated_package_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28",
+    "expected_but_not_yet_observed_build": "Build DM Cockpit v0.9.29",
+    "controlled_ci_trigger_commit": "26e6babfd011610129698a6f1539042b780b3745",
+    "release_workflow_design": [
+      "main-Runs per concurrency serialisiert; cancel-in-progress aktiviert",
+      "Foundry-Paketbau nur bei Foundry-relevanten Änderungen",
+      "Companion-/Protocol-Validierung unabhängig vom ZIP-Build",
+      "größere autonome Blöcke über Staging-Branch bündeln und main einmalig fast-forwarden"
+    ],
+    "blocking_issue": "0.9.29 Main-CI-/Packaging-Ergebnis noch nicht eindeutig bestätigt"
+  },
+  "working_rules": {
+    "github_source_of_truth": true,
+    "check_main_before_changes": true,
+    "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
+    "user_test_cadence": "Insgesamt ungefähr drei gebündelte reale Discord-/Foundry-Testblöcke für den Discord-Bot-Ausbau; keine Mikrotets nach jedem Commit.",
+    "checkpoint_rule": "Nach sinnvollen Wiederaufnahmepunkten PROJECT-CHECKPOINT.json aktualisieren, historischen Snapshot unter checkpoints/ anlegen und denselben JSON-Stand im Chat bereitstellen.",
+    "staging_rule": "Größere autonome Blöcke auf temporärem Branch bündeln; main erst nach Review einmalig fast-forwarden.",
+    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
+    "powershell_rule": "PowerShell-Befehle getrennt; npm.cmd verwenden; kein &&.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "world_change_rule": "Keine automatische Foundry-Actor-/Weltmutation ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung.",
+    "status_rule": "implemented, automated_tested, ci_validated, local_confirmed und fully_confirmed strikt trennen."
+  },
+  "confirmed_baseline_do_not_repeat_without_regression": {
+    "companion_0_10_0": [
+      "Discord Login / DAVE / GM Follow",
+      "speaker-getrennte Audioverarbeitung",
+      "Deepgram End-to-End",
+      "Candidate Review Persistenz",
+      "Change-Record/Undo Backend"
+    ],
+    "ai": [
+      "Ollama qwen3:4b Adapter/Preflight/E2E",
+      "Qualitätsbenchmark 11/12 = 91.7%"
+    ],
+    "foundry": [
+      "0.9.24 NPC-Memory Undo E2E vollständig bestätigt",
+      "0.9.26 UI visuell positiv bestätigt"
+    ],
+    "deferred_do_not_resurface_unsolicited": [
+      "0.9.25 Recap-Inhalts-/Copy-Test",
+      "0.9.26 Drag/Persistenz/Resize/Filter-Interaktions-Smoke"
+    ]
+  },
+  "discord_bot_expansion": {
+    "status": "in_progress",
+    "scope_document": "docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json",
+    "deferred_scope_ids": [5, 14],
+    "deferred_features": [
+      "mehrere GMs",
+      "eigenes Befehlsberechtigungs-Framework"
+    ],
+    "milestones": [
+      {
+        "name": "discord_identity_core",
+        "foundry": "0.9.27",
+        "companion": "0.11.0",
+        "status": "implemented_ci_validated_runtime_not_user_confirmed",
+        "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2",
+        "implemented": [
+          "Teilnehmer des relevanten Discord-Voice-Calls an Foundry",
+          "Cockpit-Karte Spieler & Charaktere",
+          "GM-bestätigte Discord-Mitglied -> Foundry-Actor-Zuordnung",
+          "weltbezogene Persistenz",
+          "strukturierte Sprecherattribution in Transkript und KI-Kontext",
+          "KI darf Actor-/Charakterzuordnung niemals raten"
+        ]
+      },
+      {
+        "name": "campaign_session_identity_and_nickname",
+        "foundry": "0.9.28",
+        "companion": "0.12.0",
+        "status": "implemented_ci_validated_runtime_not_user_confirmed",
+        "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20",
+        "implemented": [
+          "persistente Kampagnen-/One-Shot-/Sessionprofile",
+          "höchstens ein aktives Identitätsprofil",
+          "Nickname-Automatik nur nach ausdrücklicher Profilaktivierung",
+          "Format Charakter | Spieler, max. 32 Unicode-Zeichen",
+          "Original-Server-Nickname persistent sichern",
+          "Join/Rejoin Apply",
+          "Leave/Profilewechsel/Deaktivierung Restore",
+          "Shutdown- und Restart-/Crash-Recovery",
+          "Restore-Konfliktschutz bei manueller Discord-Namensänderung",
+          "Manage-Nicknames- und Rollen-Hierarchie-Prüfung"
+        ]
+      },
+      {
+        "name": "discord_output_channel_notice_and_recap_posting",
+        "foundry": "0.9.29",
+        "companion": "0.13.0",
+        "status": "implemented_automated_tested_on_main_ci_confirmation_pending",
+        "implemented": [
+          "Cockpit-Karte für Discord-Ausgabe",
+          "zugängliche Discord-Textkanäle bereitstellen",
+          "Ziel-Textkanal jederzeit neu auswählbar",
+          "Kanalauswahl persistent",
+          "ViewChannel-/SendMessages-Prüfung vor Versand",
+          "automatischer Aufnahme-/Transkriptionshinweis beim Sessionstart",
+          "Hinweisversand idempotent gegen doppelte Reconnect-Sends",
+          "capture.status noticeShown wird erst nach erfolgreichem Hinweis gesetzt",
+          "Session-Recap erhält bewussten Button 'An Discord senden'",
+          "kein automatisches Recap-Posting",
+          "Discord allowedMentions deaktiviert",
+          "nur Versand-Metadaten persistiert, nicht der Nachrichteninhalt"
+        ],
+        "automated_validation": [
+          "isolierter discord-output-smoke-test erfolgreich",
+          "Kanalliste",
+          "Persistenz/Reopen",
+          "Recap-Send",
+          "Request-Idempotenz",
+          "Capture-Notice",
+          "Clear"
+        ],
+        "ci_pending": [
+          "Build DM Cockpit v0.9.29 auf main noch nicht beobachtet",
+          "GitHub-Actions-/Packaging-Zustand von 26e6bab zuerst untersuchen"
+        ],
+        "runtime_pending": [
+          "reale Discord-Kanalliste in Foundry",
+          "reale Kanalauswahl und Persistenz",
+          "realer Aufnahmehinweis",
+          "realer Recap-Versand",
+          "Permissions-/gelöschter-Kanal-Fehlerfälle"
+        ]
+      }
+    ]
+  },
+  "next_actions_exact_order": [
+    {
+      "step": 1,
+      "action": "Aktuellen main erneut prüfen.",
+      "reason": "GitHub main ist Source of Truth."
+    },
+    {
+      "step": 2,
+      "action": "README.md, PROJECT-HANDOFF.md, PROJECT-CHECKPOINT.json, docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json und .github/workflows/release.yml lesen.",
+      "reason": "Dokumentation kann gegenüber dem realen Code auf main hinterherhinken."
+    },
+    {
+      "step": 3,
+      "action": "CI/Packaging für Commit 26e6bab diagnostizieren.",
+      "checks": [
+        "Hat der Main-Workflow überhaupt gestartet?",
+        "Ist Validate companion and protocol fehlgeschlagen?",
+        "Ist Build clean Foundry package fehlgeschlagen?",
+        "Ist Publish current package to main fehlgeschlagen?",
+        "Warum fehlt Build DM Cockpit v0.9.29?"
+      ]
+    },
+    {
+      "step": 4,
+      "action": "Falls CI fehlschlägt: nur den konkreten Fehler beheben und erneut kontrolliert validieren.",
+      "constraint": "Keine neuen Features parallel auf main beginnen."
+    },
+    {
+      "step": 5,
+      "action": "Wenn 0.9.29-Paketbuild bestätigt ist: Checkpoint/Handoff auf ci_validated aktualisieren."
+    },
+    {
+      "step": 6,
+      "action": "Danach nächster Discord-Bot-Block auf neuem Staging-Branch.",
+      "block": "session_control_commands_presence_diagnostics_reconnect",
+      "planned_features": [
+        "manuelle Session-Steuerung getrennt vom bloßen Voice-Join",
+        "Discord Slash Commands wie /dm status, /dm start, /dm stop, /dm recap",
+        "sichtbarer Bot-Presence-/Sessionstatus",
+        "verständliche Diagnosezustände",
+        "robuster Voice-Reconnect mit Zustandswiederherstellung",
+        "keine doppelten Sessions/Notices/Transkriptsegmente bei Reconnect"
+      ]
+    }
+  ],
+  "runtime_test_strategy": {
+    "user_tests_should_remain_rare": true,
+    "planned_bundled_blocks": [
+      "Spieler <-> Charakter <-> Sprecher",
+      "Discord-Eingriffe: Nicknames, Zielkanal, Hinweis/Recap, Reconnect",
+      "finaler End-to-End-Test"
+    ],
+    "current_instruction": "Noch keinen Nutzertest allein wegen 0.9.29 verlangen; zuerst CI autonom klären."
+  },
+  "important_design_semantics": {
+    "speaker_truth": "Discord User ID aus der getrennten Voice-Audiospur.",
+    "character_truth": "Nur GM-bestätigte Foundry-Actor-Zuordnung.",
+    "ic_ooc": "Mapping bedeutet nicht automatisch In-Character; keine stille IC/OOC-Klassifikation in V1.",
+    "nickname_target": "Nur serverbezogener Discord-Nickname, niemals globaler Username.",
+    "recap_rule": "Nur bewusste GM-Aktion darf Recap an Discord senden.",
+    "notice_rule": "Aufnahme-/Transkriptionshinweis ersetzt keine rechtliche Einwilligungs-/Datenschutzklärung."
+  },
+  "resume_prompt_for_next_chat": "Arbeite am GitHub-Repository hacker2090-coder/dm-cockpit weiter. GitHub main ist Source of Truth. Prüfe zuerst den aktuellen main und lies README.md, PROJECT-HANDOFF.md, PROJECT-CHECKPOINT.json, docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json und .github/workflows/release.yml. Aktuell liegt Foundry 0.9.29 / Companion 0.13.0 auf main. Der Discord-Output-Block ist implementiert und isoliert smoke-getestet, aber der erwartete Commit 'Build DM Cockpit v0.9.29' war zuletzt noch nicht vorhanden. Prüfe deshalb zuerst vollständig den GitHub-Actions-/Packaging-Zustand des kontrollierten Trigger-Commits 26e6babfd011610129698a6f1539042b780b3745 und behebe nur einen realen CI-Fehler. Beginne vor erfolgreicher 0.9.29-CI-Bestätigung keine neuen Features. Danach Checkpoint aktualisieren und chronologisch mit Session-Steuerung / Slash-Commands / Presence / Diagnose / Reconnect auf einem Staging-Branch fortfahren. Bereits bestätigte Tests nicht wiederholen und aufgeschobene Tests nicht ungefragt hervorholen."
+}
