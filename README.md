@@ -15,7 +15,9 @@ Aktueller Stand:
 - NPC-Schnellgenerator
 - Actor-basiertes NPC Memory
 - Discord Live-Transkript Mock/Transport-Client
-- lokaler Companion-Service Skeleton 0.1.0 mit WebSocket + SQLite
+- lokaler Companion Service 0.2.0
+- WebSocket + SQLite Ende-zu-Ende bestätigt
+- Discord Voice Skeleton mit DAVE/E2EE und GM-Follow implementiert
 
 ## Bestätigter Foundry-Kern
 
@@ -29,8 +31,6 @@ Für den Discord-Live-Transkript-Schritt wurden erfolgreich geprüft:
 - Feed leeren
 - NPC-Kontext aus dem NPC-Memory-Dropdown
 - Anzeige `<Actorname> · Cockpit`
-
-Damit ist der Foundry-seitige Mock-/Transport-Client abgeschlossen.
 
 ## NPC-Schnellgenerator
 
@@ -73,45 +73,57 @@ Funktionen:
 - sichtbarer Hinweis auf die konfigurierte Capture-Policy
 - Debug-/Integrations-API unter `globalThis.DMCockpitLiveTranscript`
 
-## Neu – lokaler Companion-Service 0.1.0
+## Companion Service 0.1.0 – bestätigt
 
-Der nächste Architekturbaustein ist unter `companion/` implementiert.
+Der lokale Companion unter `companion/` wurde am 09.08.2026 auf dem Ziel-PC vollständig Ende-zu-Ende getestet.
 
-Ziel: Foundry bleibt browserbasiert; Discord Voice, STT, KI und lokale Persistenz laufen später im separaten Companion-Prozess.
+Bestätigt:
 
-### Enthalten
+- Node.js läuft auf dem Ziel-PC
+- Companion startet lokal
+- Foundry verbindet sich über `ws://127.0.0.1:43170/v1`
+- `npm run mock` läuft erfolgreich über den echten WebSocket
+- der Sprecher **Companion Mock** erscheint im Foundry-Transkript
+- SQLite speichert Daten dauerhaft
+- Health-Test bestätigte `sessions: 1`, `speakers: 1`, `segments: 1`, `npcContexts: 1`
 
-- Node.js Service für lokalen Betrieb
-- Standardbindung nur an `127.0.0.1:43170`
-- WebSocket-Endpunkt `/v1`
-- HTTP-Health-Endpunkt `/health`
-- `hello` → `hello.ack` Handshake nach Contract v1
-- Verarbeitung von `session.started` / `session.ended`
-- Sprecher-Upsert
-- finale `transcript.segment`-Persistenz
-- NPC-Kontext-Ereignisse
-- `capture.status` Transport
-- SQLite-Datenbank unter `companion/data/dm-cockpit.sqlite`
-- Tabellen für Sessions, Sprecher, Transkriptsegmente, NPC-Kontext und zukünftige Change-/Undo-Records
-- idempotente Transkriptsegmente über `segmentId`
-- 1-MiB WebSocket-Maximalpayload
-- WebSocket-Kompression deaktiviert
-- echter lokaler Mock-Client mit `npm run mock`
+Damit sind **Foundry ↔ WebSocket ↔ Companion ↔ SQLite** als funktionierende Basis bestätigt.
 
-Details und Startanleitung:
+## Companion Service 0.2.0 – Discord Voice Skeleton
 
-`companion/README.md`
+Neu implementiert:
 
-### Voraussetzungen
+- `companion/src/main.js`
+- `companion/src/discord-voice.js`
+- `discord.js` 14.27.0
+- `@discordjs/voice` 0.19.2
+- DAVE/E2EE ausdrücklich aktiviert
+- Discord Gateway mit `Guilds` + `GuildVoiceStates`
+- konfigurierter GM über Discord User ID
+- automatischer Join in den aktuellen Voice-Channel des GM
+- automatisches Folgen bei Channel-Wechsel
+- automatisches Verlassen, wenn der GM Voice verlässt
+- `selfDeaf: false` als Grundlage für späteren Audio-Empfang
+- `selfMute: true`, solange der Bot selbst kein Audio sendet
+- Discord Voice bleibt optional; ohne lokale Discord-Konfiguration läuft der bestätigte WebSocket-/SQLite-Kern weiterhin
+- eigene GitHub-Actions-CI unter `.github/workflows/companion-ci.yml`
 
-- Node.js 22.16.0 oder neuer
-- npm
+### Sicherheit der Zugangsdaten
+
+Discord Bot Token und IDs werden ausschließlich über lokale Umgebungsvariablen konfiguriert. Der Bot-Token gehört weder in GitHub noch in Chat-Nachrichten.
+
+Benötigte Variablen:
+
+- `DISCORD_BOT_TOKEN`
+- `DISCORD_GUILD_ID`
+- `DISCORD_GM_USER_ID`
+
+Details: `companion/README.md`
 
 ### Noch nicht enthalten
 
-- Discord Gateway / Voice
-- DAVE/E2EE
-- Audio-Buffering
+- Audio-Buffering / eigentliche Aufnahme
+- Sprecher-Audiostreams
 - Speech-to-Text
 - KI-Extraktion
 - automatische NPC-Memory-Änderungen
@@ -146,18 +158,11 @@ Festgelegt:
 
 ## Nächster einzelner Test
 
-Companion-Service lokal starten und die echte Verbindung zu Foundry prüfen:
+**Discord Voice Skeleton 0.2.0 auf einem echten Discord-Server testen.**
 
-1. `cd companion`
-2. `npm install`
-3. `npm run check`
-4. `npm start`
-5. Foundry → Discord Live-Transkript → **Verbinden**
-6. in zweitem Terminal `npm run mock`
-7. prüfen, ob **Companion Mock** im Foundry-Transkript erscheint
-8. `/health` prüfen, ob SQLite mindestens Session/Sprecher/Segment gezählt hat
+Dafür wird lokal ein Discord-Bot mit Zugriff auf den Zielserver benötigt. Der Nutzer muss keinen Token im Chat teilen; die Konfiguration erfolgt nur im lokalen PowerShell-Prozess.
 
-Für diesen Test werden weiterhin kein Discord-Bot, kein API-Key und keine kostenpflichtige Cloud benötigt.
+Erst nach bestätigtem DAVE-Voice-Join folgt Audio-Buffering/Receive als eigener nächster Schritt.
 
 ## Updates
 
