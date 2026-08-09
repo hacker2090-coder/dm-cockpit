@@ -1,0 +1,34 @@
+{
+  "checkpoint_type": "dm_cockpit_milestone",
+  "schema_version": "3.8",
+  "created_at": "2026-08-09T14:12:00+02:00",
+  "project": "DM Cockpit",
+  "milestone": "Companion 0.7.0 OpenAI adapter implemented",
+  "confirmed_previous_baseline": "Companion 0.6.0 fully locally confirmed including mock AI pipeline E2E",
+  "implemented": {
+    "provider": "openai",
+    "model": "gpt-5.4-nano",
+    "endpoint": "https://api.openai.com/v1/responses",
+    "store": false,
+    "strict_structured_output": true,
+    "actor_assignment": "Foundry npc.context only",
+    "local_post_validation": true,
+    "safe_default": "AI_PROVIDER=none",
+    "automatic_actor_writes": false
+  },
+  "isolated_test": {
+    "status": "passed",
+    "real_api_call": false,
+    "requires_api_key": false
+  },
+  "working_rules": {
+    "selection_questions_via_html": true,
+    "regular_json_checkpoints": true,
+    "checkpoint_to_chatgpt_library_and_github": true,
+    "user_requests_are_explicitly_marked_with_ich_moechte_von_dir": true,
+    "local_repo": "$HOME\\Desktop\\dm-cockpit",
+    "use_npm_cmd_on_windows": true,
+    "never_store_secrets": true
+  },
+  "next_single_todo": "User-PC: git pull, npm.cmd run check, npm.cmd run test:ai-openai. No real API key needed for this step."
+}
