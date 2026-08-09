@@ -1,0 +1,46 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.6",
+  "created_at": "2026-08-09T14:08:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "foundry_version": "0.9.21",
+    "companion_github_version": "0.6.0",
+    "companion_last_fully_user_tested_stage": "0.6.0_isolated_ai_extraction_confirmed"
+  },
+  "confirmed_now": {
+    "npm_cmd_run_check": "passed",
+    "npm_cmd_run_test_ai": "passed",
+    "test_output": [
+      "[ai] Provider 'mock' bereit.",
+      "[ai] Segment seg_ai_test_001: 2 Kandidaten erzeugt.",
+      "[ai] Segment seg_ai_no_npc: 1 Kandidat erzeugt.",
+      "AI-Extraction-Test erfolgreich."
+    ],
+    "capabilities": [
+      "provider-neutraler AI Extraction Service",
+      "deterministischer Mock Provider",
+      "NPC Memory Kandidaten",
+      "Session Event Kandidaten",
+      "sourceSegmentIds Quellenbindung",
+      "NPC-Kontext",
+      "nur finale Segmente",
+      "Deduplizierung"
+    ]
+  },
+  "still_pending": {
+    "next_single_todo": "Companion 0.6.0 mit AI_PROVIDER=mock starten und npm.cmd run test:ai-pipeline ausführen.",
+    "real_llm_provider": false,
+    "automatic_actor_writes": false
+  },
+  "working_rules": {
+    "selection_questions_via_html": true,
+    "regular_json_checkpoints": true,
+    "checkpoint_to_library_and_github": true,
+    "user_requests_section_title": "Ich möchte von dir",
+    "local_repo": "$HOME\\Desktop\\dm-cockpit",
+    "use_npm_cmd": true
+  }
+}
