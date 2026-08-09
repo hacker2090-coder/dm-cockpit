@@ -59,7 +59,7 @@ try {
   const store = new IdentityProfileStore(dbPath);
   const mappingOne = {
     discordUserId: "discord-42",
-    playerName: "Mira",
+    playerName: "Mira Gespeichert",
     actorId: "actor-7",
     actorUuid: "Actor.actor-7",
     characterName: "Ragna",
@@ -123,7 +123,7 @@ try {
   };
 
   await manager.handleParticipants(participants);
-  assert.equal(voice.nickname("discord-42"), "Ragna | Mira");
+  assert.equal(voice.nickname("discord-42"), "Ragna | Mira", "Aktueller Discord-Anzeigename soll einen alten gespeicherten Spielernamen überstimmen.");
   assert.equal(voice.calls.length, 1, "Join soll Session-Nickname genau einmal anwenden.");
   let lease = store.getNicknameOverride(voice.guildId, "discord-42");
   assert.equal(lease.originalNickname, "Mira Alt");
