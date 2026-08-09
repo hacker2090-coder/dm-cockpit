@@ -6,24 +6,25 @@ Stand: 2026-08-09
 
 Der Vertrag trennt Foundry/DM Cockpit von Discord Voice, STT und KI. Anbieter und Hosting können dadurch gewechselt werden, ohne das Foundry-Datenmodell neu zu bauen.
 
+Maschinenlesbares Schema:
+
+`schemas/discord-audio-ai-v1.schema.json`
+
 ## Grundregeln
 
 - Transport lokal: `ws://127.0.0.1:43170/v1`
 - Protokollversion: `1.0`
 - finale Transkriptsegmente werden in SQLite persistiert
 - Roh-Audio wird nicht dauerhaft gespeichert
-- Sprechertrennung erfolgt technisch über Discord User IDs
 - Discord User ID ist Source of Truth dafür, **welche Person spricht**
-- nur eine vom GM in Foundry bestätigte Zuordnung ist Source of Truth dafür, **welchen Foundry-Charakter diese Person spielt**
+- nur eine vom GM bestätigte Foundry-Zuordnung ist Source of Truth dafür, **welchen Charakter diese Person spielt**
 - KI darf niemals Actor-IDs oder Spieler-/Charakterzuordnungen selbst erraten
-- eine Charakterzuordnung bedeutet nicht automatisch, dass jede Aussage in-character ist
-- Provider bleiben austauschbar
-- KI-Kandidaten enthalten Quell-Segment-IDs
-- keine automatische Foundry-Weltänderung ohne sicheren Undo/Change-Record oder explizite GM-Bestätigung
-
-Maschinenlesbares Schema:
-
-`schemas/discord-audio-ai-v1.schema.json`
+- eine Charakterzuordnung ist keine automatische IC/OOC-Klassifikation
+- Discord-Server-Nicknames dürfen nur durch ein ausdrücklich aktiviertes Identity-Profil verändert werden
+- der globale Discord-Benutzername wird niemals verändert
+- vor jeder Session-Nickname-Änderung muss der vorherige Server-Nickname persistent gesichert sein
+- Restore darf eine unerwartete manuelle Namensänderung nicht blind überschreiben
+- keine automatische Foundry-Weltänderung ohne sicheren Undo/Change-Record oder ausdrückliche GM-Bestätigung
 
 ## Envelope
 
@@ -38,9 +39,9 @@ Maschinenlesbares Schema:
 }
 ```
 
-## Kernnachrichten
+## Verbindung / Session
 
-### Verbindung / Session
+Kernnachrichten:
 
 - `hello`
 - `hello.ack`
@@ -50,9 +51,11 @@ Maschinenlesbares Schema:
 - `capture.status`
 - `speaker.upserted`
 
-### Voice-Teilnehmer
+`hello.ack` veröffentlicht die tatsächlich vom Companion unterstützten Features. Seit Companion 0.12.0 gehören persistente Identity-Profile und persistenter Nickname-Restore-Zustand dazu.
 
-#### `voice.participants`
+## Voice-Teilnehmer
+
+### `voice.participants`
 
 Der Companion veröffentlicht den beobachteten Zustand des Voice-Channels, dem er für den konfigurierten GM folgt.
 
@@ -74,11 +77,11 @@ Der Companion veröffentlicht den beobachteten Zustand des Voice-Channels, dem e
 }
 ```
 
-Bots dürfen im Payload enthalten sein; die Foundry-Zuordnungs-UI filtert sie für die Spielerzuordnung aus.
+Bots dürfen im Payload enthalten sein; Mapping- und Nickname-Logik ignorieren sie für Spielerzuordnungen.
 
-#### `voice.participants.request`
+### `voice.participants.request`
 
-Foundry kann den zuletzt bekannten Teilnehmerzustand erneut anfordern. Der Server hält dafür nur den aktuellen Snapshot im Speicher; dies ist keine Teilnehmerhistorie.
+Foundry kann den zuletzt bekannten Teilnehmer-Snapshot erneut anfordern. Dies ist keine Teilnehmerhistorie.
 
 ## Spieler-/Charakterzuordnung
 
@@ -86,13 +89,12 @@ Die Zuordnung ist bewusst **keine KI-Aufgabe**. Foundry zeigt Discord-Spieler un
 
 ### `player.character.mapping.set`
 
-Foundry überträgt den vollständigen aktuellen Mapping-Snapshot seiner Welt.
+Foundry sendet den vollständigen aktuellen Mapping-Snapshot seiner Welt.
 
 ```json
 {
   "worldId": "world_01",
   "worldName": "Meine Kampagne",
-  "updatedAt": "2026-08-09T16:21:00.000Z",
   "mappings": [
     {
       "discordUserId": "1234567890",
@@ -106,24 +108,157 @@ Foundry überträgt den vollständigen aktuellen Mapping-Snapshot seiner Welt.
 }
 ```
 
-Semantik:
+Regeln:
 
-- `worldId + discordUserId` ist der persistente Schlüssel im Companion.
-- Der übertragene Array-Inhalt ersetzt für diese Welt den bisherigen Companion-Mirror vollständig.
-- Ein leerer Mapping-Array löscht die Zuordnungen dieser Welt im Mirror.
-- Die Foundry-Welt-Einstellung bleibt die autoritative GM-Konfiguration; SQLite dient als persistenter Companion-Mirror.
+- `worldId + discordUserId` ist der persistente Schlüssel im Companion-Mirror.
+- der Array-Inhalt ersetzt für diese Welt den bisherigen Mirror vollständig
+- ein leerer Array löscht die Mirror-Zuordnungen der Welt
+- Foundry bleibt die autoritative GM-Konfiguration
 
-### `player.character.mapping.request`
+Weitere Nachrichten:
+
+- `player.character.mapping.request`
+- `player.character.mapping.result`
+
+## Session-/Kampagnen-Identity-Profile
+
+Ein Identity-Profil ist ein persistenter Snapshot einer konkreten Spielidentität. Unterstützte Typen:
+
+- `campaign`
+- `oneshot`
+- `session`
+
+Ein Profil enthält:
+
+- `profileId`
+- `worldId`
+- Anzeigename
+- Typ
+- Aktivstatus
+- Snapshot der bestätigten Discord-Spieler-/Foundry-Charakterzuordnungen
+
+Es kann Companion-weit immer nur **ein** Profil gleichzeitig aktiv sein.
+
+### `identity.profile.save`
+
+Speichert oder aktualisiert ein Profil. Das Speichern allein aktiviert **keine** Nickname-Automatik.
 
 ```json
 {
-  "worldId": "world_01"
+  "profileId": "profile_01",
+  "worldId": "world_01",
+  "worldName": "Meine Kampagne",
+  "name": "Auktion der verbotenen Dinge",
+  "kind": "oneshot",
+  "mappings": [
+    {
+      "discordUserId": "1234567890",
+      "playerName": "Mira",
+      "actorId": "actor_01",
+      "actorUuid": "Actor.actor_01",
+      "characterName": "Ragna"
+    }
+  ]
 }
 ```
 
-### `player.character.mapping.result`
+### Profilnachrichten
 
-Der Companion liefert die für diese Welt persistent gespeicherten Zuordnungen zurück. Der laufende Companion verwendet den zuletzt erhaltenen Mapping-Snapshot zur Sprecherattribution.
+- `identity.profile.list.request`
+- `identity.profile.list.result`
+- `identity.profile.activate`
+- `identity.profile.deactivate`
+- `identity.profile.state.request`
+- `identity.profile.state`
+
+### Aktivierungsregel
+
+Nur `identity.profile.activate` schaltet ein Profil scharf. Danach darf der Nickname-Manager ausschließlich für im aktiven Profil zugeordnete Mitglieder des relevanten Voice-Calls arbeiten.
+
+`identity.profile.deactivate` beendet diesen Zustand. Aktive DM-Cockpit-Nickname-Leases werden danach restauriert, soweit Discord-Berechtigungen und Konfliktschutz dies erlauben.
+
+## Discord-Session-Nickname
+
+Standardformat:
+
+`Charakter | Spieler`
+
+Regeln:
+
+1. Der Charaktername steht zuerst.
+2. Der Nickname wird auf maximal 32 Unicode-Zeichen begrenzt.
+3. Der Charaktername hat bei Platzmangel Priorität; der Spielername wird zuerst gekürzt bzw. weggelassen.
+4. Ziel ist ausschließlich der serverbezogene Discord-Nickname.
+5. Vor dem ersten Write wird `originalNickname` persistent gespeichert.
+6. `Manage Nicknames` und Discord-Rollenhierarchie müssen die Änderung erlauben.
+7. Ein identischer gewünschter Nickname verursacht keinen unnötigen weiteren Write.
+
+## Persistenter Nickname-Lease
+
+Tabelle:
+
+`discord_nickname_overrides`
+
+Ein Lease enthält mindestens:
+
+- Guild-ID
+- Discord-User-ID
+- Profil-ID
+- ursprünglichen Nickname
+- von DM Cockpit gesetzten Nickname
+- Zustand
+- Fehler-/Zeitstempel
+
+Relevante Zustände:
+
+- `prepared`
+- `applied`
+- `apply_failed`
+- `restore_failed`
+- `restore_conflict`
+- `conflict_released`
+- `restored`
+
+### Apply
+
+Ablauf:
+
+1. Mitglied und Discord-Berechtigungen prüfen.
+2. aktuellen Server-Nickname lesen.
+3. Lease mit Originalzustand **vor** Discord-Mutation persistieren.
+4. Session-Nickname setzen.
+5. Lease als `applied` markieren.
+
+### Restore
+
+Restore wird ausgelöst, wenn z. B.:
+
+- ein zugeordnetes Mitglied den relevanten Call verlässt
+- ein Profil deaktiviert oder gewechselt wird
+- eine Zuordnung im aktiven Profil nicht mehr gilt
+- der Companion sauber herunterfährt
+- nach einem Restart ein persistierter Lease nicht mehr zu einem aktiven Call-Zustand gehört
+
+Sicherheitslogik:
+
+- aktueller Nickname entspricht bereits `originalNickname` → Restore als No-op erfolgreich markieren
+- aktueller Nickname entspricht dem von DM Cockpit gesetzten `appliedNickname` → Original wiederherstellen
+- aktueller Nickname entspricht **weder** Original noch DM-Cockpit-Nickname → `restore_conflict`; manuelle Änderung nicht überschreiben
+
+Bei einem späteren bewussten Rejoin/Apply kann ein vorheriger Restore-Konflikt freigegeben werden; der nun aktuelle manuelle Name wird dann zur neuen Restore-Basis.
+
+## `nickname.status`
+
+Der Companion veröffentlicht Diagnose-/Lifecycle-Zustände des Nickname-Managers, z. B.:
+
+- `nickname_applied`
+- `nickname_restored`
+- `nickname_restore_conflict`
+- `nickname_apply_blocked`
+- `nickname_apply_failed`
+- `nickname_restore_failed`
+
+Foundry zeigt diese Informationen in der Karte `Session-Identität` an.
 
 ## Transkript
 
@@ -131,7 +266,7 @@ Der Companion liefert die für diese Welt persistent gespeicherten Zuordnungen z
 
 Persistiert werden nur finale Segmente. Partials dürfen für Live-Feedback übertragen werden, werden aber nicht dauerhaft archiviert.
 
-Neue Segmente können zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakteridentität enthalten:
+Ein finales Segment kann zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakteridentität enthalten:
 
 ```json
 {
@@ -155,154 +290,22 @@ Neue Segmente können zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/
 Regeln:
 
 1. `discordUserId` bleibt die technische Sprecheridentität.
-2. `speakerName` bleibt der Discord-Anzeigename der sprechenden Person.
-3. `playerName`, `actorId`, `actorUuid`, `characterName` werden nur aus der bereits bestätigten Mapping-Tabelle ergänzt.
-4. Ohne Mapping bleiben Actor-/Charakterfelder `null`; die Pipeline darf sie nicht erraten.
-5. Persistierte Transkriptsegmente behalten die Identität, die zum Zeitpunkt ihrer Verarbeitung galt. Spätere Mapping-Änderungen schreiben alte Segmente nicht still um.
-6. Die KI erhält den Spieler- und optionalen Charakternamen als Kontext, aber keine Freiheit zur Actor-Zuordnung.
+2. `speakerName` ist der Discord-Anzeigename der sprechenden Person.
+3. Actor-/Charakterfelder stammen ausschließlich aus bestätigtem Mapping.
+4. Ohne Mapping bleiben Actor-/Charakterfelder `null`.
+5. Alte persistierte Segmente werden durch spätere Mapping-Änderungen nicht still umgeschrieben.
+6. Die KI erhält Spieler-/Charakterkontext, aber keine Freiheit zur Actor-Zuordnung.
 
-## NPC-Kontext
+## NPC-Kontext / KI-Kandidaten / Undo
 
-Foundry sendet `npc.context` bei relevanten Änderungen.
+Die bestehenden Regeln bleiben unverändert:
 
-Priorität:
-
-1. explizit aktiver Cockpit-Actor
-2. ausgewählter Foundry-Token
-3. kein NPC
-
-Der Companion darf NPC-Kandidaten nur dem Actor zuordnen, den Foundry über `actorId`/`actorUuid` geliefert hat. Die KI bestimmt niemals selbst eine Actor-ID.
-
-## KI-Kandidaten
-
-### `npc.memory.candidate`
-
-Pflichtfelder:
-
-- `candidateId`
-- `actorId`
-- `text`
-- `kind`
-- `sourceSegmentIds`
-- `createdAt`
-
-NPC-Kategorien:
-
-- `statement`
-- `knowledge`
-- `action`
-- `relationship`
-- `promise`
-- `lie`
-- `deadline`
-- `consequence`
-- `other`
-
-### `session.event.candidate`
-
-Session-Kategorien:
-
-- `decision`
-- `quest`
-- `task`
-- `loot`
-- `reward`
-- `open_question`
-- `combat`
-- `event`
-- `other`
-
-Kandidatenstatus:
-
-- `pending`
-- `accepted`
-- `rejected`
-
-## Manuelle Kandidatenprüfung
-
-### `candidate.review`
-
-Foundry sendet diese Nachricht ausschließlich nach einer bewussten GM-Aktion.
-
-```json
-{
-  "candidateType": "npc.memory.candidate",
-  "candidateId": "cand_01...",
-  "status": "accepted"
-}
-```
-
-Erlaubte Statuswerte für Review:
-
-- `accepted`
-- `rejected`
-
-Der Companion aktualisiert den Status in SQLite.
-
-### `candidate.reviewed`
-
-Bestätigung/Broadcast nach erfolgreicher Persistenz:
-
-```json
-{
-  "candidateType": "npc.memory.candidate",
-  "candidateId": "cand_01...",
-  "status": "accepted",
-  "reviewedAt": "2026-08-09T14:50:00.000Z"
-}
-```
-
-## Kandidaten nach Reload wieder laden
-
-### `candidates.list.request`
-
-```json
-{
-  "status": "pending",
-  "limit": 100
-}
-```
-
-Optional:
-
-- `status`: `pending`, `accepted`, `rejected`, `all`
-- `sessionId`
-- `limit` bis 250
-
-### `candidates.list.result`
-
-Antwort enthält getrennte Arrays:
-
-- `npcCandidates`
-- `sessionEventCandidates`
-
-Dadurch kann Foundry nach einem Reload offene Kandidaten erneut aus SQLite laden.
-
-## Foundry-Anwendung
-
-Für NPC-Memory gilt in der aktuellen manuellen V1:
-
-1. KI erzeugt `npc.memory.candidate`.
-2. Foundry zeigt den Kandidaten an.
-3. GM klickt ausdrücklich auf „Annehmen“.
-4. Foundry schreibt den Text in `flags['dm-cockpit'].actionMemory` des bereits vorgegebenen Actors.
-5. Foundry sendet `candidate.review` mit `accepted`.
-6. Companion persistiert den Review-Status und broadcastet `candidate.reviewed`.
-
-Bei `rejected` findet keine Actor-Änderung statt.
-
-Session-Kandidaten werden bei Annahme zunächst nur als `accepted` in SQLite markiert. Sie dienen später als Quelle für Session-Historie, Recap und Discord-Kurzfassung.
-
-## Undo / Change-Records
-
-Das Schema enthält weiterhin:
-
-- `npc.memory.applied`
-- `change.undo.request`
-- `change.undo.result`
-- `change_records` in SQLite
-
-Der bestätigte NPC-Memory-Schreibpfad erfordert weiterhin einen manuellen GM-Klick. Der neue Spieler-/Charakter-Mapping-Kern verändert keine Foundry-Actors und keine Discord-Nicknames.
+- `npc.context` priorisiert expliziten Cockpit-Actor, dann ausgewählten Token, sonst keinen NPC
+- NPC-Kandidaten dürfen nur dem von Foundry vorgegebenen Actor zugeordnet werden
+- `npc.memory.candidate` und `session.event.candidate` bleiben manuell prüfbare Vorschläge
+- `candidate.review` / `candidate.reviewed` persistieren Annahme/Ablehnung
+- `npc.memory.applied`, `change.undo.request`, `change.undo.result` bilden den sicheren Change-/Undo-Pfad
+- keine automatische Foundry-Actor-Mutation durch die neue Discord-Identity-Logik
 
 ## Provider-Abstraktion
 
@@ -316,28 +319,26 @@ STT bleibt provider-neutral und kann später lokal ersetzt werden.
 
 ### KI-Extraktion
 
-Unterstützte Companion-Provider:
+Unterstützt:
 
 - `none`
 - `mock`
 - `openai`
 - `ollama`
 
-Aktuell ausgewählter kostenloser Standard:
+Aktueller kostenloser Standard:
 
 - Ollama lokal
 - `qwen3:4b`
-- Structured Output per JSON-Schema
+- Structured Output
 - `think=false`
 - Temperatur 0
 
-Ollama und der optionale OpenAI-Adapter erhalten nun zusätzlich den **GM-bestätigten Charakternamen**, sofern ein Mapping vorhanden ist. Actor-ID/UUID werden nicht als frei interpretierbare Modellentscheidung verwendet.
-
-OpenAI bleibt optionaler Fallback; ein echter kostenpflichtiger OpenAI-API-Aufruf wurde bisher nicht benötigt.
+Ollama und der optionale OpenAI-Adapter erhalten zusätzlich den **GM-bestätigten Charakternamen**, sofern ein Mapping vorhanden ist. Actor-ID/UUID sind keine Modellentscheidung.
 
 ## Roh-Audio
 
-V1-Regel:
+Regel:
 
 `until_successful_transcription`
 
@@ -345,44 +346,59 @@ Roh-Audio bleibt nur temporär für Verarbeitung/Retry im RAM bzw. kurzfristigen
 
 ## Fehler- und Wiederanlaufregeln
 
-- eindeutige Message-IDs
-- eindeutige Segment-IDs
+- eindeutige Message- und Segment-IDs
 - idempotente SQLite-Schreibvorgänge für finale Segmente/Kandidaten
 - Mapping-Snapshot pro Welt wird transaktional ersetzt
+- Profile und Nickname-Leases sind persistent
 - Reconnect darf gespeicherte Daten nicht duplizieren
-- Candidate-Review wird persistent als Status gespeichert
-- Providerfehler müssen sichtbar werden; kein stilles Verwerfen
+- Candidate-Review bleibt persistent
+- Providerfehler müssen sichtbar werden
 - Backpressure/Queue ist Segmentverlust vorzuziehen
-- Discord-Nickname-Automatik ist **nicht** Teil dieses Identity-Core-Blocks
+- geordneter Companion-Shutdown führt Nickname-Restore vor Discord-/SQLite-Ende aus
+- Restore-Konflikte werden sichtbar gehalten statt externe manuelle Änderungen zu überschreiben
 
-## Aktueller Implementierungsstand
+## Implementierungs-/Teststand
 
-Bereits früher vollständig bestätigt und nicht ohne Regression zu wiederholen:
+Bereits früher vollständig bestätigt und nicht ohne konkrete Regression zu wiederholen:
 
 - Discord Voice/DAVE/GM Follow
 - Sprechertrennung
 - Deepgram STT
 - Live-Transkript
 - SQLite-Persistenz
-- provider-neutrale KI-Extraktion
-- Ollama/qwen3:4b End-to-End
+- Ollama/qwen3:4b E2E
 - Candidate Review / Change-Record / Undo-Baseline
 
-Identity-Core 0.9.27 / Companion 0.11.0 auf `main` implementiert:
+### Identity-Core 0.9.27 / Companion 0.11.0
 
-- Voice-Teilnehmer-Snapshot des relevanten Calls
-- Protocol-Nachrichten für Teilnehmer und Spieler-/Charakterzuordnung
-- persistente SQLite-Tabelle für Welt-Zuordnungen
-- migrationssichere zusätzliche Transkript-Identitätsfelder
-- Foundry-Karte `Spieler & Charaktere`
-- weltpersistente GM-Zuordnung Discord-Mitglied -> Foundry-Actor
-- strukturierte Spieler-/Charakterattribution neuer Transkriptsegmente
-- Weitergabe des bestätigten Spielernamens/Charakternamens an Ollama/OpenAI-Extraktionskontext
-- automatischer Identity-Mapping-/Legacy-Migrations-Smoke-Test in CI
+- implementiert
+- CI-validiert mit `Build DM Cockpit v0.9.27`
+- echter Discord-/Foundry-Runtime-Test noch offen
 
-Status dieses neuen Blocks:
+### Session Identity 0.9.28 / Companion 0.12.0
 
-- **implementiert auf main**
-- **automatisierte/static Prüfung über GitHub Actions vorgesehen**
-- **echter Discord-/Foundry-Runtime-Test noch offen**
-- **nicht als lokal oder vollständig bestätigt behandeln, bevor der gebündelte Nutzertest durchgeführt wurde**
+Implementiert:
+
+- persistente Profile
+- Foundry-Karte `Session-Identität`
+- reversible Nickname-Leases
+- Join/Leave/Profilewechsel/Deactivate/Shutdown-Lifecycle
+- Rollen-/Berechtigungsprüfung
+- Restore-Konfliktschutz
+- Restart-/Crash-Recovery
+
+Automatisiert ohne echten Discord-Server erfolgreich geprüft:
+
+- Profil-Persistenz
+- ein aktives Profil
+- Nickname-Längenbegrenzung
+- Join Apply
+- Leave Restore
+- doppelte Snapshot-Idempotenz
+- manuelle Änderung → Restore-Konflikt
+- Rejoin nach Konflikt
+- Profilwechsel
+- Deaktivierung
+- Restart-Recovery
+
+Bis zum gebündelten Nutzertest gilt dieser Block **nicht** als lokal oder vollständig bestätigt.
