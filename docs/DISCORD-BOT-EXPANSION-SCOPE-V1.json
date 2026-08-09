@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-08-09T17:37:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "branch": "main",
+  "scope_id": "discord-bot-expansion-v1",
+  "status": "selected_not_implemented",
+  "source": "user_checklist_selection",
+  "implementation_rule": {
+    "yes": "in den geplanten Ausbau aufnehmen",
+    "later": "dokumentieren, aber nicht im aktuellen Ausbau umsetzen",
+    "no": "nicht umsetzen",
+    "do_not_start_without_explicit_work_order": true
+  },
+  "selected": [
+    {
+      "id": 1,
+      "feature": "Discord-Slash-Commands",
+      "decision": "Ja",
+      "details": "Bot über Discord steuerbar machen, z. B. Status, Sessionstart/-ende und Recap."
+    },
+    {
+      "id": 2,
+      "feature": "Manuelle Session-Steuerung",
+      "decision": "Ja",
+      "details": "GM kann Sessionstart und -ende bewusst steuern; automatische Voice-Folge darf davon getrennt werden."
+    },
+    {
+      "id": 3,
+      "feature": "Aufnahme-/Transkriptionshinweis in Discord",
+      "decision": "Ja",
+      "details": "Bei aktiver Verarbeitung soll ein klarer, konfigurierbarer Hinweis in Discord möglich sein."
+    },
+    {
+      "id": 4,
+      "feature": "Sichtbarer Bot-Status / Presence",
+      "decision": "Ja",
+      "details": "Discord soll verständlich zeigen, ob der Bot bereit, im Voice, am Transkribieren oder im Fehlerzustand ist."
+    },
+    {
+      "id": 6,
+      "feature": "Robuster Reconnect bei Voice-Problemen",
+      "decision": "Ja",
+      "details": "Voice-Unterbrechungen kontrolliert behandeln und Verbindung/Zustand sauber wiederherstellen."
+    },
+    {
+      "id": 7,
+      "feature": "Recap direkt über den Bot an Discord senden",
+      "decision": "Ja",
+      "details": "Nur nach bewusster GM-Aktion; kein ungefragtes automatisches Posting."
+    },
+    {
+      "id": 8,
+      "feature": "Session-Status in Discord anzeigen",
+      "decision": "Ja",
+      "details": "Laufzeit, Sprecher, Transkript-/Sessiondaten und relevante Statusinformationen abrufbar machen."
+    },
+    {
+      "id": 9,
+      "feature": "Discord-Spieler mit Foundry-Charakteren verknüpfen",
+      "decision": "Ja",
+      "details": "Zuordnung von Discord-Mitgliedern zu Foundry-Spielercharakteren im Cockpit."
+    },
+    {
+      "id": 10,
+      "feature": "Bot-Konfiguration stärker ins Cockpit holen",
+      "decision": "Ja",
+      "details": "Unkritische Einstellungen über Foundry bedienbar machen; Secrets bleiben ausschließlich lokal."
+    },
+    {
+      "id": 11,
+      "feature": "Verständlicher Fehler- und Diagnosemodus",
+      "decision": "Ja",
+      "details": "Discord/Voice/STT/KI-Status und Fehler für den GM verständlich sichtbar machen."
+    },
+    {
+      "id": 12,
+      "feature": "Veraltete Discord-Code-Statusangaben bereinigen",
+      "decision": "Ja",
+      "details": "Repository-Angaben wie audioCaptureImplemented=false bzw. veraltete Kommentare an den realen Stand angleichen."
+    },
+    {
+      "id": 13,
+      "feature": "Session-/Ausgabe-Textkanal festlegen",
+      "decision": "Ja",
+      "details": "Der Zielkanal soll nicht fest verdrahtet sein. Der GM soll jederzeit wieder einen neuen Discord-Textkanal festlegen können."
+    },
+    {
+      "id": 15,
+      "feature": "Call-Mitglieder mit Foundry-Charakteren zuordnen und Discord-Server-Nicknames anpassen",
+      "decision": "Ja",
+      "details": [
+        "Bot erkennt, welche Discord-Mitglieder im relevanten Voice-Call sitzen.",
+        "Cockpit zeigt die verfügbaren Foundry-Spielercharaktere.",
+        "GM legt im Cockpit fest, welches Discord-Mitglied zu welchem Foundry-Spielercharakter gehört.",
+        "Nach bestätigter Zuordnung darf der Bot den Server-Nickname des Discord-Mitglieds so anpassen, dass der Charaktername zuerst steht.",
+        "Gemeint ist der serverbezogene Nickname, nicht der globale Discord-Benutzername."
+      ]
+    }
+  ],
+  "deferred": [
+    {
+      "id": 5,
+      "feature": "Mehrere GMs unterstützen",
+      "decision": "Später"
+    },
+    {
+      "id": 14,
+      "feature": "Berechtigungen für Bot-Befehle",
+      "decision": "Später"
+    }
+  ],
+  "constraints": [
+    "Keine Secrets in GitHub, Chat oder Checkpoints.",
+    "Keine dauerhafte Roh-Audio-Speicherung.",
+    "Recap-Posting nur nach bewusster GM-Aktion.",
+    "Normale Bedienung soll im Cockpit bzw. über Discord-Befehle möglich sein; keine Entwicklerkonsole als Standardweg.",
+    "Dieser Scope ist eine Auswahlentscheidung und noch keine Implementierungsbestätigung."
+  ]
+}
