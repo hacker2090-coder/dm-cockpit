@@ -1,8 +1,8 @@
-# DM Cockpit Companion Service 0.6.0
+# DM Cockpit Companion Service 0.7.0
 
-Lokaler Dienst zwischen Foundry/DM Cockpit, Discord Voice, Speech-to-Text, SQLite und der neuen strukturierten KI-Extraktionsschicht.
+Lokaler Dienst zwischen Foundry/DM Cockpit, Discord Voice, Speech-to-Text, SQLite und strukturierter KI-Extraktion.
 
-## Bestätigte Baseline: 0.5.0
+## Bestätigte Baseline: 0.6.0
 
 Auf dem Nutzer-PC vollständig bestätigt:
 
@@ -13,49 +13,78 @@ Auf dem Nutzer-PC vollständig bestätigt:
 - Protocol v1 → SQLite → Foundry-Live-Transkript
 - `npc.memory.candidate` Broadcast/Persistenz
 - `session.event.candidate` Broadcast/Persistenz
+- provider-neutrale `AiExtractionService`
+- deterministischer Mock-Provider
+- Final-only + Deduplizierung
+- NPC-Kontext + Latest-Context-Fallback
+- automatische Mock-Pipeline `transcript.segment → Kandidaten → Protocol v1 → SQLite`
+- keine automatischen Actor-Writes
 
-## Neu in 0.6.0
+## Neu in 0.7.0: realer OpenAI-Adapter
 
-### Provider-neutrale Extraktion
+Datei:
 
-`src/ai-extraction-service.js` kapselt die Extraktionslogik. Auswahl über:
+- `src/ai-extraction-openai.js`
+
+Aktivierung erfolgt ausschließlich lokal über:
+
+```text
+AI_PROVIDER=openai
+OPENAI_API_KEY=...
+```
+
+Der sichere Standard bleibt:
 
 ```text
 AI_PROVIDER=none
 ```
 
-`none` bleibt der sichere Standard. Dadurch wird ohne ausdrückliche Aktivierung **keine KI-Extraktion ausgeführt**.
+Damit wird ohne ausdrückliche lokale Aktivierung **kein Transkript an einen LLM-Provider gesendet**.
 
-Für reproduzierbare lokale Tests existiert:
-
-```text
-AI_PROVIDER=mock
-```
-
-Der Mock ist deterministisch und überträgt keine Daten an externe Dienste. Ein realer LLM-Provider ist noch nicht implementiert.
-
-### Automatische Datenstrecke
+### Standardmodell
 
 ```text
-final transcript.segment
-→ Protocol-v1-Broadcast
-→ AiExtractionService
-→ npc.memory.candidate / session.event.candidate
-→ Companion Server
-→ SQLite + WebSocket-Broadcast
+OPENAI_AI_MODEL=gpt-5.4-nano
 ```
 
-`npc.context` wird pro Session verfolgt. Zusätzlich bleibt der zuletzt gemeldete NPC-Kontext als Fallback erhalten, damit eine NPC-Auswahl **vor** dem Voice-/Sessionstart nicht verloren geht.
+Das Modell ist für kostensensitive, hochvolumige Klassifikation und Datenextraktion vorgesehen und unterstützt Structured Outputs.
 
-### Sicherheitsregeln
+### API-Vertrag
 
-- nur finale Transkriptsegmente
-- Deduplizierung per `segmentId`
-- `sourceSegmentIds` bleiben erhalten
-- Kandidaten tragen Provider/Modell/Confidence/Status
-- keine automatischen Actor-Schreibvorgänge
-- keine Undo-Ausführung in 0.6.0
-- kein echter LLM/API-Key in dieser Version notwendig
+Der Adapter nutzt die OpenAI Responses API:
+
+```text
+https://api.openai.com/v1/responses
+```
+
+Schutzmaßnahmen:
+
+- `store: false`
+- Strict Structured Output per JSON Schema
+- maximal 8 NPC- und 8 Session-Kandidaten pro Segment
+- Kategorien ausschließlich aus den Protocol-v1-Enums
+- lokale Nachvalidierung nach der Modellantwort
+- ohne aktiven Foundry-NPC-Kontext werden alle NPC-Kandidaten verworfen
+- die Actor-ID wird **nie vom Modell bestimmt**; sie kommt ausschließlich aus `npc.context`
+- keine Actor-Writes
+- keine Tokens/API-Keys in GitHub oder Checkpoints
+
+An den Provider werden bei aktivierter OpenAI-Extraktion übertragen:
+
+- finales Transkriptsegment
+- Sprecher-Anzeigename
+- Session-ID
+- lesbarer NPC-Kontext, falls aktiv
+
+Roh-Audio wird nicht an den LLM-Adapter übergeben.
+
+## Provider
+
+```text
+AI_PROVIDER=none     # sicherer Standard
+AI_PROVIDER=mock     # deterministischer lokaler Testprovider
+AI_PROVIDER=openai   # realer OpenAI-Adapter
+```
 
 ## Tests
 
@@ -65,44 +94,34 @@ Syntax/Grundprüfung:
 npm.cmd run check
 ```
 
-Deterministischer Extraktionstest:
+Deterministische Mock-Extraktion:
 
 ```powershell
 npm.cmd run test:ai
 ```
 
-Dieser bestätigt Provider-Abstraktion, NPC-/Session-Kandidaten, Quellenbindung, Final-only und Deduplizierung.
-
-Candidate-Infrastruktur aus 0.5.0:
+OpenAI-Adapter ohne echten API-Aufruf testen:
 
 ```powershell
-npm.cmd run test:candidates
+npm.cmd run test:ai-openai
 ```
 
-Automatischer 0.6.0-Ende-zu-Ende-Test, nachdem der Companion mit `AI_PROVIDER=mock` läuft:
+Dieser Test verwendet einen lokalen Fake-HTTP-Response und bestätigt:
+
+- Responses-API-Payload
+- `store=false`
+- Strict Structured Output
+- Actor-Zuordnung aus Foundry-Kontext
+- lokale Nachvalidierung
+- kein echter API-Key und keine Kosten
+
+Ende-zu-Ende Candidate-Pipeline:
 
 ```powershell
 npm.cmd run test:ai-pipeline
 ```
 
-Er sendet selbstständig `npc.context` und ein finales `transcript.segment` und erwartet danach:
-
-- `npc.memory.candidate` vom Mock-Provider
-- `session.event.candidate` vom Mock-Provider
-- beide Kandidaten als WebSocket-Broadcast
-- steigende Candidate-Zähler in `/health`/SQLite
-
-## Lokales Update
-
-```powershell
-Ctrl+C
-cd $HOME\Desktop\dm-cockpit
-git pull
-cd companion
-npm.cmd install
-npm.cmd run check
-npm.cmd run test:ai
-```
+Dieser Test funktioniert mit laufendem Companion sowohl für `AI_PROVIDER=mock` als auch für den späteren kontrollierten Realtest mit `AI_PROVIDER=openai`.
 
 ## `.env`
 
@@ -120,13 +139,16 @@ DEEPGRAM_STT_MODEL=nova-3
 DEEPGRAM_STT_LANGUAGE=de
 
 AI_PROVIDER=none
+OPENAI_API_KEY=
+OPENAI_AI_MODEL=gpt-5.4-nano
+OPENAI_AI_ENDPOINT=https://api.openai.com/v1/responses
+OPENAI_AI_TIMEOUT_MS=20000
 ```
 
-Für den 0.6.0-Ende-zu-Ende-Mock-Test wird `AI_PROVIDER=mock` nur temporär aktiviert.
+## Noch nicht bestätigt / enthalten
 
-## Noch nicht enthalten
-
-- realer LLM/AI-Provider
+- echter OpenAI-API-Aufruf auf dem Nutzer-PC
+- Qualitätsevaluation an echten Session-Sätzen
 - Foundry Candidate UI
 - Annehmen/Verwerfen in Foundry
 - automatische Actor-Memory-Änderungen
@@ -134,6 +156,6 @@ Für den 0.6.0-Ende-zu-Ende-Mock-Test wird `AI_PROVIDER=mock` nur temporär akti
 - Transkript-Suche
 - Session-Recap / Discord-Kurzfassung
 
-## Nächster Schritt
+## Nächster einzelner Schritt
 
-0.6.0 auf dem Nutzer-PC mit `npm.cmd run check` und `npm.cmd run test:ai` bestätigen. Danach Companion temporär mit `AI_PROVIDER=mock` starten und `npm.cmd run test:ai-pipeline` ausführen.
+0.7.0 lokal mit `npm.cmd run check` und `npm.cmd run test:ai-openai` bestätigen. Danach erst einen lokalen OpenAI API-Key setzen und einen kontrollierten echten Pipeline-Test ausführen.
