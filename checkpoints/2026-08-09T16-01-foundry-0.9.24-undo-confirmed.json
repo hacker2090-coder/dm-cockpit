@@ -1,0 +1,116 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.22",
+  "created_at": "2026-08-09T16:01:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "foundry_repository_version": "0.9.24",
+    "foundry_last_user_confirmed_version": "0.9.24",
+    "companion_repository_version": "0.10.0",
+    "companion_last_user_confirmed_version": "0.10.0",
+    "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
+    "pause_point": "Foundry 0.9.24 und Companion 0.10.0 sind für den NPC-Memory-Change-Record/Undo-Block real bestätigt. Die sichtbare Cockpit-Version zeigt 0.9.24 korrekt. Ein neuer angenommener NPC-Kandidat kann über die Cockpit-Oberfläche wieder rückgängig gemacht werden. Der Nutzer hat ausdrücklich verlangt, nach diesem Abschluss nicht automatisch mit dem nächsten Roadmap-Punkt zu beginnen."
+  },
+  "working_rules": {
+    "github_source_of_truth": true,
+    "check_main_before_changes": true,
+    "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
+    "user_test_cadence": "Zusammengehörige lokale Prüfungen als vollständigen Testblock bündeln; keine Bestätigung nach jedem Mikroschritt verlangen.",
+    "selection_questions_rule": "Strukturierte Auswahlfragen über bearbeitbare HTML-Dateien mit kopierbarer Zusammenfassung; maximal etwa 15 grobe Fragen.",
+    "ui_rule": "Normale Bedienfunktionen müssen über das Cockpit erreichbar sein; Entwicklerkonsole nur für tatsächliches Debugging, nicht als normaler Bedienweg.",
+    "checkpoint_rule": "PROJECT-CHECKPOINT.json aktualisieren, historischen Snapshot unter checkpoints/ anlegen und regulären Checkpoint zusätzlich in ChatGPT Library /DM Cockpit/ speichern.",
+    "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
+    "local_command_rule": "PowerShell: cd $HOME\\Desktop\\dm-cockpit; git pull; cd companion; npm.cmd ...; kein &&.",
+    "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
+    "raw_audio_rule": "Keine dauerhafte Roh-Audio-Speicherung.",
+    "change_rule": "Keine automatische Actor-/Weltänderung ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung.",
+    "pause_after_current_block": true
+  },
+  "confirmed": {
+    "companion_0_10_0": {
+      "status": "fully_user_confirmed",
+      "syntax_check": "passed",
+      "runtime_start": "passed",
+      "change_record_smoke": "passed",
+      "confirmed_flow": [
+        "Change-Record persistent",
+        "accepted candidate list reload",
+        "change.undo.request -> ready with before/after",
+        "persistent undone",
+        "idempotent already_undone"
+      ],
+      "smoke_test_fix_commit": "390f65f0deaafaac8f1cd4ca5e4632d8fb3910d0"
+    },
+    "foundry_0_9_24": {
+      "status": "fully_user_confirmed_for_npc_memory_undo",
+      "module_version_display": "passed; Cockpit zeigt 0.9.24 korrekt",
+      "version_badge_fix_commit": "77578d82a8579b942974607609c3718282afbf9e",
+      "version_bump_commit": "95e3c7c88650f88dc7d35e732b6b08afdff84f98",
+      "package_build_commit": "2c1fc728ed26195c8943775ac8a61ee4d3f1e33f",
+      "undo_implementation_commit": "578b7064b857950f14df89d304f98e368f9df7f2",
+      "confirmed_flow": [
+        "neuer NPC-Memory-Kandidat kann manuell angenommen werden",
+        "Annehmen erzeugt einen Change-Record für flags.dm-cockpit.actionMemory",
+        "angenommener Kandidat erhält einen Rückgängig-Pfad in der Cockpit-Oberfläche",
+        "Nutzer kann die Änderung erfolgreich zurücknehmen"
+      ],
+      "safety": "Restore ist konfliktgeschützt und soll nur bei passendem aktuellem after-Zustand schreiben."
+    },
+    "foundry_0_9_22_baseline": {
+      "status": "fully_user_confirmed",
+      "features": [
+        "realer Ollama/qwen3:4b NPC-Kandidat mit Foundry-Actor-Kontext",
+        "manuelles Annehmen und Verwerfen",
+        "Annehmen -> bestehendes NPC Memory"
+      ]
+    },
+    "ollama": {
+      "status": "fully_user_confirmed",
+      "model": "qwen3:4b",
+      "quality_score_percent": 91.7,
+      "passed_cases": 11,
+      "total_cases": 12
+    }
+  },
+  "architecture": {
+    "websocket": "ws://127.0.0.1:43170/v1",
+    "health": "http://127.0.0.1:43170/health",
+    "sqlite": "companion/data/dm-cockpit.sqlite",
+    "npc_memory_flag": "flags['dm-cockpit'].actionMemory",
+    "change_record_flag_path": "flags.dm-cockpit.actionMemory",
+    "raw_audio_persistence": false
+  },
+  "packaging_note": {
+    "status": "open_maintenance_risk_not_blocking_confirmed_undo",
+    "finding": "Der aktuelle Release-Workflow baut dm-cockpit.zip inkrementell, indem das vorhandene ZIP entpackt und mit vorhandenen Repository-Quelldateien überlagert wird. Mindestens scripts/dm-cockpit.js war bei der Prüfung nicht als normale Datei auf main abrufbar; dadurch kann Altcode im ZIP weitervererbt werden.",
+    "mitigation_done": "Die sichtbare Versionsanzeige ist ab 0.9.24 über scripts/module-version-badge.js an game.modules.get('dm-cockpit').version gekoppelt und real bestätigt.",
+    "future_maintenance": "Vor größerem weiteren Foundry-Ausbau sollte der Build reproduzierbar aus vollständig versionierten Quellen erzeugt werden. Dies wurde noch nicht begonnen, weil der Nutzer nach Abschluss dieses Blocks ausdrücklich einen Stopp verlangt hat."
+  },
+  "do_not_repeat": [
+    "Companion 0.10.0 npm.cmd run check",
+    "Companion 0.10.0 npm.cmd run test:change-record",
+    "Companion 0.9.0 Candidate-Review-Smoke-Test",
+    "Ollama Adapter/Preflight/E2E/Qualitätsbenchmark",
+    "Foundry 0.9.22 realer Ollama-Kandidat",
+    "Foundry 0.9.22 Annehmen/Verwerfen",
+    "Foundry 0.9.22 Annehmen -> NPC Memory",
+    "Foundry 0.9.24 Versionsanzeige",
+    "Foundry 0.9.24 normaler NPC-Memory-Undo-E2E-Test"
+  ],
+  "roadmap": [
+    "6: Change-Record/Undo für NPC Memory abgeschlossen und real bestätigt",
+    "Maintenance vor weiterem Foundry-Ausbau: reproduzierbaren ZIP-Build aus vollständig versionierten Quellen herstellen",
+    "7: optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
+    "8: dauerhaft durchsuchbares Transkript",
+    "9: Session-Historie, Recap und Discord-Kurzfassung",
+    "10: optional lokales STT und Performance-/Skalierungs-Hardening"
+  ],
+  "resume_instructions": {
+    "status": "paused_by_user_after_successful_undo_block",
+    "next_action": "Nicht automatisch fortsetzen. Erst auf neue Nutzeranweisung warten. Wenn weiterentwickelt wird, vor Änderungen erneut neuesten main-Stand prüfen.",
+    "current_block_requires_more_user_testing": false
+  }
+}
