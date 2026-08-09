@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T17:58:00+02:00",
+  "updated_at": "2026-08-09T18:32:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
@@ -15,18 +15,49 @@
     "autonomous_work_authorized": true,
     "user_tests": "Nur an echten lokalen/externen Runtime-Grenzen und gebündelt anfordern."
   },
+  "completed_implementation_blocks": [
+    {
+      "name": "discord_identity_core",
+      "status": "implemented_ci_validated_runtime_not_user_confirmed",
+      "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27",
+      "implemented": [
+        "Protocol und Datenmodell für Voice-Teilnehmer und Spieler-/Charakterzuordnung erweitert",
+        "Teilnehmer des relevanten Discord-Voice-Channels werden bereitgestellt",
+        "persistente Foundry-Welt-Zuordnung Discord-Mitglied -> Spielercharakter",
+        "Companion-SQLite-Spiegelung und additive Migration",
+        "Transkriptsegmente strukturiert um Spieler-/Charakteridentität ergänzt",
+        "bestätigte Identität wird an die KI-Extraktion weitergereicht",
+        "Foundry-Cockpit-Karte Spieler & Charaktere",
+        "veraltete Audio-Capture-Statusangabe bereinigt"
+      ],
+      "automated_validation": [
+        "Foundry node --check",
+        "Companion node --check",
+        "Protocol-/Scope-JSON parse",
+        "Identity-Mapping-Smoke-Test",
+        "Foundry-Paketbuild 0.9.27"
+      ],
+      "runtime_pending": [
+        "echte Voice-Teilnehmerliste in Foundry",
+        "echte Spieler-/Charakterzuordnung",
+        "Live-Transkript mit realer Charakterattribution",
+        "realer Call-Wechsel/Reconnect"
+      ]
+    }
+  ],
   "current_implementation_block": {
-    "name": "discord_identity_core",
-    "status": "started",
+    "name": "campaign_session_identity_and_nickname",
+    "status": "next",
     "order": [
-      "Protocol und Datenmodell erweitern",
-      "Teilnehmer des relevanten Discord-Voice-Channels bereitstellen",
-      "persistente Foundry-Welt-Zuordnung Discord-Mitglied -> Spielercharakter",
-      "Transkriptsegmente strukturiert um Spieler-/Charakteridentität ergänzen",
-      "dieselbe bestätigte Identität an die KI-Extraktion weiterreichen"
+      "Kampagnen-/One-Shot-/Sessionprofil als persistenten Zustand modellieren",
+      "Profil mit vorhandenen Spieler-/Charakterzuordnungen verbinden",
+      "ursprünglichen Discord-Server-Nickname persistent sichern",
+      "Nickname nur bei ausdrücklich aktivem Profil/Sessionzustand anwenden",
+      "Charaktername zuerst im Session-Nickname darstellen",
+      "bei Call-Leave und Sessionende ursprünglichen Nickname zurücksetzen",
+      "Rejoin und Crash-Recovery idempotent behandeln"
     ],
     "explicitly_not_in_this_block": [
-      "Discord-Nicknames verändern",
       "Slash-Commands",
       "Recap posten",
       "mehrere GMs",
@@ -39,126 +70,56 @@
     "ai_rule": "Die KI darf niemals selbst eine Actor-ID oder Spieler-Charakter-Zuordnung erraten oder erzeugen.",
     "transcript_rule": "Neue Transkriptsegmente behalten die Discord-Sprecheridentität und tragen zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakterzuordnung.",
     "ic_ooc_rule": "Die Zuordnung bedeutet nicht automatisch, dass jede Aussage in-character gesprochen wurde. Eine IC/OOC-Erkennung ist nicht Bestandteil dieses V1-Kerns.",
-    "mapping_scope": "Zuordnungen werden mindestens pro Foundry-Welt persistent geführt; spätere Kampagnen-/Sessionprofile dürfen darauf aufbauen."
+    "mapping_scope": "Zuordnungen werden mindestens pro Foundry-Welt persistent geführt; Kampagnen-/Sessionprofile bauen darauf auf."
   },
-  "future_session_identity_profile": {
-    "status": "planned_after_identity_core",
+  "session_identity_profile": {
+    "status": "selected_for_current_block",
     "behavior": [
       "GM wählt bzw. aktiviert eine Kampagne, einen One-Shot oder ein Sessionprofil.",
-      "Gespeicherte Discord-Mitglied-zu-Charakter-Zuordnungen werden für dieses Profil geladen.",
-      "Erst nach ausdrücklicher Session-Aktivierung darf eine spätere Nickname-Automatik Namen verändern.",
+      "Gespeicherte Discord-Mitglied-zu-Charakter-Zuordnungen werden für dieses Profil genutzt.",
+      "Erst nach ausdrücklicher Session-/Profil-Aktivierung darf die Nickname-Automatik Namen verändern.",
       "Beim Rejoin in den relevanten Call kann der gespeicherte Session-Nickname erneut angewendet werden.",
-      "Beim Verlassen des relevanten Calls oder Sessionende soll der vorherige Server-Nickname wiederhergestellt werden.",
-      "Für Crash-Recovery soll der vorherige Nickname vor Änderungen persistent gesichert werden."
+      "Beim Verlassen des relevanten Calls oder Sessionende wird der vorherige Server-Nickname wiederhergestellt.",
+      "Für Crash-Recovery wird der vorherige Nickname vor Änderungen persistent gesichert."
     ],
     "nickname_target": "Nur serverbezogener Discord-Nickname, niemals globaler Discord-Benutzername."
   },
   "selected": [
-    {
-      "id": 1,
-      "feature": "Discord-Slash-Commands",
-      "decision": "Ja",
-      "details": "Bot über Discord steuerbar machen, z. B. Status, Sessionstart/-ende und Recap."
-    },
-    {
-      "id": 2,
-      "feature": "Manuelle Session-Steuerung",
-      "decision": "Ja",
-      "details": "GM kann Sessionstart und -ende bewusst steuern; automatische Voice-Folge darf davon getrennt werden."
-    },
-    {
-      "id": 3,
-      "feature": "Aufnahme-/Transkriptionshinweis in Discord",
-      "decision": "Ja",
-      "details": "Bei aktiver Verarbeitung soll ein klarer, konfigurierbarer Hinweis in Discord möglich sein."
-    },
-    {
-      "id": 4,
-      "feature": "Sichtbarer Bot-Status / Presence",
-      "decision": "Ja",
-      "details": "Discord soll verständlich zeigen, ob der Bot bereit, im Voice, am Transkribieren oder im Fehlerzustand ist."
-    },
-    {
-      "id": 6,
-      "feature": "Robuster Reconnect bei Voice-Problemen",
-      "decision": "Ja",
-      "details": "Voice-Unterbrechungen kontrolliert behandeln und Verbindung/Zustand sauber wiederherstellen."
-    },
-    {
-      "id": 7,
-      "feature": "Recap direkt über den Bot an Discord senden",
-      "decision": "Ja",
-      "details": "Nur nach bewusster GM-Aktion; kein ungefragtes automatisches Posting."
-    },
-    {
-      "id": 8,
-      "feature": "Session-Status in Discord anzeigen",
-      "decision": "Ja",
-      "details": "Laufzeit, Sprecher, Transkript-/Sessiondaten und relevante Statusinformationen abrufbar machen."
-    },
-    {
-      "id": 9,
-      "feature": "Discord-Spieler mit Foundry-Charakteren verknüpfen",
-      "decision": "Ja",
-      "details": "Zuordnung von Discord-Mitgliedern zu Foundry-Spielercharakteren im Cockpit; diese Zuordnung ist auch die strukturierte Sprecheridentität für Transkript und KI."
-    },
-    {
-      "id": 10,
-      "feature": "Bot-Konfiguration stärker ins Cockpit holen",
-      "decision": "Ja",
-      "details": "Unkritische Einstellungen über Foundry bedienbar machen; Secrets bleiben ausschließlich lokal."
-    },
-    {
-      "id": 11,
-      "feature": "Verständlicher Fehler- und Diagnosemodus",
-      "decision": "Ja",
-      "details": "Discord/Voice/STT/KI-Status und Fehler für den GM verständlich sichtbar machen."
-    },
-    {
-      "id": 12,
-      "feature": "Veraltete Discord-Code-Statusangaben bereinigen",
-      "decision": "Ja",
-      "details": "Repository-Angaben wie audioCaptureImplemented=false bzw. veraltete Kommentare an den realen Stand angleichen."
-    },
-    {
-      "id": 13,
-      "feature": "Session-/Ausgabe-Textkanal festlegen",
-      "decision": "Ja",
-      "details": "Der Zielkanal soll nicht fest verdrahtet sein. Der GM soll jederzeit wieder einen neuen Discord-Textkanal festlegen können."
-    },
+    { "id": 1, "feature": "Discord-Slash-Commands", "decision": "Ja" },
+    { "id": 2, "feature": "Manuelle Session-Steuerung", "decision": "Ja" },
+    { "id": 3, "feature": "Aufnahme-/Transkriptionshinweis in Discord", "decision": "Ja" },
+    { "id": 4, "feature": "Sichtbarer Bot-Status / Presence", "decision": "Ja" },
+    { "id": 6, "feature": "Robuster Reconnect bei Voice-Problemen", "decision": "Ja" },
+    { "id": 7, "feature": "Recap direkt über den Bot an Discord senden", "decision": "Ja" },
+    { "id": 8, "feature": "Session-Status in Discord anzeigen", "decision": "Ja" },
+    { "id": 9, "feature": "Discord-Spieler mit Foundry-Charakteren verknüpfen", "decision": "Ja", "details": "Zuordnung ist auch strukturierte Sprecheridentität für Transkript und KI." },
+    { "id": 10, "feature": "Bot-Konfiguration stärker ins Cockpit holen", "decision": "Ja" },
+    { "id": 11, "feature": "Verständlicher Fehler- und Diagnosemodus", "decision": "Ja" },
+    { "id": 12, "feature": "Veraltete Discord-Code-Statusangaben bereinigen", "decision": "Ja" },
+    { "id": 13, "feature": "Session-/Ausgabe-Textkanal festlegen", "decision": "Ja", "details": "GM kann den Zielkanal jederzeit neu auswählen." },
     {
       "id": 15,
       "feature": "Call-Mitglieder mit Foundry-Charakteren zuordnen und Discord-Server-Nicknames anpassen",
       "decision": "Ja",
       "details": [
-        "Bot erkennt, welche Discord-Mitglieder im relevanten Voice-Call sitzen.",
-        "Cockpit zeigt die verfügbaren Foundry-Spielercharaktere.",
-        "GM legt im Cockpit fest, welches Discord-Mitglied zu welchem Foundry-Spielercharakter gehört.",
-        "Die bestätigte Zuordnung wird für Sprecherattribution in Transkript und KI genutzt.",
-        "In einem späteren Block darf der Bot nach ausdrücklicher Session-Aktivierung den Server-Nickname so anpassen, dass der Charaktername zuerst steht.",
-        "Beim Verlassen des Calls oder Sessionende soll der ursprüngliche Server-Nickname automatisch wiederhergestellt werden.",
-        "Gemeint ist der serverbezogene Nickname, nicht der globale Discord-Benutzername."
+        "Bot erkennt Mitglieder im relevanten Voice-Call.",
+        "GM ordnet im Cockpit Foundry-Spielercharaktere zu.",
+        "Bestätigte Zuordnung wird für Sprecherattribution genutzt.",
+        "Bei aktivem Sessionprofil darf der serverbezogene Discord-Nickname so angepasst werden, dass der Charaktername zuerst steht.",
+        "Beim Call-Leave oder Sessionende wird der vorherige Server-Nickname wiederhergestellt."
       ]
     }
   ],
   "deferred": [
-    {
-      "id": 5,
-      "feature": "Mehrere GMs unterstützen",
-      "decision": "Später"
-    },
-    {
-      "id": 14,
-      "feature": "Berechtigungen für Bot-Befehle",
-      "decision": "Später"
-    }
+    { "id": 5, "feature": "Mehrere GMs unterstützen", "decision": "Später" },
+    { "id": 14, "feature": "Berechtigungen für Bot-Befehle", "decision": "Später" }
   ],
   "constraints": [
     "Keine Secrets in GitHub, Chat oder Checkpoints.",
     "Keine dauerhafte Roh-Audio-Speicherung.",
     "Recap-Posting nur nach bewusster GM-Aktion.",
     "Normale Bedienung soll im Cockpit bzw. über Discord-Befehle möglich sein; keine Entwicklerkonsole als Standardweg.",
-    "Implementiert, statisch geprüft, lokal bestätigt und vollständig bestätigt strikt unterscheiden.",
+    "Implementiert, CI-validiert, lokal bestätigt und vollständig bestätigt strikt unterscheiden.",
     "Neue Discord-/Foundry-Runtime-Funktionen gelten bis zum gebündelten Nutzertest ausdrücklich als noch lokal zu prüfen."
   ]
 }
