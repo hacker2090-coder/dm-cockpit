@@ -12,6 +12,8 @@ import {
 } from "@discordjs/voice";
 
 const JOIN_TIMEOUT_MS = 20_000;
+const RECONNECT_BASE_MS = 1_000;
+const RECONNECT_MAX_ATTEMPTS = 5;
 
 function env(name) {
   return String(process.env[name] ?? "").trim();
@@ -48,6 +50,9 @@ export class DiscordVoiceController {
     this.boundConnections = new WeakSet();
     this.followQueue = Promise.resolve();
     this.participantRefreshTimer = null;
+    this.reconnectTimer = null;
+    this.reconnectAttempts = 0;
+    this.lastReconnectAt = null;
   }
 
   missingConfiguration() {
@@ -75,6 +80,12 @@ export class DiscordVoiceController {
       audioCaptureImplemented: true,
       participantTrackingImplemented: true,
       nicknameManagementImplemented: true,
+      reconnect: {
+        attempts: this.reconnectAttempts,
+        maxAttempts: RECONNECT_MAX_ATTEMPTS,
+        scheduled: Boolean(this.reconnectTimer),
+        lastReconnectAt: this.lastReconnectAt
+      },
       dave: {
         enabled: true,
         library: "@discordjs/voice",
@@ -100,6 +111,94 @@ export class DiscordVoiceController {
     if (this.debug && error?.stack) console.warn(error.stack);
     this.emitStatus();
     this.setCaptureState("error");
+  }
+
+  clearReconnectTimer() {
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+  }
+
+  resetReconnectState() {
+    this.clearReconnectTimer();
+    this.reconnectAttempts = 0;
+  }
+
+  scheduleReconnect(reason = "voice_disconnected") {
+    if (this.reconnectTimer || !this.channelId || !this.client || this.gatewayState !== "ready") return;
+    if (this.reconnectAttempts >= RECONNECT_MAX_ATTEMPTS) {
+      this.setError(new Error(`Voice-Reconnect nach ${RECONNECT_MAX_ATTEMPTS} Versuchen fehlgeschlagen.`));
+      return;
+    }
+
+    const delay = Math.min(RECONNECT_BASE_MS * (2 ** this.reconnectAttempts), 8_000);
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      void this.reconnectCurrentVoice(reason);
+    }, delay);
+    this.reconnectTimer.unref?.();
+    this.emitStatus();
+  }
+
+  async reconnectCurrentVoice(reason = "voice_disconnected") {
+    const channelId = this.channelId;
+    if (!channelId || !this.client || this.gatewayState !== "ready") return false;
+
+    this.reconnectAttempts += 1;
+    this.lastReconnectAt = new Date().toISOString();
+    this.voiceState = "reconnecting";
+    this.lastError = null;
+    this.emitStatus();
+    this.setCaptureState("joining");
+
+    try {
+      const guild = await this.client.guilds.fetch(this.guildId);
+      const channel = await guild.channels.fetch(channelId);
+      if (!channel?.isVoiceBased?.()) throw new Error(`Voice-Reconnect-Ziel ${channelId} ist kein Voice-Channel.`);
+
+      const me = guild.members.me ?? await guild.members.fetchMe();
+      const permissions = channel.permissionsFor(me);
+      if (!permissions?.has(PermissionsBitField.Flags.ViewChannel)) throw new Error(`Bot darf den Voice-Channel '${channel.name}' nicht sehen.`);
+      if (!permissions.has(PermissionsBitField.Flags.Connect)) throw new Error(`Bot darf dem Voice-Channel '${channel.name}' nicht beitreten.`);
+
+      let connection = this.connection ?? getVoiceConnection(this.guildId);
+      if (!connection || connection.state.status === VoiceConnectionStatus.Destroyed) {
+        connection = joinVoiceChannel({
+          channelId,
+          guildId: this.guildId,
+          adapterCreator: guild.voiceAdapterCreator,
+          selfDeaf: false,
+          selfMute: true,
+          daveEncryption: true,
+          debug: this.debug
+        });
+      } else {
+        connection.rejoin({
+          channelId,
+          selfDeaf: false,
+          selfMute: true
+        });
+      }
+
+      this.connection = connection;
+      this.bindConnection(connection);
+      await entersState(connection, VoiceConnectionStatus.Ready, JOIN_TIMEOUT_MS);
+      this.voiceState = "ready";
+      this.lastError = null;
+      this.resetReconnectState();
+      console.log(`[discord-voice] Voice-Reconnect erfolgreich (${reason}) → '${channel.name}' (${channelId}).`);
+      this.emitStatus();
+      await this.emitParticipants(channelId);
+      this.setCaptureState("paused");
+      return true;
+    } catch (error) {
+      this.lastError = errorText(error);
+      this.voiceState = "disconnected";
+      console.warn(`[discord-voice] Voice-Reconnect Versuch ${this.reconnectAttempts} fehlgeschlagen: ${this.lastError}`);
+      this.emitStatus();
+      this.setCaptureState("idle");
+      this.scheduleReconnect(reason);
+      return false;
+    }
   }
 
   async participantSnapshot(channelId = this.channelId) {
@@ -303,6 +402,7 @@ export class DiscordVoiceController {
       throw new Error(`Bot darf dem Voice-Channel '${channel.name}' nicht beitreten.`);
     }
 
+    this.clearReconnectTimer();
     const existing = getVoiceConnection(this.guildId);
     let connection = existing;
 
@@ -313,7 +413,7 @@ export class DiscordVoiceController {
     this.setCaptureState("joining");
 
     if (connection && connection.state.status !== VoiceConnectionStatus.Destroyed) {
-      if (connection.joinConfig.channelId !== channelId) {
+      if (connection.joinConfig.channelId !== channelId || connection.state.status !== VoiceConnectionStatus.Ready) {
         connection.rejoin({
           channelId,
           selfDeaf: false,
@@ -339,11 +439,11 @@ export class DiscordVoiceController {
     this.voiceState = "ready";
     this.channelId = channelId;
     this.lastError = null;
+    this.resetReconnectState();
     console.log(`[discord-voice] Folge GM in '${channel.name}' (${channelId}); DAVE aktiviert.`);
     this.emitStatus();
     await this.emitParticipants(channelId);
 
-    // Audio-Capture ist implementiert; der Receiver setzt den Status nach dem Anbinden auf listening.
     this.setCaptureState("paused");
   }
 
@@ -353,7 +453,9 @@ export class DiscordVoiceController {
 
     connection.on("error", error => {
       console.warn("[discord-voice] Voice-Verbindungsfehler:", errorText(error));
-      this.setError(error);
+      this.lastError = errorText(error);
+      this.emitStatus();
+      this.scheduleReconnect("connection_error");
     });
 
     connection.on("transitioned", transitionId => {
@@ -366,22 +468,26 @@ export class DiscordVoiceController {
       switch (newState.status) {
         case VoiceConnectionStatus.Signalling:
         case VoiceConnectionStatus.Connecting:
-          this.voiceState = "joining";
+          this.voiceState = this.reconnectAttempts ? "reconnecting" : "joining";
           this.setCaptureState("joining");
           break;
         case VoiceConnectionStatus.Ready:
           this.voiceState = "ready";
+          this.lastError = null;
+          this.resetReconnectState();
           this.setCaptureState("paused");
           this.queueParticipantRefresh();
           break;
         case VoiceConnectionStatus.Disconnected:
           this.voiceState = "disconnected";
           this.setCaptureState("idle");
+          this.scheduleReconnect("voice_disconnected");
           break;
         case VoiceConnectionStatus.Destroyed:
-          this.voiceState = "idle";
-          this.channelId = null;
+          this.voiceState = "disconnected";
+          this.connection = null;
           this.setCaptureState("idle");
+          if (this.channelId) this.scheduleReconnect("voice_destroyed");
           break;
         default:
           break;
@@ -395,6 +501,7 @@ export class DiscordVoiceController {
   }
 
   leaveVoice(reason = "Voice verlassen") {
+    this.clearReconnectTimer();
     const connection = this.connection ?? getVoiceConnection(this.guildId);
     this.connection = null;
 
@@ -412,6 +519,7 @@ export class DiscordVoiceController {
     this.channelId = null;
     this.voiceState = "idle";
     this.lastDaveTransitionId = null;
+    this.reconnectAttempts = 0;
     this.emitStatus();
     this.setCaptureState("idle");
     this.onParticipants({
