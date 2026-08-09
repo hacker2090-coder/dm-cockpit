@@ -1,0 +1,49 @@
+{
+  "checkpoint_type": "dm_cockpit_project_handoff",
+  "schema_version": "3.1",
+  "created_at": "2026-08-09T13:40:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "foundry_version": "0.9.21",
+  "companion_version": "0.5.0",
+  "status": {
+    "health": "confirmed",
+    "discord_voice_dave": "confirmed",
+    "speaker_separated_opus": "confirmed",
+    "deepgram_stt": "confirmed",
+    "foundry_live_transcript": "confirmed",
+    "candidate_persistence_broadcast": "test_prepared_not_yet_run"
+  },
+  "confirmed_0_5_0_regression": {
+    "health": {
+      "serviceVersion": "0.5.0",
+      "protocolVersion": "1.0",
+      "connectedClients": 1,
+      "npcCandidates": 0,
+      "sessionEventCandidates": 0
+    },
+    "voice_test": {
+      "speaker": "hacker 2090",
+      "packets": 344,
+      "bytes": 47775,
+      "duration_ms": 8220,
+      "text": "Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.",
+      "confidence": 0.961,
+      "visible_in_foundry_live_transcript": true
+    }
+  },
+  "new_test_infrastructure": {
+    "file": "companion/src/candidate-smoke-test.js",
+    "command": "npm.cmd run test:candidates",
+    "goal": "NPC-Memory- und Session-Event-Kandidat über Protocol v1 senden, Broadcast empfangen und SQLite-Persistenz über Health-Zähler bestätigen."
+  },
+  "working_rules": {
+    "selection_questions": "Auswahlfragen über HTML-Dateien mit kopierbarer Antwort führen.",
+    "checkpoints": "Regelmäßig JSON-Checkpoints erstellen und sowohl in ChatGPT-Bibliothek als auch GitHub sichern.",
+    "user_action_section": "Wenn etwas vom Nutzer benötigt wird, Abschnitt 'Ich möchte von dir' mit exakter Anweisung verwenden.",
+    "local_repo": "$HOME\\Desktop\\dm-cockpit",
+    "local_commands": "Bekannten Ablauf mit cd $HOME\\Desktop\\dm-cockpit, git pull, cd companion und npm.cmd verwenden."
+  },
+  "next_single_todo": "Bei laufendem Companion in zweiter PowerShell git pull und anschließend npm.cmd run test:candidates ausführen.",
+  "after_success": "Companion 0.5.0 vollständig als Baseline markieren und mit provider-neutraler AI/LLM-Extraktion zu Candidates beginnen; noch keine automatischen Actor-Writes."
+}
