@@ -40,8 +40,6 @@ Enthalten:
 - npm
 - DM Cockpit V0.9.21 oder neuer
 
-Der höhere Node-Mindeststand kommt von der aktuellen `@discordjs/voice`-Version mit DAVE-Unterstützung.
-
 ## Installation / Update
 
 ```powershell
@@ -54,7 +52,43 @@ npm.cmd run check
 
 Bei einer PowerShell ohne Skriptausführungsfreigabe `npm.cmd` statt `npm` verwenden.
 
-## Start ohne Discord
+## Lokale Discord-Konfiguration über `.env`
+
+Der Companion lädt beim Start automatisch eine vorhandene `companion/.env`. Diese Datei ist per `.gitignore` ausgeschlossen und darf nicht committed werden.
+
+Vorlage erzeugen:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+In `.env` eintragen:
+
+```text
+DISCORD_BOT_TOKEN=DEIN_TOKEN_NUR_LOKAL
+DISCORD_GUILD_ID=DEINE_SERVER_ID
+DISCORD_GM_USER_ID=DEINE_DISCORD_USER_ID
+DM_COCKPIT_DISCORD_DEBUG=0
+```
+
+**Den Bot-Token niemals in GitHub oder Chat-Nachrichten einfügen.**
+
+Alternativ können die Variablen weiterhin nur für ein PowerShell-Fenster gesetzt werden.
+
+## Discord-Bot vorbereiten
+
+Im Discord Developer Portal:
+
+1. Neue Application für DM Cockpit anlegen.
+2. Bot User für die Application anlegen.
+3. Bot-Token lokal in `.env` eintragen.
+4. Für den aktuellen Skeleton werden keine privilegierten Gateway-Intents benötigt.
+5. App als Guild-Install konfigurieren und mit Bot-Scope auf den Zielserver installieren.
+6. Dem Bot nur die für Voice nötigen Rechte geben: **Kanäle ansehen** und **Verbinden**. Administrator ist nicht nötig.
+7. Discord-Entwicklermodus aktivieren und Server-ID sowie eigene User-ID kopieren; beide lokal in `.env` eintragen.
+
+## Start
 
 ```powershell
 npm.cmd start
@@ -68,24 +102,13 @@ Ohne Discord-Konfiguration erscheint eine Meldung wie:
 
 Der WebSocket-/SQLite-Service läuft trotzdem normal weiter.
 
-## Discord Voice lokal konfigurieren
-
-Die Werte **nur lokal im PowerShell-Fenster setzen**. Den Bot-Token niemals in GitHub committen und nicht in Chat-Nachrichten einfügen.
-
-```powershell
-$env:DISCORD_BOT_TOKEN="DEIN_TOKEN_NUR_LOKAL"
-$env:DISCORD_GUILD_ID="DEINE_SERVER_ID"
-$env:DISCORD_GM_USER_ID="DEINE_DISCORD_USER_ID"
-npm.cmd start
-```
-
 Optional für ausführliche Voice-Debuglogs:
 
-```powershell
-$env:DM_COCKPIT_DISCORD_DEBUG="1"
+```text
+DM_COCKPIT_DISCORD_DEBUG=1
 ```
 
-### Erwartetes Verhalten
+### Erwartetes Verhalten beim Voice-Test
 
 1. Companion startet.
 2. Bot meldet sich bei Discord an.
