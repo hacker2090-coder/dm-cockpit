@@ -23,88 +23,115 @@ Bestätigte Kernfunktionen:
 
 Foundry bleibt auf **V0.9.21**. Der Companion wird unabhängig davon versioniert.
 
-## Companion – bestätigte Baseline 0.5.0
+## Companion – vollständig bestätigte Stufen
 
-Auf dem Nutzer-PC vollständig bestätigt:
+### 0.5.0
+
+Auf dem Nutzer-PC bestätigt:
 
 - Foundry ↔ WebSocket ↔ Companion ↔ SQLite
 - Discord Bot Login
 - DAVE/E2EE Voice
-- Auto-Join und Follow beim konfigurierten GM
+- Auto-Join/Follow beim konfigurierten GM
 - sprechergetrennter Discord-Opus-Empfang
 - keine dauerhafte Roh-Audio-Speicherung
 - Deepgram Nova-3 STT auf Deutsch
 - echter Discord → Deepgram → Protocol v1 → Foundry-Live-Transkript-Pfad
-- `npc.memory.candidate` Broadcast + SQLite-Persistenz
-- `session.event.candidate` Broadcast + SQLite-Persistenz
+- Candidate-Broadcast + SQLite-Persistenz
 
-Bestätigter 0.5.0-Regressionstest:
+### 0.6.0
 
-- 344 Opus-Pakete
-- 47.775 Bytes
-- 8.220 ms
-- Confidence **0.961**
-- erkannter Satz im Foundry-Live-Transkript sichtbar
-- Candidate-Zähler erfolgreich von 0 → 1 für beide Candidate-Typen
-
-## Companion 0.6.0 – auf GitHub, Nutzer-PC-Test ausstehend
-
-Neu:
+Auf dem Nutzer-PC vollständig bestätigt:
 
 - provider-neutraler `AiExtractionService`
-- sicherer Default `AI_PROVIDER=none`
-- deterministischer `MockAiExtractionProvider` für lokale Tests
-- finale `transcript.segment`-Nachrichten gehen über Protocol v1 in die Extraktionsschicht
-- NPC-Kontext pro Session + Latest-Context-Fallback, damit eine Auswahl vor Sessionstart nicht verloren geht
-- strukturierte Ausgabe als `npc.memory.candidate` und `session.event.candidate`
-- `sourceSegmentIds` als Herkunftsnachweis
-- Provider/Modell/Confidence/Status am Kandidaten
-- Deduplizierung per Segment-ID
-- Partials werden ignoriert
-- weiterhin **keine automatischen Actor-Schreibvorgänge**
+- deterministischer Mock-Provider
+- Final-only und Segment-Deduplizierung
+- NPC-Kontext + Latest-Context-Fallback
+- `npc.memory.candidate`
+- `session.event.candidate`
+- End-to-End Mock-Pipeline bis Protocol v1/Broadcast/SQLite
+- keine automatischen Actor-Writes
 
-Der isolierte AI-Test ist bereits erfolgreich gelaufen. Der End-to-End-Smoke-Test ist vorbereitet und syntaktisch geprüft.
+### 0.7.0
 
-### Lokaler 0.6.0-Test
+Auf dem Nutzer-PC bestätigt:
 
-```powershell
-Ctrl+C
-cd $HOME\Desktop\dm-cockpit
-git pull
-cd companion
-npm.cmd install
-npm.cmd run check
-npm.cmd run test:ai
+- Syntaxprüfung
+- isolierter OpenAI-Adaptertest mit Fake-HTTP-Response
+- Responses-API-Payload
+- `store=false`
+- Strict Structured Output
+- Actor-Zuordnung ausschließlich aus Foundry-Kontext
+
+Ein echter kostenpflichtiger OpenAI-Aufruf wurde bewusst **nicht** durchgeführt.
+
+## Companion 0.8.0 – kostenlose lokale KI vorbereitet
+
+Der bevorzugte nächste Pfad ist lokal über **Ollama + Qwen3** statt kostenpflichtiger LLM-API.
+
+Implementiert:
+
+- `AI_PROVIDER=ollama`
+- lokaler Ollama-Adapter
+- Standardmodell `qwen3:4b`
+- Standardendpoint `http://127.0.0.1:11434/api/chat`
+- Structured Outputs per JSON-Schema
+- `think=false`
+- Temperatur 0
+- Kontext 8192 Tokens
+- kein API-Key erforderlich
+- lokale/remote Endpoint-Erkennung
+- isolierter Fake-HTTP-Adaptertest
+- nicht-destruktiver Ollama-Preflight
+- provider-neutraler End-to-End-Pipeline-Test für Ollama
+
+Sicherer Standard bleibt:
+
+```text
+AI_PROVIDER=none
 ```
 
-Danach wird der Companion einmal temporär mit `AI_PROVIDER=mock` gestartet und in einer zweiten PowerShell ausgeführt:
+Lokale Aktivierung:
 
-```powershell
-npm.cmd run test:ai-pipeline
+```text
+AI_PROVIDER=ollama
+OLLAMA_AI_MODEL=qwen3:4b
+OLLAMA_AI_ENDPOINT=http://127.0.0.1:11434/api/chat
 ```
 
-Der Pipeline-Test prüft automatisch:
+Der echte Ollama/Qwen3-Lauf auf dem Nutzer-PC steht noch aus. Bis dahin gilt 0.8.0 als **implementiert und isoliert getestet, realer lokaler Modelltest ausstehend**.
 
-**npc.context + final transcript.segment → AiExtractionService → NPC-/Session-Kandidat → Protocol v1 → SQLite**
+## Kostenstrategie
 
-## Geplante nächste Stufen
+Ziel ist, laufende LLM-API-Kosten zu vermeiden:
 
-1. 0.6.0 lokal bestätigen
-2. realen AI/LLM-Provider auswählen und anbinden
+- LLM-Auswertung: bevorzugt lokal mit Ollama/Qwen3
+- OpenAI: nur optionaler Fallback
+- STT: aktuell weiterhin Deepgram; ein lokaler STT-Ersatz ist eine spätere Stufe
+
+Damit kann die KI-Extraktion selbst ohne API-Gebühren betrieben werden, sofern die lokale Modellqualität im realen Test ausreicht.
+
+## Nächste Stufen
+
+1. Companion 0.8.0 lokal mit Ollama/Qwen3 bestätigen
+2. Qwen3 4B gegen 8B an realistischen deutschen Session-Sätzen vergleichen
 3. Kandidaten-UI in Foundry mit Annehmen/Verwerfen
 4. Undo/Change-Record Runtime
 5. erst danach optionale automatische NPC-Memory-Übernahme
 6. durchsuchbares Transkript
 7. Session-Historie, Recap und Discord-Kurzfassung
+8. optional lokales STT und Skalierungs-/Performance-Hardening
 
 ## Datenschutz / Secrets
 
 - Discord Bot Token niemals in GitHub oder Chat speichern.
 - Deepgram API Key niemals in GitHub oder Chat speichern.
-- spätere AI/API Keys ebenfalls ausschließlich lokal halten.
+- OpenAI/API Keys ausschließlich lokal halten.
+- Ollama lokal benötigt für den Standardpfad keinen API-Key.
 - Secrets bleiben in `companion/.env`.
 - Roh-Audio wird nicht dauerhaft gespeichert.
 - `notice_only` ist nur eine technische Capture-Policy und keine rechtliche Einwilligung.
+- automatische Welt-/Actor-Änderungen erst nach Undo/Change-Record bzw. klarer GM-Bestätigung.
 
 ## Projekt-Checkpoint
 
@@ -115,8 +142,6 @@ Kanonischer Projektstand:
 Historische Snapshots:
 
 `checkpoints/`
-
-Aktueller Checkpoint: **Schema 3.5**.
 
 ## Installation / Updates
 
