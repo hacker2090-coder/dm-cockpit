@@ -74,6 +74,7 @@ export class DiscordVoiceController {
       selfMute: true,
       audioCaptureImplemented: true,
       participantTrackingImplemented: true,
+      nicknameManagementImplemented: true,
       dave: {
         enabled: true,
         library: "@discordjs/voice",
@@ -139,6 +140,50 @@ export class DiscordVoiceController {
       observedAt: new Date().toISOString(),
       participants
     };
+  }
+
+  async memberContext(discordUserId) {
+    const id = String(discordUserId ?? "").trim();
+    if (!this.client || this.gatewayState !== "ready") throw new Error("Discord Gateway ist nicht bereit.");
+    if (!this.guildId || !id) throw new Error("Guild- oder Discord-User-ID fehlt.");
+
+    const guild = await this.client.guilds.fetch(this.guildId);
+    const voiceMember = guild.voiceStates.cache.get(id)?.member ?? null;
+    const member = voiceMember ?? guild.members.cache.get(id) ?? await guild.members.fetch(id);
+    const me = guild.members.me ?? await guild.members.fetchMe();
+    return { guild, member, me };
+  }
+
+  async nicknameMemberState(discordUserId) {
+    const id = String(discordUserId ?? "").trim();
+    const { member, me } = await this.memberContext(id);
+    return {
+      guildId: this.guildId,
+      discordUserId: id,
+      displayName: member.user?.globalName ?? member.user?.username ?? member.displayName ?? id,
+      currentNickname: member.nickname ?? null,
+      isBot: Boolean(member.user?.bot),
+      manageable: Boolean(member.manageable),
+      botHasManageNicknames: Boolean(me.permissions?.has(PermissionsBitField.Flags.ManageNicknames))
+    };
+  }
+
+  async setServerNickname(discordUserId, nickname, reason = "DM Cockpit Session-Identität") {
+    const id = String(discordUserId ?? "").trim();
+    const { member, me } = await this.memberContext(id);
+    if (!me.permissions?.has(PermissionsBitField.Flags.ManageNicknames)) {
+      throw new Error("Bot hat keine Discord-Berechtigung 'Manage Nicknames'.");
+    }
+    if (!member.manageable) {
+      throw new Error("Discord-Mitglied kann wegen Rollen-/Eigentümer-Hierarchie nicht umbenannt werden.");
+    }
+
+    const normalizedNickname = nickname === null || nickname === undefined || String(nickname).trim() === ""
+      ? null
+      : String(nickname);
+    await member.setNickname(normalizedNickname, String(reason ?? "DM Cockpit Session-Identität").slice(0, 512));
+    this.queueParticipantRefresh();
+    return this.nicknameMemberState(id);
   }
 
   async emitParticipants(channelId = this.channelId) {
@@ -281,9 +326,7 @@ export class DiscordVoiceController {
         guildId: this.guildId,
         adapterCreator: guild.voiceAdapterCreator,
         selfDeaf: false,
-        selfMute: true,
-        daveEncryption: true,
-        debug: this.debug
+        selfMute: true
       });
     }
 
@@ -298,7 +341,6 @@ export class DiscordVoiceController {
     this.emitStatus();
     await this.emitParticipants(channelId);
 
-    // Audio-Capture ist implementiert; der Receiver setzt den Status nach dem Anbinden auf listening.
     this.setCaptureState("paused");
   }
 
