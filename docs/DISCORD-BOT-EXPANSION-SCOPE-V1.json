@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.7",
+  "schema_version": "1.8",
   "created_at": "2026-08-09T17:37:00+02:00",
   "updated_at": "2026-08-09T22:06:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
-  "branch": "session_control_commands_presence_diagnostics_reconnect",
+  "branch": "main",
   "scope_id": "discord-bot-expansion-v1",
-  "status": "in_progress",
+  "status": "in_progress_runtime_confirmation_pending",
   "source": "user_checklist_selection_plus_identity_refinement",
   "implementation_rule": {
     "yes": "in den geplanten Ausbau aufnehmen",
@@ -50,14 +50,6 @@
         "Versand-Audit persistiert Metadaten, aber keinen Nachrichtentext",
         "erfolgreiche Request-IDs sind idempotent gegen doppelte Reconnect-/Retry-Ausgaben"
       ],
-      "automated_validation": [
-        "Foundry-/Companion-JavaScript-Syntax",
-        "Protocol-/Scope-JSON",
-        "Identity-Mapping-Smoke",
-        "Identity-Profile-Smoke",
-        "Discord-Output-Smoke: Kanalliste, Persistenz, Recap, Request-Idempotenz, Aufnahmehinweis, Reload, Clear",
-        "sauberer Foundry-Paketbuild 0.9.29"
-      ],
       "runtime_pending": [
         "echte Discord-Textkanalliste in Foundry",
         "echten Zielkanal auswählen und nach Reload wiedersehen",
@@ -67,64 +59,60 @@
         "fehlende Senderechte / gelöschter Kanal im echten Discord",
         "kein doppelter automatischer Hinweis bei realem Reconnect"
       ]
+    },
+    {
+      "name": "session_control_commands_presence_diagnostics_reconnect",
+      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+      "foundry_version": "0.9.30",
+      "companion_version": "0.14.0",
+      "validated_build": "90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30",
+      "implemented": [
+        "manuelle logische Session-Steuerung getrennt vom bloßen Discord-Voice-Join",
+        "idempotenter Session-Start und Session-Stop",
+        "Discord Slash Command /dm status",
+        "Discord Slash Command /dm start",
+        "Discord Slash Command /dm stop",
+        "Discord Slash Command /dm recap",
+        "Slash-Commands auf die konfigurierte GM-Discord-User-ID begrenzt",
+        "Foundry-Session-Control-Bridge ebenfalls auf GM-Aktionen begrenzt",
+        "sichtbarer Bot-Presence-/Sessionstatus",
+        "diagnostic.state für verständliche Gateway-/Voice-/Output-/Command-Fehlerzustände",
+        "robuster Voice-Reconnect mit begrenztem Backoff",
+        "Wiederherstellung derselben logischen Session nach Voice-Reconnect",
+        "Intentional-Leave-Sperre vor Voice destroy, sodass bewusster Leave keinen Reconnect erzeugt",
+        "Audio-Receiver nur bei aktiver Session plus Voice-ready",
+        "späte STT-Ergebnisse einer beendeten oder ersetzten Session werden verworfen",
+        "kurzlebige Audiosegment-Deduplizierung vor STT",
+        "Foundry-Bridge für Session-Control-Zustand und /dm recap über den bestehenden bestätigten Recap-/Discord-Ausgabepfad"
+      ],
+      "automated_validation": [
+        "Foundry-/Companion-JavaScript-Syntax",
+        "Protocol-/Scope-JSON",
+        "Identity-Mapping-Smoke",
+        "Identity-Profile-Smoke",
+        "Discord-Output-Smoke",
+        "Session-Control-Smoke: Start/Stop-Idempotenz, Voice-Verlust, gleiche sessionId nach Reconnect",
+        "Discord-Command-Smoke: Guild-Registrierung, Routing, GM-Guard, Presence, Listener-Cleanup",
+        "Voice-Reconnect-Smoke: intentional leave ohne Retry, unerwartetes Destroyed mit Reconnect",
+        "sauberer Foundry-Paketbuild 0.9.30"
+      ]
     }
   ],
-  "current_implementation_block": {
-    "name": "session_control_commands_presence_diagnostics_reconnect",
-    "status": "implemented_on_staging_pre_merge_review_ci_pending",
-    "staging_branch": "session_control_commands_presence_diagnostics_reconnect",
-    "target_foundry_version": "0.9.30",
-    "target_companion_version": "0.14.0",
-    "implemented": [
-      "manuelle logische Session-Steuerung getrennt vom bloßen Discord-Voice-Join",
-      "idempotenter Session-Start und Session-Stop",
-      "Discord Slash Command /dm status",
-      "Discord Slash Command /dm start",
-      "Discord Slash Command /dm stop",
-      "Discord Slash Command /dm recap",
-      "Slash-Commands auf die konfigurierte GM-Discord-User-ID begrenzt",
-      "sichtbarer Bot-Presence-/Sessionstatus",
-      "diagnostic.state für verständliche Gateway-/Voice-/Output-/Command-Fehlerzustände",
-      "robuster Voice-Reconnect mit begrenztem Backoff",
-      "Wiederherstellung derselben logischen Session nach Voice-Reconnect",
-      "Intentional-Leave-Sperre vor Voice destroy, sodass bewusster Leave keinen Reconnect erzeugt",
-      "Audio-Receiver nur bei aktiver Session plus Voice-ready",
-      "späte STT-Ergebnisse einer beendeten oder ersetzten Session werden verworfen",
-      "kurzlebige Audiosegment-Deduplizierung vor STT",
-      "Foundry-Bridge für Session-Control-Zustand und /dm recap über den bestehenden bestätigten Recap-/Discord-Ausgabepfad",
-      "Foundry module.json lädt die neue Discord-Command-Bridge",
-      "Companion/Server/Publisher melden konsistent Version 0.14.0 bzw. die neuen Protokollfeatures"
-    ],
-    "automated_tests_authored": [
-      "session-control-smoke-test.js: Start/Stop-Idempotenz, Voice-Verlust, gleiche sessionId nach Reconnect",
-      "discord-command-controller-smoke-test.js: Registrierung, Status, GM-Guard, Start, Presence, Listener-Cleanup",
-      "discord-voice-reconnect-smoke-test.js: absichtlicher Leave ohne Reconnect versus unerwartetes Destroyed mit Reconnect",
-      "bestehender discord-output-smoke-test.js bleibt Teil des Release-Workflows"
-    ],
-    "validation_status": {
-      "implemented": true,
-      "automated_tested": false,
-      "ci_validated": false,
-      "local_confirmed": false,
-      "fully_confirmed": false,
-      "note": "Die neuen Tests sind versioniert und im Main-Release-Workflow eingetragen, wurden für den Staging-Stand aber noch nicht durch GitHub Actions ausgeführt."
-    },
-    "constraints": [
-      "Voice-Join allein startet keine manuell gesteuerte Session.",
-      "Recap-Posting bleibt eine bewusste GM-Aktion.",
-      "Discord User ID bleibt Source of Truth für die sprechende Person.",
-      "Foundry-Charakterzuordnung kommt ausschließlich vom GM.",
-      "Reconnect darf keine neue logische Session erzeugen, wenn eine bestehende Session wiederhergestellt wird.",
-      "Reconnect darf keinen bereits erfolgreich gesendeten Aufnahmehinweis erneut automatisch senden.",
-      "Reconnect darf bereits verarbeitete Transkriptsegmente nicht duplizieren.",
-      "Absichtliches Voice-Verlassen darf keinen Reconnect auf den alten Kanal auslösen.",
-      "keine dauerhafte Roh-Audio-Speicherung"
-    ],
-    "remaining_before_main": [
-      "vollständigen Staging-Diff gegen aktuellen main reviewen",
-      "Versions-, Manifest-, Protokoll- und Dokumentkonsistenz prüfen",
-      "nur bei sauberem Review main per Fast-Forward aktualisieren",
-      "Main-CI inklusive neuer Smoke-Tests und Paketbuild 0.9.30 prüfen"
+  "current_implementation_block": null,
+  "runtime_confirmation_pending": {
+    "status": "external_runtime_test_required_before_full_confirmation",
+    "recommended_bundle": "discord_interventions_and_reconnect",
+    "covers": [
+      "echte Discord-Kanalliste und Zielkanal-Persistenz in Foundry",
+      "realer automatischer Aufnahme-/Transkriptionshinweis",
+      "Discord Slash Commands /dm status, start, stop, recap",
+      "sichtbare Presence-/Statuswechsel",
+      "echter Voice-Disconnect und automatischer Reconnect",
+      "gleiche logische sessionId nach Reconnect",
+      "kein doppelter automatischer Aufnahmehinweis",
+      "keine doppelten Transkriptsegmente",
+      "bewusstes Recap-Posting",
+      "Fehlerfall fehlende Senderechte oder gelöschter Zielkanal"
     ]
   },
   "identity_semantics": {
