@@ -157,6 +157,7 @@ Der Release-Workflow:
 
 - baut ausschließlich aus versionierten Repository-Quellen
 - validiert Manifest-referenzierte Skripte/Styles und alle Foundry-JavaScript-Dateien
+- installiert die Companion-Abhängigkeiten vor den Companion-Smoke-Tests
 - validiert Companion-JavaScript sowie Protocol-/Scope-JSON
 - führt Identity-, Identity-Profile- und Discord-Output-Smoke-Tests aus
 - serialisiert `main`-Runs per GitHub-Actions-`concurrency`
