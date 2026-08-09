@@ -61,6 +61,8 @@ export class CompanionPublisher {
           "speaker.upserted",
           "voice.participants",
           "player.character.mapping.result",
+          "identity.profile.state",
+          "nickname.status",
           "session.started",
           "session.ended",
           "capture.status",
