@@ -1,0 +1,31 @@
+{
+  "checkpoint_type": "dm_cockpit_historical_checkpoint",
+  "created_at": "2026-08-09T11:58:00+02:00",
+  "foundry_version": "0.9.21",
+  "foundry_status": "functionally_confirmed",
+  "companion": {
+    "confirmed_baseline_version": "0.1.0",
+    "baseline_test": {
+      "websocket": true,
+      "sqlite": true,
+      "foundry_roundtrip": true,
+      "health_stats": {
+        "sessions": 1,
+        "speakers": 1,
+        "segments": 1,
+        "npcContexts": 1
+      }
+    },
+    "current_version": "0.2.0",
+    "voice_skeleton": {
+      "implemented": true,
+      "dave_enabled": true,
+      "auto_follow_configured_gm": true,
+      "audio_capture": false,
+      "real_discord_test_pending": true
+    }
+  },
+  "next_external_test": "Configure a Discord bot locally and verify login, DAVE voice join, follow on channel move, and leave when GM leaves.",
+  "secret_rule": "Never put the Discord bot token in chat or GitHub.",
+  "next_after_test": "Implement per-speaker Discord audio receive/buffering without choosing STT provider yet."
+}
