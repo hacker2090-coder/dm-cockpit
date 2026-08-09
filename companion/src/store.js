@@ -76,6 +76,44 @@ export class CompanionStore {
       CREATE INDEX IF NOT EXISTS idx_npc_context_session_time
         ON npc_context_events(session_id, received_at);
 
+      CREATE TABLE IF NOT EXISTS npc_memory_candidates (
+        candidate_id TEXT PRIMARY KEY,
+        session_id TEXT,
+        actor_id TEXT NOT NULL,
+        actor_uuid TEXT,
+        text TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        source_segment_ids_json TEXT NOT NULL,
+        confidence REAL,
+        provider TEXT,
+        model TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL,
+        received_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_npc_candidate_session_time
+        ON npc_memory_candidates(session_id, created_at);
+      CREATE INDEX IF NOT EXISTS idx_npc_candidate_actor_time
+        ON npc_memory_candidates(actor_id, created_at);
+
+      CREATE TABLE IF NOT EXISTS session_event_candidates (
+        candidate_id TEXT PRIMARY KEY,
+        session_id TEXT,
+        text TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        source_segment_ids_json TEXT NOT NULL,
+        confidence REAL,
+        provider TEXT,
+        model TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT NOT NULL,
+        received_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_session_event_candidate_session_time
+        ON session_event_candidates(session_id, created_at);
+
       CREATE TABLE IF NOT EXISTS change_records (
         change_id TEXT PRIMARY KEY,
         actor_id TEXT NOT NULL,
@@ -197,12 +235,66 @@ export class CompanionStore {
     );
   }
 
+  addNpcMemoryCandidate(sessionId, payload, timestamp = new Date().toISOString()) {
+    if (!payload?.candidateId || !payload?.actorId || !payload?.text || !payload?.kind) return false;
+    const sourceIds = Array.isArray(payload.sourceSegmentIds) ? payload.sourceSegmentIds.map(String) : [];
+    if (!sourceIds.length) return false;
+    this.db.prepare(`
+      INSERT OR IGNORE INTO npc_memory_candidates (
+        candidate_id, session_id, actor_id, actor_uuid, text, kind,
+        source_segment_ids_json, confidence, provider, model, status, created_at, received_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      String(payload.candidateId),
+      sessionId ?? null,
+      String(payload.actorId),
+      payload.actorUuid ?? null,
+      String(payload.text),
+      String(payload.kind),
+      JSON.stringify(sourceIds),
+      typeof payload.confidence === "number" ? payload.confidence : null,
+      payload.provider ?? null,
+      payload.model ?? null,
+      String(payload.status ?? "pending"),
+      String(payload.createdAt ?? timestamp),
+      timestamp
+    );
+    return true;
+  }
+
+  addSessionEventCandidate(sessionId, payload, timestamp = new Date().toISOString()) {
+    if (!payload?.candidateId || !payload?.text || !payload?.kind) return false;
+    const sourceIds = Array.isArray(payload.sourceSegmentIds) ? payload.sourceSegmentIds.map(String) : [];
+    if (!sourceIds.length) return false;
+    this.db.prepare(`
+      INSERT OR IGNORE INTO session_event_candidates (
+        candidate_id, session_id, text, kind, source_segment_ids_json,
+        confidence, provider, model, status, created_at, received_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      String(payload.candidateId),
+      sessionId ?? null,
+      String(payload.text),
+      String(payload.kind),
+      JSON.stringify(sourceIds),
+      typeof payload.confidence === "number" ? payload.confidence : null,
+      payload.provider ?? null,
+      payload.model ?? null,
+      String(payload.status ?? "pending"),
+      String(payload.createdAt ?? timestamp),
+      timestamp
+    );
+    return true;
+  }
+
   stats() {
     const sessions = this.db.prepare("SELECT COUNT(*) AS count FROM sessions").get().count;
     const speakers = this.db.prepare("SELECT COUNT(*) AS count FROM speakers").get().count;
     const segments = this.db.prepare("SELECT COUNT(*) AS count FROM transcript_segments").get().count;
     const npcContexts = this.db.prepare("SELECT COUNT(*) AS count FROM npc_context_events").get().count;
-    return { sessions, speakers, segments, npcContexts };
+    const npcCandidates = this.db.prepare("SELECT COUNT(*) AS count FROM npc_memory_candidates").get().count;
+    const sessionEventCandidates = this.db.prepare("SELECT COUNT(*) AS count FROM session_event_candidates").get().count;
+    return { sessions, speakers, segments, npcContexts, npcCandidates, sessionEventCandidates };
   }
 
   close() {
