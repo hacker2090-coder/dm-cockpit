@@ -1,17 +1,57 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "created_at": "2026-08-09T17:37:00+02:00",
+  "updated_at": "2026-08-09T17:58:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
   "scope_id": "discord-bot-expansion-v1",
-  "status": "selected_not_implemented",
-  "source": "user_checklist_selection",
+  "status": "in_progress",
+  "source": "user_checklist_selection_plus_identity_refinement",
   "implementation_rule": {
     "yes": "in den geplanten Ausbau aufnehmen",
     "later": "dokumentieren, aber nicht im aktuellen Ausbau umsetzen",
     "no": "nicht umsetzen",
-    "do_not_start_without_explicit_work_order": true
+    "autonomous_work_authorized": true,
+    "user_tests": "Nur an echten lokalen/externen Runtime-Grenzen und gebündelt anfordern."
+  },
+  "current_implementation_block": {
+    "name": "discord_identity_core",
+    "status": "started",
+    "order": [
+      "Protocol und Datenmodell erweitern",
+      "Teilnehmer des relevanten Discord-Voice-Channels bereitstellen",
+      "persistente Foundry-Welt-Zuordnung Discord-Mitglied -> Spielercharakter",
+      "Transkriptsegmente strukturiert um Spieler-/Charakteridentität ergänzen",
+      "dieselbe bestätigte Identität an die KI-Extraktion weiterreichen"
+    ],
+    "explicitly_not_in_this_block": [
+      "Discord-Nicknames verändern",
+      "Slash-Commands",
+      "Recap posten",
+      "mehrere GMs",
+      "Befehlsberechtigungen"
+    ]
+  },
+  "identity_semantics": {
+    "human_speaker_source_of_truth": "Discord User ID aus der sprechergetrennten Voice-Audiospur.",
+    "character_source_of_truth": "Ausschließlich die vom GM im Foundry-Cockpit bestätigte Zuordnung zu einem vorhandenen Foundry-Actor.",
+    "ai_rule": "Die KI darf niemals selbst eine Actor-ID oder Spieler-Charakter-Zuordnung erraten oder erzeugen.",
+    "transcript_rule": "Neue Transkriptsegmente behalten die Discord-Sprecheridentität und tragen zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakterzuordnung.",
+    "ic_ooc_rule": "Die Zuordnung bedeutet nicht automatisch, dass jede Aussage in-character gesprochen wurde. Eine IC/OOC-Erkennung ist nicht Bestandteil dieses V1-Kerns.",
+    "mapping_scope": "Zuordnungen werden mindestens pro Foundry-Welt persistent geführt; spätere Kampagnen-/Sessionprofile dürfen darauf aufbauen."
+  },
+  "future_session_identity_profile": {
+    "status": "planned_after_identity_core",
+    "behavior": [
+      "GM wählt bzw. aktiviert eine Kampagne, einen One-Shot oder ein Sessionprofil.",
+      "Gespeicherte Discord-Mitglied-zu-Charakter-Zuordnungen werden für dieses Profil geladen.",
+      "Erst nach ausdrücklicher Session-Aktivierung darf eine spätere Nickname-Automatik Namen verändern.",
+      "Beim Rejoin in den relevanten Call kann der gespeicherte Session-Nickname erneut angewendet werden.",
+      "Beim Verlassen des relevanten Calls oder Sessionende soll der vorherige Server-Nickname wiederhergestellt werden.",
+      "Für Crash-Recovery soll der vorherige Nickname vor Änderungen persistent gesichert werden."
+    ],
+    "nickname_target": "Nur serverbezogener Discord-Nickname, niemals globaler Discord-Benutzername."
   },
   "selected": [
     {
@@ -60,7 +100,7 @@
       "id": 9,
       "feature": "Discord-Spieler mit Foundry-Charakteren verknüpfen",
       "decision": "Ja",
-      "details": "Zuordnung von Discord-Mitgliedern zu Foundry-Spielercharakteren im Cockpit."
+      "details": "Zuordnung von Discord-Mitgliedern zu Foundry-Spielercharakteren im Cockpit; diese Zuordnung ist auch die strukturierte Sprecheridentität für Transkript und KI."
     },
     {
       "id": 10,
@@ -94,7 +134,9 @@
         "Bot erkennt, welche Discord-Mitglieder im relevanten Voice-Call sitzen.",
         "Cockpit zeigt die verfügbaren Foundry-Spielercharaktere.",
         "GM legt im Cockpit fest, welches Discord-Mitglied zu welchem Foundry-Spielercharakter gehört.",
-        "Nach bestätigter Zuordnung darf der Bot den Server-Nickname des Discord-Mitglieds so anpassen, dass der Charaktername zuerst steht.",
+        "Die bestätigte Zuordnung wird für Sprecherattribution in Transkript und KI genutzt.",
+        "In einem späteren Block darf der Bot nach ausdrücklicher Session-Aktivierung den Server-Nickname so anpassen, dass der Charaktername zuerst steht.",
+        "Beim Verlassen des Calls oder Sessionende soll der ursprüngliche Server-Nickname automatisch wiederhergestellt werden.",
         "Gemeint ist der serverbezogene Nickname, nicht der globale Discord-Benutzername."
       ]
     }
@@ -116,6 +158,7 @@
     "Keine dauerhafte Roh-Audio-Speicherung.",
     "Recap-Posting nur nach bewusster GM-Aktion.",
     "Normale Bedienung soll im Cockpit bzw. über Discord-Befehle möglich sein; keine Entwicklerkonsole als Standardweg.",
-    "Dieser Scope ist eine Auswahlentscheidung und noch keine Implementierungsbestätigung."
+    "Implementiert, statisch geprüft, lokal bestätigt und vollständig bestätigt strikt unterscheiden.",
+    "Neue Discord-/Foundry-Runtime-Funktionen gelten bis zum gebündelten Nutzertest ausdrücklich als noch lokal zu prüfen."
   ]
 }
