@@ -1,9 +1,8 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "1.0",
-  "created_at": "2026-08-09T02:12:00+02:00",
+  "schema_version": "1.1",
+  "created_at": "2026-08-09T11:11:00+02:00",
   "language": "de",
-  "purpose": "Maschinenlesbarer Projekt-Checkpoint für einen neuen Chat oder eine andere KI, damit ohne erneute Grundklärung am aktuellen DM-Cockpit-Projekt weitergearbeitet werden kann.",
   "project": {
     "name": "DM Cockpit",
     "type": "Foundry VTT Modul",
@@ -11,21 +10,15 @@
     "module_id": "dm-cockpit",
     "repository": "hacker2090-coder/dm-cockpit",
     "default_branch": "main",
-    "canonical_source": "GitHub main + öffentliche dm-cockpit.zip",
     "current_version": "0.9.18",
     "current_version_status": "functionally_confirmed_in_foundry",
-    "update_system": {
-      "status": "confirmed_working",
-      "manifest_url": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/module.json",
-      "download_url": "https://raw.githubusercontent.com/hacker2090-coder/dm-cockpit/main/dm-cockpit.zip",
-      "build": "GitHub Actions baut die Installations-ZIP automatisch."
-    }
+    "runtime_changed_by_this_checkpoint": false
   },
   "working_rules": {
-    "autonomy": "Ab diesem Projektstand möglichst autonom weiterarbeiten. Nur nachfragen, wenn eine Entscheidung nicht sinnvoll aus diesem Checkpoint und dem vorhandenen Projektstand ableitbar ist.",
+    "autonomy": "Möglichst autonom weiterarbeiten und nur bei nicht sinnvoll ableitbaren Entscheidungen nachfragen.",
     "one_todo_at_a_time": true,
-    "github_sync_rule": "Wenn am DM-Cockpit-Projekt ein Arbeitsschritt abgeschlossen wird, GitHub, Manifest, Installationspaket und Projektstatus ebenfalls aktualisieren.",
-    "scope_note": "Diese Arbeitsregel gehört nur zum Projekt/Chat DM Cockpit und ist keine allgemeine Nutzerpräferenz."
+    "github_sync_rule": "Abgeschlossene Projekt-Arbeitsschritte auf GitHub dokumentieren; Runtime-/Release-Änderungen zusätzlich mit Manifest, Installationspaket und Projektstatus synchronisieren.",
+    "checkpoint_rule": "In sinnvollen Abständen einen aktuellen Checkpoint auf GitHub und zusätzlich als JSON-Datei im Chat bereitstellen."
   },
   "confirmed_features": [
     "LIVE-Dashboard",
@@ -42,133 +35,81 @@
     "Actor-basiertes NPC Memory",
     "Foundry/GitHub Update-System"
   ],
-  "current_npc_system": {
-    "version": "0.9.18",
-    "status": "confirmed_working",
-    "npc_quick_generator": {
-      "fields": ["Name", "Rolle", "Auftreten", "Persönlichkeit", "Motivation", "Eigenheit", "Geheimnis"],
-      "last_npc_persists_for_gm": true,
-      "create_actor_button": true,
-      "create_actor_behavior": [
-        "Erzeugter Schnell-NPC kann mit 'Als Actor anlegen' als echter World Actor erstellt werden.",
-        "Der Actor erscheint im Foundry Actor-Tab.",
-        "Actor-Typ 'npc' wird bevorzugt, sonst wird ein gültiger registrierter Fallback verwendet.",
-        "Foundrys generisches Actor-Standardbild wird für Actor und Prototype Token verwendet.",
-        "Generator-Daten werden als dm-cockpit Actor-Flag gespeichert."
-      ]
+  "discord_audio_ai": {
+    "status": "architecture_contract_v1_defined_not_runtime_implemented",
+    "completed_todo": "Datenmodell und API-Vertrag v1 für Discord Audio & KI definieren",
+    "files": {
+      "contract": "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
+      "schema": "schemas/discord-audio-ai-v1.schema.json"
     },
-    "npc_memory": {
-      "own_cockpit_section": true,
-      "uses_world_actors": true,
-      "actor_source": "Foundry Actor-Tab / game.actors",
-      "actor_search": ["Name", "Actor-Typ"],
-      "actor_open_button": true,
-      "memory_storage": "Direkt am ausgewählten Actor als dm-cockpit Flag.",
-      "memory_entry_fields": ["Text", "Zeitstempel"],
-      "memory_features": [
-        "Einträge hinzufügen",
-        "neueste Einträge oben",
-        "Einträge einzeln löschen",
-        "Schnellgenerator-Daten bei entsprechenden Actors anzeigen",
-        "neu erzeugter Schnell-NPC wird automatisch im NPC Memory ausgewählt"
-      ]
-    }
-  },
-  "discord_audio_ai_extension": {
-    "status": "concept_direction_selected_not_yet_implemented",
-    "goal": "Discord-Voice-Call mithören, transkribieren, relevante Informationen automatisch erkennen und in DM Cockpit/NPC Memory/Session-Historie übernehmen; danach automatische Session-Recaps erzeugen.",
-    "selected_architecture": {
-      "speech_and_ai": "Cloud",
-      "bot_join_behavior": "Automatisch beim GM",
-      "speaker_processing": "Discord-Nutzer getrennt",
-      "npc_assignment": "Beides: aktiver NPC im Cockpit + ausgewählter Foundry-Token",
-      "npc_memory_detection_scope": "Alles Relevante",
-      "general_session_detection_scope": "Alles Wichtige",
-      "storage_behavior": "Direkt speichern",
-      "live_transcript": "Ja, kompakt im Cockpit",
-      "post_session_output": "Recap + Discord-Kurzfassung",
-      "audio_retention": "Manuell entscheiden",
-      "transcript_retention": "Dauerhaft durchsuchbar",
-      "target_scope": "Solide V1"
-    },
-    "interpretation_of_selected_scope": {
-      "npc_information_to_detect": [
-        "Versprechen",
-        "wichtige Aussagen",
-        "Wissen, das NPCs besitzen oder neu erfahren",
-        "Handlungen",
-        "Beziehungen",
-        "Lügen bzw. als solche markierte Aussagen",
-        "Fristen",
-        "offene Konsequenzen"
+    "protocol_version": "1.0",
+    "architecture": {
+      "foundry_and_discord_host": "same_pc_currently",
+      "companion_service": "separate_process_between_discord_voice_stt_ai_sqlite_and_foundry",
+      "transport_local": "WebSocket on loopback, configurable port",
+      "transport_remote_future": "WSS plus authentication",
+      "provider_strategy": "STT and AI provider neutral adapters",
+      "speaker_identity": "Discord User ID",
+      "transcript_storage": "local SQLite",
+      "raw_audio_retention": "temporary until successful transcription then delete",
+      "latency_target": "5-15 seconds",
+      "participant_target": "more than 10; protocol has no hard participant cap",
+      "npc_context_priority": [
+        "explicit active NPC in DM Cockpit",
+        "selected Foundry token",
+        "none"
       ],
-      "session_information_to_detect": [
-        "Spielerentscheidungen",
-        "Quests/Aufträge",
-        "Loot/Belohnungen",
-        "offene Fragen",
-        "Kämpfe",
-        "wichtige Session-Ereignisse"
-      ],
-      "outputs": [
-        "Live-Transkript im DM Cockpit",
-        "automatisch aktualisierte NPC Memories",
-        "dauerhaft durchsuchbares Transkript",
-        "Session-Recap",
-        "kurze Discord-Zusammenfassung"
-      ]
+      "direct_ai_save": true,
+      "undo_required": true
     },
-    "recommended_guardrail_even_with_direct_save": {
-      "enabled_recommendation": true,
-      "feature": "Undo/Änderungsverlauf",
-      "reason": "Da KI-Ergebnisse direkt gespeichert werden sollen, müssen Fehlzuordnungen und falsche Extraktionen schnell rückgängig gemacht werden können."
+    "user_decisions": {
+      "bot_hosting": "open",
+      "auto_join": "follow configured GM voice channel automatically",
+      "cloud_ai": "open_compare_providers",
+      "capture_policy_preference": "notice_only",
+      "foundry_test_world": "not_created_needs_short_instructions"
     },
-    "legal_note_germany": {
-      "summary": "Audioverarbeitung nicht heimlich durchführen. Vor Aufnahme/Verarbeitung sollen alle Beteiligten informiert sein und zustimmen.",
-      "implementation_consequence": "Bot/Workflow sollte einen klaren Aufnahme-/Verarbeitungsstatus und einen Einwilligungsprozess besitzen."
-    },
-    "technical_components_needed": [
-      "Discord Voice Bot mit aktueller Discord Voice/DAVE-Unterstützung",
-      "Cloud Speech-to-Text",
-      "Cloud-KI für strukturierte Extraktion und Recap",
-      "Zwischendienst/API zwischen Discord-Bot und Foundry",
-      "Foundry-Erweiterung für Live-Transkript und aktiven NPC",
-      "Persistente Speicherung/Indexierung für dauerhaft durchsuchbare Transkripte",
-      "Session-Historie bzw. Event-Datenmodell",
-      "Undo/Änderungsverlauf für automatisch gespeicherte KI-Ergebnisse"
-    ]
-  },
-  "not_yet_implemented": [
-    "Discord Voice Bot für das DM Cockpit",
-    "Audioaufnahme/-verarbeitung",
-    "Speech-to-Text",
-    "Live-Transkript",
-    "automatische KI-Extraktion aus Sprache",
-    "automatische NPC-Zuordnung anhand Cockpit/Token",
-    "automatische Session-Historie aus Sprache",
-    "automatischer Session-Recap aus Transkript",
-    "Discord-Kurzfassung",
-    "dauerhaft durchsuchbares Transkript-Archiv",
-    "Undo/Änderungsverlauf für KI-Aktionen"
-  ],
-  "next_recommended_step": {
-    "task": "Architektur und MVP-Schnittstellen für Discord Audio & KI definieren",
-    "do_not_start_with": "Komplette KI-Automatisierung auf einmal.",
-    "recommended_first_vertical_slice": [
-      "Discord-Bot joint automatisch beim GM.",
-      "Sprecher werden getrennt verarbeitet.",
-      "Cloud-STT liefert Transkriptsegmente mit Sprecher + Zeitstempel.",
-      "Segmente werden an DM Cockpit übertragen.",
-      "Cockpit zeigt kompaktes Live-Transkript.",
-      "Aktiver NPC wird über Cockpit oder Token bestimmt.",
-      "KI extrahiert zunächst NPC-Memory-Einträge.",
-      "Direktes Speichern plus Undo/Änderungsverlauf."
+    "capture_policy_note": "notice_only ist nur eine technische Workflow-Einstellung und wird nicht als automatische rechtliche Freigabe interpretiert.",
+    "defined_message_types": [
+      "hello",
+      "hello.ack",
+      "health",
+      "session.started",
+      "session.ended",
+      "speaker.upserted",
+      "capture.status",
+      "transcript.segment",
+      "npc.context",
+      "npc.memory.candidate",
+      "npc.memory.applied",
+      "change.undo.request",
+      "change.undo.result",
+      "error"
     ],
-    "after_that": [
-      "Spielerentscheidungen/Quests/Kämpfe erweitern.",
-      "dauerhafte Transkript-Suche hinzufügen.",
-      "Session-Recap und Discord-Kurzfassung erzeugen."
+    "not_yet_implemented": [
+      "Foundry Live-Transkript UI/Transport Client",
+      "Discord Voice Bot",
+      "DAVE/E2EE Voice integration",
+      "Speech-to-Text Provider",
+      "SQLite runtime persistence",
+      "AI extraction",
+      "automatic NPC-memory persistence",
+      "Undo runtime",
+      "transcript search",
+      "session recap",
+      "Discord short summary"
     ]
   },
-  "handoff_instruction_for_next_ai": "Behandle diesen JSON-Checkpoint als aktuellen Projektstand. V0.9.18 ist in Foundry bestätigt. Die Discord-Audio/KI-Funktion ist bislang nur konzeptionell festgelegt und noch nicht implementiert. Keine bereits bestätigten DM-Cockpit-Funktionen unnötig umbauen. Neue Funktionen vorzugsweise modular ergänzen. Bei tatsächlichen Projektänderungen GitHub und Projektstatus synchron halten."
+  "next_single_todo": {
+    "task": "Foundry Live-Transkript V1 als Mock/Transport-Client implementieren",
+    "scope": [
+      "simulierte transcript.segment Nachrichten verarbeiten",
+      "capture.status anzeigen",
+      "npc.context aus Foundry bereitstellen",
+      "noch kein echter Discord Voice Bot",
+      "noch kein kostenpflichtiger Cloud Provider"
+    ],
+    "test_prerequisite": "Kurze Anleitung zum Anlegen einer separaten Foundry-V14-Testwelt bereitstellen, bevor Runtime-Tests nötig werden."
+  },
+  "handoff_instruction_for_next_ai": "Behandle diesen Checkpoint als aktuellen Stand. Der API-/Datenvertrag v1 ist abgeschlossen und auf GitHub dokumentiert. Die Modulversion bleibt 0.9.18, weil noch kein Runtime-Code geändert wurde. Als nächstes ausschließlich das Foundry Live-Transkript V1 als Mock/Transport-Client umsetzen. Danach GitHub synchronisieren und bei sinnvoller Etappe erneut einen JSON-Checkpoint erzeugen."
 }
