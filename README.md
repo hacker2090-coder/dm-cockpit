@@ -89,7 +89,7 @@ CI-validierter Paketbuild dieses Meilensteins:
 
 ## 0.9.28 / Companion 0.12.0 – Session-/Kampagnen-Identität
 
-Status vor dem echten Nutzertest: **implementiert, isolierter Companion-Smoke-Test bestanden; finaler Main-CI-/Paketbuild wird vor dem Checkpoint abgewartet.**
+Status vor dem echten Nutzertest: **implementiert und isoliert automatisiert geprüft. Der kanonische Main-/CI-Stand steht immer in `PROJECT-CHECKPOINT.json`.**
 
 Neu:
 
@@ -99,6 +99,7 @@ Neu:
 - Es kann immer nur ein Identitätsprofil aktiv sein.
 - **Nur ein ausdrücklich aktiviertes Profil darf Discord-Server-Nicknames verändern.**
 - Session-Nickname wird mit Charaktername zuerst gebildet, standardmäßig `Charakter | Spieler`.
+- Der aktuelle Discord-Anzeigename wird als Spieleranteil bevorzugt; ein gespeicherter Mapping-Name ist nur Fallback.
 - Der Session-Nickname wird auf maximal 32 Unicode-Zeichen begrenzt; der Charaktername hat Priorität.
 - Der ursprüngliche Discord-Server-Nickname wird **vor** der Änderung persistent in SQLite gesichert.
 - Betritt ein zugeordneter Spieler während eines aktiven Profils den relevanten Call, wird der Session-Nickname angewendet.
@@ -107,7 +108,7 @@ Neu:
 - Beim sauberen Companion-Shutdown wird vor Discord-/DB-Ende ein Restore versucht.
 - Persistierte Nickname-Leases ermöglichen Restart-/Crash-Recovery.
 - Wenn der aktuelle Nickname außerhalb von DM Cockpit manuell verändert wurde, überschreibt der Restore ihn **nicht blind**. Der Zustand wird als Restore-Konflikt sichtbar gehalten.
-- Bei einem späteren bewussten Rejoin/Apply kann dieser manuell geänderte Name zur neuen Restore-Basis werden.
+- Bei einem späteren bewussten Rejoin/Apply wird der neue manuelle Basisname atomar in den nächsten persistenten Lease übernommen.
 - Discord-Rollenhierarchie und `Manage Nicknames` werden vor einer Änderung geprüft.
 - DAVE/Voice-Baseline bleibt im Join-Pfad erhalten.
 
@@ -117,10 +118,11 @@ Automatisch geprüft ohne echten Discord-Server:
 - nur ein aktives Profil
 - 32-Zeichen-Nickname-Formatter
 - Join → Nickname anwenden
+- aktueller Discord-Anzeigename vor altem gespeichertem Spielernamen
 - identischer Teilnehmer-Snapshot → kein doppelter Write
 - Leave → ursprünglichen Namen restaurieren
 - Schutz manueller Namensänderungen
-- Rejoin nach Restore-Konflikt
+- atomarer Rejoin nach Restore-Konflikt
 - Profilwechsel mit korrekter Restore-Basis
 - Profil-Deaktivierung
 - Restart-/Crash-Recovery aus persistentem Lease
