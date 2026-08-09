@@ -1,6 +1,6 @@
 # DM Cockpit V0.9.21
 
-Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext und die geplante KI-Auswertung.
+Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext und strukturierte KI-Kandidaten.
 
 ## Aktueller Stand
 
@@ -10,180 +10,116 @@ Bestätigte Kernfunktionen:
 
 - LIVE-Dashboard
 - Abenteuer-Flowchart
-- spontane Szenen
-- Szenen-Presets
-- Gegner-Spawnpunkte
-- Enemy Reserve Bench
+- spontane Szenen und Szenen-Presets
+- Gegner-Spawnpunkte und Enemy Reserve Bench
 - Handout Queue
 - Loot-/Belohnungspakete + Item-Suche
 - Compendium-Schnellsuche
 - NPC-Schnellgenerator
 - Actor-basiertes NPC Memory
 - Discord Live-Transkript UI/Transport-Client
-- NPC-Kontext aus ausgewähltem Cockpit-Actor bzw. ausgewähltem Foundry-Token
+- NPC-Kontext aus Cockpit-Actor bzw. ausgewähltem Foundry-Token
 - Foundry/GitHub Update-System
 
 Foundry bleibt auf **V0.9.21**. Der Companion wird unabhängig davon versioniert.
 
-## Discord Audio & Companion
+## Companion – bestätigte Baseline 0.5.0
 
-### Companion 0.1.0 – bestätigt
+Auf dem Nutzer-PC vollständig bestätigt:
 
-Der lokale Basispfad wurde auf dem Ziel-PC Ende-zu-Ende bestätigt:
-
-**Foundry ↔ WebSocket ↔ Companion ↔ SQLite**
-
-### Companion 0.2.0 – bestätigt
-
-Auf echtem Discord bestätigt:
-
-- Bot-Login
+- Foundry ↔ WebSocket ↔ Companion ↔ SQLite
+- Discord Bot Login
 - DAVE/E2EE Voice
-- Auto-Join beim konfigurierten GM
-- Follow bei Voice-Channel-Wechsel
-- Leave, wenn der GM Voice verlässt
+- Auto-Join und Follow beim konfigurierten GM
+- sprechergetrennter Discord-Opus-Empfang
+- keine dauerhafte Roh-Audio-Speicherung
+- Deepgram Nova-3 STT auf Deutsch
+- echter Discord → Deepgram → Protocol v1 → Foundry-Live-Transkript-Pfad
+- `npc.memory.candidate` Broadcast + SQLite-Persistenz
+- `session.event.candidate` Broadcast + SQLite-Persistenz
 
-### Companion 0.3.0 – bestätigt
+0.5.0 Regressionstest:
 
-Echter Discord-Audioempfang wurde bestätigt:
+- 344 Opus-Pakete
+- 47.775 Bytes
+- 8.220 ms
+- erkannter Satz: `Das ist der Regressions Test für DM Cockpit Version 0 Punkt 5 Punkt 0.`
+- Confidence: **0.961**
+- Satz im Foundry-Live-Transkript sichtbar
 
-- Sprechertrennung per Discord User ID
-- Discord-Opus nur temporär im RAM
-- Testsegmente mit realen Audio-Paketen/Bytes erfolgreich
-- keine dauerhaften Roh-Audiodateien
+Candidate-Smoke-Test:
 
-### Companion 0.4.0 – echter Deepgram-STT-Test bestätigt
+- `npcCandidates`: 0 → 1
+- `sessionEventCandidates`: 0 → 1
+- Protocol v1, Broadcast und SQLite-Persistenz bestätigt
 
-Der reale Sprache-zu-Text-Pfad funktioniert:
+## Companion 0.6.0 – auf GitHub, lokaler Nutzer-Test ausstehend
 
-**Discord Voice → DAVE → sprechergetrenntes Opus → Deepgram → Text**
+Der aktuelle GitHub-Paketstand ist **0.6.0**.
 
-Bestätigter Test:
+Neu:
 
-- Sprecher: `hacker 2090`
-- 233 Opus-Pakete
-- 32.124 Bytes
-- 5.980 ms
-- erkannt: `Dies ist ein Test für das DM Cockpit. Kannst Du mich verstehen?`
-- Confidence: **0.931**
+- provider-neutraler `AiExtractionService`
+- sicherer Default `AI_PROVIDER=none`
+- deterministischer `MockAiExtractionProvider` für Tests
+- finale `transcript.segment`-Nachrichten werden über den Protocol-v1-Broadcast der Extraktionsschicht zugeführt
+- NPC-Kontext wird pro Session aus `npc.context` verfolgt
+- strukturierte Ausgabe als `npc.memory.candidate` und `session.event.candidate`
+- `sourceSegmentIds` bleiben als Herkunftsnachweis erhalten
+- Provider/Modell/Confidence/Status werden am Kandidaten gespeichert
+- doppelte Segment-IDs werden unterdrückt
+- Partials werden nicht extrahiert
+- weiterhin **keine automatischen Actor-Schreibvorgänge**
 
-STT-Architektur:
+Der deterministische Test wurde außerhalb des Nutzer-PCs bereits erfolgreich ausgeführt. Der nächste Schritt ist die lokale Regression mit:
 
-- provider-neutraler `SttService`
-- sicherer Default `STT_PROVIDER=none`
-- erster Adapter: Deepgram Nova-3
-- Deutsch
-- Deepgram EU-Endpunkt
-- Discord Opus 48 kHz Stereo direkt als Input
-- begrenzte Parallelität, Queue und Retries
-- `mip_opt_out=true` wird im Deepgram-Adapter erzwungen
-- Provider/API-Key bleiben lokal in `companion/.env`
+```powershell
+Ctrl+C
+cd $HOME\Desktop\dm-cockpit
+git pull
+cd companion
+npm.cmd install
+npm.cmd run check
+npm.cmd run test:ai
+```
 
-Der Rückpfad über Protocol v1 zu SQLite/Foundry ist implementiert. Der WebSocket/SQLite-Pfad war bereits zuvor per Mock Ende-zu-Ende bestätigt.
-
-## Companion 0.5.0 – auf GitHub, noch nicht lokal regressionsgetestet
-
-Der aktuelle GitHub-Paketstand ist **0.5.0**.
-
-Neu vorbereitet:
-
-- SQLite-Tabelle `npc_memory_candidates`
-- SQLite-Tabelle `session_event_candidates`
-- Indizes für Kandidaten
-- `addNpcMemoryCandidate`
-- `addSessionEventCandidate`
-- Health-Stats `npcCandidates` und `sessionEventCandidates`
-- Protocol-Handler `npc.memory.candidate`
-- Protocol-Handler `session.event.candidate`
-- Persistenz und WebSocket-Broadcast der Kandidaten
-- Schema-Support für Session-Event-Kandidaten
-
-Noch **nicht** implementiert:
-
-- kein LLM/AI-Extraktionsprovider
-- keine automatische Analyse von Transkriptsegmenten
-- keine automatische Kandidaten-Erzeugung aus Sprache
-- keine Kandidaten-UI in Foundry
-- keine automatische Actor-Änderung
-- keine Undo-Ausführung
-
-## Nächster einzelner Schritt
-
-**Companion 0.5.0 auf dem Nutzer-PC regressionsprüfen.**
-
-Dabei prüfen:
-
-1. `git pull`
-2. `cd companion`
-3. `npm.cmd install`
-4. `npm.cmd run check`
-5. `npm.cmd start`
-6. Discord Voice/DAVE weiterhin funktionsfähig
-7. kurzer Deepgram-STT-Test weiterhin erfolgreich
-8. `/health` meldet `serviceVersion: 0.5.0`
-9. `/health` enthält `npcCandidates` und `sessionEventCandidates`
-
-Erst danach folgt die **AI-Kandidaten-Pipeline**.
+Danach folgt ein lokaler Ende-zu-Ende-Test mit temporärem `AI_PROVIDER=mock`.
 
 ## Geplante AI-Pipeline
 
-Zunächst nur strukturierte Vorschläge, **keine automatischen Actor-Schreibvorgänge**.
+```text
+Discord Voice
+→ DAVE / sprechergetrenntes Opus
+→ STT
+→ final transcript.segment
+→ AiExtractionService
+→ npc.memory.candidate / session.event.candidate
+→ SQLite + WebSocket
+→ später Foundry Candidate UI
+```
 
-Zieltypen:
-
-- `npc.memory.candidate`
-  - Aussagen
-  - Wissen
-  - Aktionen
-  - Beziehungen
-  - Versprechen
-  - Lügen
-  - Fristen
-  - Konsequenzen
-- `session.event.candidate`
-  - Entscheidungen
-  - Quests/Aufgaben
-  - Loot/Belohnungen
-  - offene Fragen
-  - Kämpfe
-  - wichtige Ereignisse
-
-Danach:
-
-1. Kandidaten-UI in Foundry
-2. manuelles Annehmen/Verwerfen
-3. Undo/Change-Record Runtime
-4. erst dann optionale automatische NPC-Memory-Updates
-5. dauerhaft durchsuchbares Transkript
-6. Session-Historie, Recap und Discord-Kurzfassung
+Zunächst nur strukturierte Vorschläge. Automatische Actor-Änderungen bleiben gesperrt, bis Undo/Change-Record sicher funktioniert.
 
 ## Datenschutz / Secrets
 
 - Discord Bot Token niemals in GitHub oder Chat speichern.
 - Deepgram API Key niemals in GitHub oder Chat speichern.
-- Secrets bleiben ausschließlich lokal in `companion/.env`.
+- spätere AI/API Keys ebenfalls ausschließlich lokal halten.
+- Secrets bleiben in `companion/.env`.
 - Roh-Audio wird nicht dauerhaft gespeichert.
 - `notice_only` ist nur eine technische Capture-Policy und keine rechtliche Einwilligung.
 
 ## Projekt-Checkpoint
 
-Der aktuelle kanonische chatübergreifende Projektstand liegt in:
+Kanonischer Projektstand:
 
 `PROJECT-CHECKPOINT.json`
 
-Historische Snapshots liegen unter:
+Historische Snapshots:
 
 `checkpoints/`
 
-Der aktuelle Checkpoint ist **Schema 3.0** und enthält bestätigte Funktionen, Architekturhistorie, Companion-/STT-Stand, offene Funktionen und die Roadmap.
-
-## Dokumentation
-
-- `PROJECT-CHECKPOINT.json`
-- `docs/DISCORD-AUDIO-AI-CONTRACT-V1.md`
-- `docs/STT-PROVIDER-EVALUATION-2026-08-09.md`
-- `schemas/discord-audio-ai-v1.schema.json`
-- `companion/README.md`
+Der aktuelle Checkpoint ist **Schema 3.3**.
 
 ## Installation / Updates
 
