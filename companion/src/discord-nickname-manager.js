@@ -208,7 +208,7 @@ export class DiscordNicknameManager {
       return null;
     }
 
-    const playerName = text(mapping.playerName) || text(participant.displayName) || text(state.displayName) || discordUserId;
+    const playerName = text(participant.displayName) || text(state.displayName) || text(mapping.playerName) || discordUserId;
     const desiredNickname = formatSessionNickname({
       characterName: mapping.characterName,
       playerName
