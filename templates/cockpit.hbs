@@ -1,0 +1,204 @@
+<div class="dm-cockpit-shell">
+  <header class="dm-cockpit-header">
+    <div class="dm-cockpit-brand">
+      <span class="dm-cockpit-eyebrow">DM COCKPIT</span>
+      <strong>{{#if isAdventureTab}}Abenteuer{{else}}Live{{/if}}</strong>
+    </div>
+    <span class="dm-cockpit-badge">V0.9.9</span>
+  </header>
+
+  <div class="dm-cockpit-layout">
+    <nav class="dm-cockpit-sidebar" aria-label="DM Cockpit Navigation">
+      <button type="button" data-tab="live" class="{{#if isLiveTab}}active{{/if}}">
+        <i class="fa-solid fa-gauge-high"></i><span>Live</span>
+      </button>
+      <button type="button" data-tab="adventure" class="{{#if isAdventureTab}}active{{/if}}">
+        <i class="fa-solid fa-diagram-project"></i><span>Abenteuer</span>
+      </button>
+    </nav>
+
+    <div class="dm-cockpit-content">
+      {{#if isLiveTab}}
+        <main class="dm-cockpit-grid">
+          <section class="dm-cockpit-card dm-live-scene-card">
+            <div class="dm-cockpit-card-title">
+              <div>
+                <span class="dm-section-label">AKTIVE SZENE</span>
+                <h2 class="dm-live-scene-name">{{sceneName}}</h2>
+              </div>
+            </div>
+
+            {{#if hasScene}}
+              <div class="dm-cockpit-metrics">
+                <div><strong>{{tokenCount}}</strong><span>Token</span></div>
+                <div><strong>{{doorCount}}</strong><span>Türen</span></div>
+                <div><strong>{{lightCount}}</strong><span>Licht</span></div>
+                <div><strong>{{playingAudioCount}}</strong><span>Audio</span></div>
+              </div>
+              <div class="dm-scene-details">
+                <span>{{visibleTokenCount}} sichtbar</span>
+                <span>{{hiddenTokenCount}} verborgen</span>
+                <span>{{openDoorCount}} offen / {{closedDoorCount}} zu</span>
+              </div>
+            {{else}}
+              <p class="muted dm-empty-inline">Keine aktive Szene.</p>
+            {{/if}}
+
+            <div class="dm-cockpit-current-flow {{#if hasCurrentFlowNode}}has-current{{/if}}">
+              <span>Aktueller Flow-Knoten</span>
+              {{#if hasCurrentFlowNode}}<strong>{{currentFlowNode.name}}</strong>{{else}}<strong>—</strong>{{/if}}
+            </div>
+          </section>
+
+          <details class="dm-cockpit-card dm-collapsible" open>
+            <summary class="dm-cockpit-card-title">
+              <div><h3>Spontane Szenen</h3><p class="card-subtitle">{{spontaneousCount}} offen</p></div>
+              <span class="dm-summary-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            </summary>
+            <div class="dm-card-body">
+              <div class="dm-section-actions">
+                <button type="button" class="dm-button-primary small" data-action="create-spontaneous"><i class="fa-solid fa-plus"></i> Neu</button>
+              </div>
+              {{#if hasSpontaneousScenes}}
+                <div class="dm-list">
+                  {{#each spontaneousScenes}}
+                    <article class="dm-list-item">
+                      <div><strong>{{name}}</strong>{{#if note}}<p>{{note}}</p>{{/if}}</div>
+                      <div class="dm-actions">
+                        <button type="button" class="dm-button-primary" data-action="promote-spontaneous" data-id="{{id}}">In Flowchart</button>
+                        <button type="button" class="dm-button-danger icon-only" data-action="delete-spontaneous" data-id="{{id}}" title="Löschen" aria-label="Spontane Szene löschen"><i class="fa-solid fa-trash"></i></button>
+                      </div>
+                    </article>
+                  {{/each}}
+                </div>
+              {{else}}
+                <div class="dm-empty-inline"><span>Keine spontanen Szenen.</span></div>
+              {{/if}}
+            </div>
+          </details>
+
+          <details class="dm-cockpit-card dm-cockpit-wide dm-collapsible" open>
+            <summary class="dm-cockpit-card-title">
+              <div><h3>Gegner-Spawnpunkte</h3><p class="card-subtitle">{{spawnPointCount}} auf dieser Szene</p></div>
+              <span class="dm-summary-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            </summary>
+            <div class="dm-card-body">
+              <div class="dm-section-actions">
+                {{#if hasScene}}<button type="button" class="dm-button-primary small" data-action="create-spawn-point"><i class="fa-solid fa-location-dot"></i> Spawnpunkt setzen</button>{{/if}}
+              </div>
+              {{#if hasSpawnPoints}}
+                <div class="dm-spawn-grid">
+                  {{#each spawnPoints}}
+                    <article class="dm-spawn-card">
+                      <div class="dm-spawn-info">
+                        <strong>{{name}}</strong>
+                        <small>Position {{x}}, {{y}}</small>
+                      </div>
+                      <div class="dm-actions dm-spawn-actions">
+                        <button type="button" class="dm-button-primary dm-spawn-main" data-action="spawn-enemy" data-id="{{id}}"><i class="fa-solid fa-user-plus"></i> Gegner spawnen</button>
+                        <button type="button" class="dm-button-danger icon-only" data-action="delete-spawn-point" data-id="{{id}}" title="Löschen" aria-label="Spawnpunkt löschen"><i class="fa-solid fa-trash"></i></button>
+                      </div>
+                    </article>
+                  {{/each}}
+                </div>
+              {{else}}
+                <div class="dm-empty-inline"><span>Noch keine Spawnpunkte.</span></div>
+              {{/if}}
+            </div>
+          </details>
+
+          <details class="dm-cockpit-card dm-cockpit-wide dm-collapsible dm-reserve-section" open>
+            <summary class="dm-cockpit-card-title">
+              <div><h3>Enemy Reserve Bench</h3><p class="card-subtitle">{{reserveEnemyCount}} auf Reserve</p></div>
+              <span class="dm-summary-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            </summary>
+            <div class="dm-card-body">
+              <div class="dm-section-actions">
+                {{#if hasScene}}<button type="button" class="dm-button-primary small" data-action="add-reserve-enemy"><i class="fa-solid fa-box-archive"></i> Gegner auf Reserve</button>{{/if}}
+              </div>
+              {{#if hasReserveEnemies}}
+                <div class="dm-reserve-list">
+                  {{#each reserveEnemies}}
+                    <article class="dm-reserve-row">
+                      <div class="dm-reserve-info">
+                        <strong>{{name}}</strong>
+                        <small>{{sourceLabel}}</small>
+                      </div>
+                      <div class="dm-actions">
+                        <button type="button" class="dm-button-primary" data-action="spawn-reserve-enemy" data-id="{{id}}"><i class="fa-solid fa-location-dot"></i> An Spawnpunkt</button>
+                        <button type="button" class="dm-button-danger icon-only" data-action="delete-reserve-enemy" data-id="{{id}}" title="Von Reserve entfernen" aria-label="Gegner von Reserve entfernen"><i class="fa-solid fa-trash"></i></button>
+                      </div>
+                    </article>
+                  {{/each}}
+                </div>
+              {{else}}
+                <div class="dm-empty-inline"><span>Keine Gegner auf Reserve.</span></div>
+              {{/if}}
+            </div>
+          </details>
+
+          <details class="dm-cockpit-card dm-cockpit-wide dm-collapsible dm-presets-section">
+            <summary class="dm-cockpit-card-title">
+              <div><h3>Szenen-Presets</h3><p class="card-subtitle">{{presetCount}} gespeichert</p></div>
+              <span class="dm-summary-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            </summary>
+            <div class="dm-card-body">
+              <div class="dm-section-actions">
+                {{#if hasScene}}<button type="button" class="dm-button-primary small" data-action="create-preset"><i class="fa-solid fa-plus"></i> Neues Preset</button>{{/if}}
+              </div>
+              {{#if hasPresets}}
+                <div class="dm-preset-list">
+                  {{#each presets}}
+                    <article class="dm-preset-row">
+                      <div class="dm-preset-info">
+                        <strong>{{name}}</strong>
+                        <small>{{tokenCount}} Token · {{doorCount}} Türen · {{lightCount}} Licht · {{audioCount}} Audio</small>
+                      </div>
+                      <div class="dm-actions">
+                        <button type="button" class="dm-button-primary" data-action="apply-preset" data-id="{{id}}">Anwenden</button>
+                        <button type="button" class="secondary icon-only" data-action="overwrite-preset" data-id="{{id}}" title="Aktualisieren" aria-label="Preset aktualisieren"><i class="fa-solid fa-rotate"></i></button>
+                        <button type="button" class="dm-button-danger icon-only" data-action="delete-preset" data-id="{{id}}" title="Löschen" aria-label="Preset löschen"><i class="fa-solid fa-trash"></i></button>
+                      </div>
+                    </article>
+                  {{/each}}
+                </div>
+              {{else}}
+                <div class="dm-empty-inline"><span>Noch keine Presets.</span></div>
+              {{/if}}
+            </div>
+          </details>
+        </main>
+      {{/if}}
+
+      {{#if isAdventureTab}}
+        <section class="dm-cockpit-card dm-flow-section">
+          <div class="dm-flow-toolbar">
+            <div><h2>Abenteuer-Flowchart</h2><p class="card-subtitle">{{flowNodeCount}} Knoten</p></div>
+            <button type="button" class="dm-button-primary small" data-action="create-flow-node"><i class="fa-solid fa-plus"></i> Knoten hinzufügen</button>
+          </div>
+
+          {{#if hasFlowNodes}}
+            <div class="dm-flow-board">
+              {{#each flowNodes}}
+                <article class="dm-flow-node {{#if isCurrent}}current{{/if}}" data-node-id="{{id}}" data-draggable="true" style="{{style}}">
+                  <div class="dm-flow-node-head">
+                    <strong>{{name}}</strong>
+                    {{#if isCurrent}}<span class="dm-current-badge"><i class="fa-solid fa-location-dot"></i> AKTUELL</span>{{/if}}
+                  </div>
+                  {{#if note}}<p>{{note}}</p>{{/if}}
+                  <div class="dm-actions dm-flow-actions">
+                    {{#unless isCurrent}}<button type="button" class="dm-button-primary" data-action="set-current-flow-node" data-id="{{id}}">Aktuell setzen</button>{{/unless}}
+                    <button type="button" class="secondary icon-only" data-action="edit-flow-node" data-id="{{id}}" title="Bearbeiten" aria-label="Knoten bearbeiten"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="dm-button-danger icon-only" data-action="delete-flow-node" data-id="{{id}}" title="Löschen" aria-label="Knoten löschen"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </article>
+              {{/each}}
+            </div>
+          {{else}}
+            <div class="dm-empty"><p>Noch keine Flowchart-Knoten.</p></div>
+          {{/if}}
+        </section>
+      {{/if}}
+    </div>
+  </div>
+</div>

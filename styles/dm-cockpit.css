@@ -1,0 +1,249 @@
+.dm-cockpit { min-width: 700px; }
+.dm-cockpit .window-content { padding: 0; overflow: hidden; }
+
+.dm-cockpit-shell {
+  --dm-border: rgba(255,255,255,.16);
+  --dm-border-soft: rgba(255,255,255,.09);
+  --dm-surface: rgba(255,255,255,.025);
+  --dm-surface-strong: rgba(255,255,255,.055);
+  --dm-text-muted: rgba(255,255,255,.68);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #151719;
+  color: #f0f0f0;
+}
+
+/* Kompakte Kopfzeile. */
+.dm-cockpit-header {
+  flex: 0 0 auto;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px 6px 12px;
+  border-bottom: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.14);
+}
+.dm-cockpit-brand { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
+.dm-cockpit-brand strong { font-size: 13px; }
+.dm-cockpit-eyebrow, .dm-cockpit-badge, .card-subtitle, .muted { color: var(--dm-text-muted); font-size: 11px; }
+.dm-cockpit-eyebrow { font-weight: 800; letter-spacing: .08em; }
+.dm-cockpit-badge { white-space: nowrap; }
+
+/* Navigation links, Inhalt rechts. Nur der Inhaltsbereich scrollt. */
+.dm-cockpit-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 116px minmax(0, 1fr); }
+.dm-cockpit-sidebar {
+  min-height: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-right: 1px solid var(--dm-border);
+  background: rgba(0,0,0,.12);
+}
+.dm-cockpit-sidebar button {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--dm-text-muted);
+  text-align: left;
+}
+.dm-cockpit-sidebar button:hover { background: var(--dm-surface-strong); color: #fff; }
+.dm-cockpit-sidebar button.active { border-color: var(--dm-border); background: var(--dm-surface-strong); color: #fff; font-weight: 750; }
+.dm-cockpit-sidebar i { width: 16px; text-align: center; }
+.dm-cockpit-content { min-width: 0; min-height: 0; overflow: auto; }
+
+/* Einheitliche, flachere Karten. */
+.dm-cockpit-grid { padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dm-cockpit-card { border: 1px solid var(--dm-border); border-radius: 5px; padding: 9px; background: var(--dm-surface); }
+.dm-cockpit-wide { grid-column: 1 / -1; }
+.dm-cockpit-card-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 7px; }
+.dm-cockpit-card-title h3 { margin: 0; font-size: 14px; line-height: 1.2; }
+.dm-cockpit-card-title p { margin: 2px 0 0; }
+.dm-section-label { color: var(--dm-text-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+
+/* Aktive Szene deutlich, Statusinformationen kompakt. */
+.dm-live-scene-card { grid-column: 1 / -1; }
+.dm-live-scene-name { margin: 1px 0 0; font-size: 23px; line-height: 1.15; }
+.dm-cockpit-metrics { display: flex; flex-wrap: wrap; gap: 4px; margin: 7px 0 6px; }
+.dm-cockpit-metrics div {
+  min-width: 76px;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid var(--dm-border-soft);
+  border-radius: 4px;
+  background: rgba(255,255,255,.02);
+}
+.dm-cockpit-metrics strong { font-size: 15px; }
+.dm-cockpit-metrics span { color: var(--dm-text-muted); font-size: 10px; }
+.dm-scene-details { display: flex; flex-wrap: wrap; gap: 10px; color: var(--dm-text-muted); font-size: 11px; }
+.dm-cockpit-current-flow {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 9px;
+  border: 1px solid var(--dm-border-soft);
+  border-radius: 4px;
+  background: rgba(0,0,0,.12);
+}
+.dm-cockpit-current-flow span { color: var(--dm-text-muted); font-size: 11px; }
+.dm-cockpit-current-flow strong { font-size: 14px; }
+.dm-cockpit-current-flow.has-current { border-width: 2px; background: rgba(255,255,255,.045); }
+
+/* Einklappbare Live-Bereiche. Presets sind im Template standardmäßig geschlossen. */
+details.dm-cockpit-card { padding: 0; overflow: visible; }
+details.dm-cockpit-card > summary { list-style: none; cursor: pointer; padding: 8px 9px; margin: 0; user-select: none; }
+details.dm-cockpit-card > summary::-webkit-details-marker { display: none; }
+.dm-summary-chevron { color: var(--dm-text-muted); font-size: 10px; transition: transform .12s ease; }
+details[open] .dm-summary-chevron { transform: rotate(180deg); }
+.dm-card-body { border-top: 1px solid var(--dm-border-soft); padding: 8px 9px 9px; }
+.dm-section-actions { display: flex; justify-content: flex-end; margin-bottom: 7px; }
+
+/* Listen und leere Zustände möglichst kompakt. */
+.dm-list, .dm-preset-list { display: grid; gap: 5px; }
+.dm-list-item, .dm-preset-row {
+  min-height: 42px;
+  border: 1px solid var(--dm-border-soft);
+  border-radius: 4px;
+  padding: 6px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dm-list-item p { margin: 2px 0 0; color: var(--dm-text-muted); white-space: pre-wrap; font-size: 11px; }
+.dm-preset-info, .dm-spawn-info { min-width: 0; }
+.dm-preset-info strong, .dm-spawn-info strong { display: block; }
+.dm-preset-info small, .dm-spawn-info small { display: block; margin-top: 2px; color: var(--dm-text-muted); font-size: 10px; }
+.dm-empty-inline { margin: 0; padding: 6px 2px; color: var(--dm-text-muted); font-size: 11px; }
+
+/* Spawnpunkte bleiben als Karten sichtbar; Koordinaten bleiben ausdrücklich sichtbar. */
+.dm-spawn-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.dm-spawn-card {
+  border: 1px solid var(--dm-border-soft);
+  border-radius: 4px;
+  padding: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dm-spawn-actions { margin-left: auto; }
+.dm-spawn-main { min-height: 32px !important; padding-inline: 12px !important; font-weight: 750; }
+
+/* Einheitliche Buttons. Löschaktionen sind bewusst klein und sekundär. */
+.dm-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.dm-actions button, button.small { width: auto; min-height: 27px; padding: 3px 7px; }
+button.dm-button-primary { font-weight: 750; border-width: 1px; }
+button.secondary { opacity: .78; }
+button.icon-only { min-width: 28px; width: 28px; padding-inline: 5px; }
+button.dm-button-danger { min-width: 28px; width: 28px; padding-inline: 5px; opacity: .64; }
+button.dm-button-danger:hover { opacity: 1; }
+
+/* Flowchart: vorhandene Knotenstruktur bleibt erhalten, der aktuelle Knoten fällt deutlich auf. */
+.dm-flow-section {
+  margin: 10px;
+  min-height: calc(100% - 20px);
+  height: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+.dm-flow-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 9px;
+  border-bottom: 1px solid var(--dm-border);
+  background: #191b1e;
+}
+.dm-flow-toolbar h2 { margin: 0; font-size: 16px; }
+.dm-flow-toolbar p { margin: 1px 0 0; }
+.dm-flow-board { position: relative; flex: 1; min-height: 500px; overflow: auto; border: 0; background: rgba(0,0,0,.08); }
+.dm-flow-node {
+  position: absolute;
+  width: 230px;
+  min-height: 100px;
+  padding: 9px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 6px;
+  background: #202225;
+  cursor: grab;
+  box-shadow: 0 2px 7px rgba(0,0,0,.24);
+}
+.dm-flow-node.dragging { cursor: grabbing; z-index: 20; }
+.dm-flow-node.current { border-width: 3px; box-shadow: 0 0 0 2px rgba(255,255,255,.16), 0 5px 15px rgba(0,0,0,.28); }
+.dm-flow-node-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dm-current-badge { font-size: 9px; font-weight: 850; letter-spacing: .04em; }
+.dm-flow-node p { margin: 8px 0; white-space: pre-wrap; opacity: .86; }
+.dm-flow-actions { margin-top: 6px; }
+.dm-empty { display: grid; place-items: center; min-height: 280px; color: var(--dm-text-muted); }
+
+/* Lesbarkeit und klare Typografie. */
+.dm-cockpit button { line-height: 1.2; }
+.dm-cockpit strong { color: #fff; }
+.dm-cockpit small { line-height: 1.3; }
+
+/* Enemy Reserve Bench: vorgemerkte Gegner, die gezielt an Spawnpunkten eingesetzt werden. */
+.dm-reserve-list { display: grid; gap: 5px; }
+.dm-reserve-row {
+  min-height: 42px;
+  border: 1px solid var(--dm-border-soft);
+  border-radius: 4px;
+  padding: 6px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dm-reserve-info { min-width: 0; }
+.dm-reserve-info strong { display: block; }
+.dm-reserve-info small { display: block; margin-top: 2px; color: var(--dm-text-muted); font-size: 10px; }
+
+@media (max-width: 820px) {
+  .dm-cockpit { min-width: 0; }
+  .dm-cockpit-layout { grid-template-columns: 88px minmax(0, 1fr); }
+  .dm-cockpit-sidebar button { gap: 6px; padding-inline: 7px; }
+  .dm-cockpit-grid { grid-template-columns: 1fr; }
+  .dm-cockpit-wide, .dm-live-scene-card { grid-column: auto; }
+  .dm-spawn-grid { grid-template-columns: 1fr; }
+}
+
+/* Eigene, neutrale Cockpit-Buttons statt stärkerer Annäherung an die Foundry-Standard-UI. */
+.dm-cockpit button.dm-button-primary {
+  color: #fff;
+  background: rgba(255,255,255,.11);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 4px;
+}
+.dm-cockpit button.dm-button-primary:hover { background: rgba(255,255,255,.17); border-color: rgba(255,255,255,.4); }
+.dm-cockpit button.secondary {
+  background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 4px;
+}
+.dm-cockpit button.dm-button-danger {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 4px;
+}
+.dm-cockpit button.dm-button-danger:hover { border-color: rgba(220,110,110,.7); color: #ffd0d0; }
