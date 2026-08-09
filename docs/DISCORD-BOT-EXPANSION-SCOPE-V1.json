@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T18:32:00+02:00",
+  "updated_at": "2026-08-09T18:58:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
@@ -19,6 +19,8 @@
     {
       "name": "discord_identity_core",
       "status": "implemented_ci_validated_runtime_not_user_confirmed",
+      "foundry_version": "0.9.27",
+      "companion_version": "0.11.0",
       "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27",
       "implemented": [
         "Protocol und Datenmodell für Voice-Teilnehmer und Spieler-/Charakterzuordnung erweitert",
@@ -30,13 +32,6 @@
         "Foundry-Cockpit-Karte Spieler & Charaktere",
         "veraltete Audio-Capture-Statusangabe bereinigt"
       ],
-      "automated_validation": [
-        "Foundry node --check",
-        "Companion node --check",
-        "Protocol-/Scope-JSON parse",
-        "Identity-Mapping-Smoke-Test",
-        "Foundry-Paketbuild 0.9.27"
-      ],
       "runtime_pending": [
         "echte Voice-Teilnehmerliste in Foundry",
         "echte Spieler-/Charakterzuordnung",
@@ -47,21 +42,69 @@
   ],
   "current_implementation_block": {
     "name": "campaign_session_identity_and_nickname",
-    "status": "next",
-    "order": [
-      "Kampagnen-/One-Shot-/Sessionprofil als persistenten Zustand modellieren",
-      "Profil mit vorhandenen Spieler-/Charakterzuordnungen verbinden",
-      "ursprünglichen Discord-Server-Nickname persistent sichern",
-      "Nickname nur bei ausdrücklich aktivem Profil/Sessionzustand anwenden",
-      "Charaktername zuerst im Session-Nickname darstellen",
-      "bei Call-Leave und Sessionende ursprünglichen Nickname zurücksetzen",
-      "Rejoin und Crash-Recovery idempotent behandeln"
+    "status": "implemented_isolated_smoke_passed_main_ci_pending_runtime_not_user_confirmed",
+    "target_foundry_version": "0.9.28",
+    "target_companion_version": "0.12.0",
+    "implemented": [
+      "persistente Kampagnen-/One-Shot-/Sessionprofile",
+      "Profile enthalten Snapshots der GM-bestätigten Spieler-/Charakterzuordnungen",
+      "Foundry-Cockpit-Karte Session-Identität zum Speichern/Aktivieren/Deaktivieren",
+      "immer höchstens ein aktives Identitätsprofil",
+      "Nickname-Automatik arbeitet nur bei ausdrücklich aktiviertem Profil",
+      "Session-Nickname mit Charaktername zuerst und maximal 32 Unicode-Zeichen",
+      "ursprünglicher Server-Nickname wird vor Discord-Mutation persistent gesichert",
+      "Join/Rejoin wendet passenden Session-Nickname an",
+      "Call-Leave stellt vorherigen Server-Nickname wieder her",
+      "Profilwechsel restauriert alten Zustand vor Anwendung des neuen Profils",
+      "Profil-Deaktivierung restauriert aktive Session-Namen",
+      "sauberer Companion-Shutdown versucht Restore vor Discord-/SQLite-Ende",
+      "persistenter Lease ermöglicht Restart-/Crash-Recovery",
+      "manuelle externe Nickname-Änderung erzeugt Restore-Konflikt statt blindem Überschreiben",
+      "Discord Manage-Nicknames-Recht und Rollen-Hierarchie werden geprüft",
+      "bestehende DAVE-Join-Konfiguration bleibt erhalten"
+    ],
+    "automated_validation": {
+      "isolated_local_smoke": "passed",
+      "covered": [
+        "Profil-Persistenz",
+        "ein aktives Profil",
+        "32-Zeichen-Nickname-Formatter",
+        "Join Apply",
+        "kein doppelter Write bei identischem Snapshot",
+        "Leave Restore",
+        "Restore-Konfliktschutz",
+        "Rejoin nach Konflikt",
+        "Profilwechsel",
+        "Deaktivierung",
+        "Restart-/Crash-Recovery"
+      ],
+      "main_ci": "pending_until_single_staged_fast_forward"
+    },
+    "runtime_pending": [
+      "Profil in echtem Foundry speichern/aktivieren",
+      "echte Discord-Nickname-Änderung",
+      "Leave/Rejoin mit echtem Voice-Call",
+      "realer Restore nach Companion-Neustart",
+      "Mapping -> Profil -> Nickname -> Live-Transkript End-to-End"
     ],
     "explicitly_not_in_this_block": [
+      "frei wechselbarer Discord-Ausgabe-Textkanal",
+      "Aufnahmehinweis in Discord",
+      "Recap direkt posten",
       "Slash-Commands",
-      "Recap posten",
       "mehrere GMs",
       "Befehlsberechtigungen"
+    ]
+  },
+  "next_implementation_block_after_ci": {
+    "name": "discord_output_channel_notice_and_recap_posting",
+    "status": "planned",
+    "order": [
+      "verfügbare Discord-Textkanäle für den GM sicher sichtbar machen",
+      "Zielkanal im Cockpit jederzeit neu auswählbar speichern",
+      "Aufnahme-/Transkriptionshinweis bewusst an den Zielkanal senden",
+      "bestehende Discord-Kurzfassung nach GM-Aktion direkt posten",
+      "keine automatische Recap-Veröffentlichung"
     ]
   },
   "identity_semantics": {
@@ -69,19 +112,7 @@
     "character_source_of_truth": "Ausschließlich die vom GM im Foundry-Cockpit bestätigte Zuordnung zu einem vorhandenen Foundry-Actor.",
     "ai_rule": "Die KI darf niemals selbst eine Actor-ID oder Spieler-Charakter-Zuordnung erraten oder erzeugen.",
     "transcript_rule": "Neue Transkriptsegmente behalten die Discord-Sprecheridentität und tragen zusätzlich die zum Segmentzeitpunkt bestätigte Spieler-/Charakterzuordnung.",
-    "ic_ooc_rule": "Die Zuordnung bedeutet nicht automatisch, dass jede Aussage in-character gesprochen wurde. Eine IC/OOC-Erkennung ist nicht Bestandteil dieses V1-Kerns.",
-    "mapping_scope": "Zuordnungen werden mindestens pro Foundry-Welt persistent geführt; Kampagnen-/Sessionprofile bauen darauf auf."
-  },
-  "session_identity_profile": {
-    "status": "selected_for_current_block",
-    "behavior": [
-      "GM wählt bzw. aktiviert eine Kampagne, einen One-Shot oder ein Sessionprofil.",
-      "Gespeicherte Discord-Mitglied-zu-Charakter-Zuordnungen werden für dieses Profil genutzt.",
-      "Erst nach ausdrücklicher Session-/Profil-Aktivierung darf die Nickname-Automatik Namen verändern.",
-      "Beim Rejoin in den relevanten Call kann der gespeicherte Session-Nickname erneut angewendet werden.",
-      "Beim Verlassen des relevanten Calls oder Sessionende wird der vorherige Server-Nickname wiederhergestellt.",
-      "Für Crash-Recovery wird der vorherige Nickname vor Änderungen persistent gesichert."
-    ],
+    "ic_ooc_rule": "Die Zuordnung bedeutet nicht automatisch, dass jede Aussage in-character gesprochen wurde.",
     "nickname_target": "Nur serverbezogener Discord-Nickname, niemals globaler Discord-Benutzername."
   },
   "selected": [
