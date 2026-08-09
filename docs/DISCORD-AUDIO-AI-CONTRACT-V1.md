@@ -4,84 +4,24 @@ Stand: 2026-08-09
 
 ## Ziel
 
-Dieser Vertrag trennt das Foundry-Modul von Discord, Speech-to-Text und Cloud-KI. Dadurch kann der Audio/KI-Teil später lokal oder auf einem VPS laufen und der Anbieter für STT/KI gewechselt werden, ohne das DM-Cockpit-Datenmodell neu zu entwerfen.
+Der Vertrag trennt Foundry/DM Cockpit von Discord Voice, STT und KI. Anbieter und Hosting können dadurch gewechselt werden, ohne das Foundry-Datenmodell neu zu bauen.
 
-## Festgelegte V1-Rahmenbedingungen
+## Grundregeln
 
-- Foundry und Discord laufen derzeit auf demselben PC.
-- Bot-Hosting bleibt vorerst offen.
-- Bot soll automatisch dem Voice-Channel des konfigurierten GM folgen.
-- Keine feste Teilnehmerobergrenze im Protokoll; Ziel ist auch >10 Teilnehmer.
-- Ziel-Latenz für Transkriptsegmente: 5–15 Sekunden.
-- STT- und KI-Anbieter bleiben austauschbar.
-- Dauerhafte Transkripte werden lokal in SQLite gespeichert.
-- Roh-Audio ist nur ein Kurzzeitpuffer und wird nach erfolgreicher Transkription gelöscht.
-- Capture-Policy ist konfigurierbar. Aktuelle Nutzerentscheidung: `notice_only`.
-- `notice_only` wird technisch nicht als rechtliche Einwilligung oder Freigabe interpretiert. Die tatsächliche Berechtigung zur Audioverarbeitung ist davon getrennt.
+- Transport lokal: `ws://127.0.0.1:43170/v1`
+- Protokollversion: `1.0`
+- finale Transkriptsegmente werden in SQLite persistiert
+- Roh-Audio wird nicht dauerhaft gespeichert
+- Sprechertrennung erfolgt über Discord User IDs
+- Provider bleiben austauschbar
+- KI-Kandidaten enthalten Quell-Segment-IDs
+- keine automatische Foundry-Weltänderung ohne sicheren Undo/Change-Record oder explizite GM-Bestätigung
 
-## Komponenten
+Maschinenlesbares Schema:
 
-### 1. DM Cockpit / Foundry
+`schemas/discord-audio-ai-v1.schema.json`
 
-Aufgaben:
-
-- Live-Transkript darstellen
-- aktiven NPC aus Cockpit oder ausgewähltem Token melden
-- NPC-Memory-Kandidaten anwenden
-- Undo/Änderungsverlauf ausführen
-- Sessionstatus anzeigen
-
-Foundry verarbeitet in V1 kein Discord-Audio direkt.
-
-### 2. Companion Service
-
-Ein separater Prozess übernimmt:
-
-- Discord Gateway / Voice
-- DAVE/E2EE-fähige Voice-Verbindung
-- Sprechertrennung anhand Discord User IDs
-- kurzzeitiges Audio-Buffering
-- STT-Provider-Adapter
-- KI-Provider-Adapter
-- SQLite-Archiv
-- WebSocket-Schnittstelle zum DM Cockpit
-
-Damit bleibt das Foundry-Modul browserkompatibel und benötigt keine nativen Discord-/Audio-Bibliotheken.
-
-### 3. SQLite
-
-V1 speichert lokal:
-
-- Sessions
-- Sprecher
-- finale Transkriptsegmente
-- Quellenbeziehungen zwischen Transkript und KI-Ergebnissen
-- Undo-/Change-Records
-- Provider-/Modell-Metadaten für Nachvollziehbarkeit
-
-Roh-Audio gehört nicht in die Datenbank.
-
-## Transport
-
-### Lokal
-
-Empfohlener Standard:
-
-`ws://127.0.0.1:<port>/v1`
-
-Der Companion Service bindet im lokalen Modus ausschließlich an Loopback. Der Port soll konfigurierbar sein.
-
-### Späterer VPS-Betrieb
-
-Bei Remote-Betrieb wird derselbe Nachrichtenvertrag verwendet, aber ausschließlich über TLS:
-
-`wss://<host>/v1`
-
-Remote-Betrieb benötigt Authentifizierung. Secrets werden nie im Repository gespeichert.
-
-## Nachrichtenformat
-
-Jede Nachricht verwendet einen Envelope:
+## Envelope
 
 ```json
 {
@@ -94,47 +34,25 @@ Jede Nachricht verwendet einen Envelope:
 }
 ```
 
-Das maschinenlesbare Schema liegt unter:
-
-`schemas/discord-audio-ai-v1.schema.json`
-
 ## Kernnachrichten
 
-### `hello` / `hello.ack`
+### Verbindung / Session
 
-Handshake zwischen Foundry und Companion Service. Dient zur Protokollversion und Feature-Erkennung.
+- `hello`
+- `hello.ack`
+- `health`
+- `session.started`
+- `session.ended`
+- `capture.status`
+- `speaker.upserted`
 
-### `session.started`
+### Transkript
 
-Startet die logische PnP-Session. Wichtige Metadaten:
+`transcript.segment`
 
-- Session-ID
-- Guild-ID
-- Voice-Channel-ID
-- GM Discord User ID
-- Capture-Policy
-- Provider-Konfiguration als nicht geheime IDs/Namen
+Persistiert werden nur finale Segmente. Partials dürfen für Live-Feedback übertragen werden, werden aber nicht dauerhaft archiviert.
 
-### `speaker.upserted`
-
-Registriert oder aktualisiert einen Discord-Sprecher. Primärschlüssel ist die Discord User ID, nicht der Anzeigename.
-
-### `capture.status`
-
-Meldet den Audiozustand sichtbar an das Cockpit:
-
-- idle
-- joining
-- listening
-- paused
-- stopping
-- error
-
-Zusätzlich werden Capture-Policy und Roh-Audio-Retention gemeldet.
-
-### `transcript.segment`
-
-Kernobjekt für Live-Transkription:
+Beispiel:
 
 ```json
 {
@@ -146,137 +64,182 @@ Kernobjekt für Live-Transkription:
   "text": "Ich verspreche dem Händler morgen zurückzukommen.",
   "final": true,
   "language": "de",
-  "provider": "provider-id",
+  "provider": "deepgram",
   "confidence": 0.94
 }
 ```
 
-V1 verarbeitet für persistente Daten nur finale Segmente. Partials dürfen optional für UI-Livefeedback gesendet werden, werden aber nicht dauerhaft gespeichert.
-
-## 5–15-Sekunden-Latenz
-
-Der Vertrag schreibt keinen konkreten Provider vor. Der Companion Service sammelt Sprache pro Discord-Nutzer in kurzen utterance-/zeitbasierten Fenstern.
-
-Ziel:
-
-- Finalisierung möglichst innerhalb 5–15 Sekunden
-- Sprecher unabhängig verarbeiten
-- keine globale Audio-Mischspur als Primärquelle
-- Backpressure/Queue statt Segmentverlust, falls mehr als 10 Teilnehmer gleichzeitig aktiv sind
-
 ## NPC-Kontext
 
-Foundry sendet `npc.context`, wenn sich der relevante NPC ändert.
+Foundry sendet `npc.context` bei relevanten Änderungen.
 
 Priorität:
 
-1. explizit aktiver NPC im DM Cockpit
+1. explizit aktiver Cockpit-Actor
 2. ausgewählter Foundry-Token
 3. kein NPC
 
-Der Actor wird mindestens über `actorId` bzw. `actorUuid` referenziert.
+Der Companion darf NPC-Kandidaten nur dem Actor zuordnen, den Foundry über `actorId`/`actorUuid` geliefert hat. Die KI bestimmt niemals selbst eine Actor-ID.
 
-## NPC-Memory-Kandidat
+## KI-Kandidaten
 
-KI-Ergebnisse werden nicht als Freitext ohne Herkunft gespeichert. Jeder Kandidat enthält:
+### `npc.memory.candidate`
 
-- Ziel-Actor
-- Memory-Typ
-- normalisierten Text
-- Quell-Segment-IDs
-- optional Confidence
-- Provider und Modell
-- Zeitstempel
+Pflichtfelder:
 
-V1-Typen:
+- `candidateId`
+- `actorId`
+- `text`
+- `kind`
+- `sourceSegmentIds`
+- `createdAt`
 
-- statement
-- knowledge
-- action
-- relationship
-- promise
-- lie
-- deadline
-- consequence
-- other
+NPC-Kategorien:
 
-## Direktes Speichern + Undo
+- `statement`
+- `knowledge`
+- `action`
+- `relationship`
+- `promise`
+- `lie`
+- `deadline`
+- `consequence`
+- `other`
 
-Die gewünschte V1 speichert akzeptierte KI-Ergebnisse direkt am Actor. Deshalb ist Undo Teil des Datenmodells und kein späteres Extra.
+### `session.event.candidate`
 
-Vor jeder automatischen Actor-Änderung wird ein Change-Record erzeugt:
+Session-Kategorien:
 
-- Change-ID
-- Actor-ID
-- Flag-Pfad
-- vorheriger Wert
-- neuer Wert
-- Quelle/Kandidat
-- Zeitstempel
+- `decision`
+- `quest`
+- `task`
+- `loot`
+- `reward`
+- `open_question`
+- `combat`
+- `event`
+- `other`
 
-Ein Undo stellt den vorherigen Zustand wieder her und wird selbst protokolliert.
+Kandidatenstatus:
+
+- `pending`
+- `accepted`
+- `rejected`
+
+## Manuelle Kandidatenprüfung
+
+### `candidate.review`
+
+Foundry sendet diese Nachricht ausschließlich nach einer bewussten GM-Aktion.
+
+```json
+{
+  "candidateType": "npc.memory.candidate",
+  "candidateId": "cand_01...",
+  "status": "accepted"
+}
+```
+
+Erlaubte Statuswerte für Review:
+
+- `accepted`
+- `rejected`
+
+Der Companion aktualisiert den Status in SQLite.
+
+### `candidate.reviewed`
+
+Bestätigung/Broadcast nach erfolgreicher Persistenz:
+
+```json
+{
+  "candidateType": "npc.memory.candidate",
+  "candidateId": "cand_01...",
+  "status": "accepted",
+  "reviewedAt": "2026-08-09T14:50:00.000Z"
+}
+```
+
+## Kandidaten nach Reload wieder laden
+
+### `candidates.list.request`
+
+```json
+{
+  "status": "pending",
+  "limit": 100
+}
+```
+
+Optional:
+
+- `status`: `pending`, `accepted`, `rejected`, `all`
+- `sessionId`
+- `limit` bis 250
+
+### `candidates.list.result`
+
+Antwort enthält getrennte Arrays:
+
+- `npcCandidates`
+- `sessionEventCandidates`
+
+Dadurch kann Foundry nach einem Reload offene Kandidaten erneut aus SQLite laden.
+
+## Foundry-Anwendung
+
+Für NPC-Memory gilt in der aktuellen manuellen V1:
+
+1. KI erzeugt `npc.memory.candidate`.
+2. Foundry zeigt den Kandidaten an.
+3. GM klickt ausdrücklich auf „Annehmen“.
+4. Foundry schreibt den Text in `flags['dm-cockpit'].actionMemory` des bereits vorgegebenen Actors.
+5. Foundry sendet `candidate.review` mit `accepted`.
+6. Companion persistiert den Review-Status und broadcastet `candidate.reviewed`.
+
+Bei `rejected` findet keine Actor-Änderung statt.
+
+Session-Kandidaten werden bei Annahme zunächst nur als `accepted` in SQLite markiert. Sie dienen später als Quelle für Session-Historie, Recap und Discord-Kurzfassung.
+
+## Undo / Change-Records
+
+Das Schema enthält weiterhin:
+
+- `npc.memory.applied`
+- `change.undo.request`
+- `change.undo.result`
+- `change_records` in SQLite
+
+Der vollständige Undo-Runtime-Pfad ist ein separater Entwicklungsblock. Bis dahin bleiben automatische Actor-Writes deaktiviert; der aktuelle NPC-Memory-Schreibpfad erfordert einen manuellen GM-Klick.
 
 ## Provider-Abstraktion
 
-Der Kernvertrag enthält keine OpenAI-, Google-, Azure- oder andere vendorspezifische Pflichtfelder.
+### STT
 
-Der Companion Service erhält zwei Adapter-Schnittstellen:
+Bestätigter aktueller Provider:
 
-### TranscriptionProvider
+- Deepgram Nova-3, Deutsch, EU-Endpunkt
 
-Eingabe:
+STT bleibt provider-neutral und kann später lokal ersetzt werden.
 
-- Sprecher-ID
-- Audiochunk/Stream
-- Sprache/Auto-Detect
-- Zeitinformationen
+### KI-Extraktion
 
-Ausgabe:
+Unterstützte Companion-Provider:
 
-- finaler/partieller Text
-- Zeitgrenzen
-- optional Confidence
-- Provider-/Modellkennung
+- `none`
+- `mock`
+- `openai`
+- `ollama`
 
-### ExtractionProvider
+Aktuell ausgewählter kostenloser Standard:
 
-Eingabe:
+- Ollama lokal
+- `qwen3:4b`
+- Structured Output per JSON-Schema
+- `think=false`
+- Temperatur 0
 
-- finale Transkriptsegmente
-- aktueller NPC-Kontext
-- bestehende relevante Actor-Memories
-
-Ausgabe:
-
-- strukturierte NPC-Memory-Kandidaten
-- Quell-Segment-IDs
-- optional Confidence
-
-So kann der Anbieter später verglichen oder gewechselt werden, ohne die Foundry-Seite umzubauen.
-
-## Auto-Join des GM
-
-Der Companion Service speichert eine konfigurierte GM Discord User ID. Bei Voice-State-Änderungen:
-
-1. GM betritt einen Voice-Channel.
-2. Bot joint denselben Channel.
-3. Capture-Status wechselt auf `joining` und danach `listening`.
-4. Wechselt der GM den Channel, folgt der Bot.
-5. Verlässt der GM Voice, wird die Session nicht zwingend sofort gelöscht; Capture wird beendet/pausiert und Session-Ende separat behandelt.
-
-Die konkrete Discord-Voice-Implementierung muss DAVE/E2EE unterstützen.
-
-## Capture-Policy
-
-Unterstützte technische Modi:
-
-- `notice_only`
-- `explicit_per_session`
-- `persistent_participant_consent`
-
-Aktuell ausgewählt: `notice_only`.
-
-Wichtig: Dieses Feld dokumentiert ausschließlich die technische Workflow-Einstellung. Es behauptet nicht, dass eine bestimmte Policy in einer konkreten Situation rechtlich ausreicht.
+OpenAI bleibt optionaler Fallback; ein echter kostenpflichtiger OpenAI-API-Aufruf wurde bisher nicht benötigt.
 
 ## Roh-Audio
 
@@ -284,39 +247,34 @@ V1-Regel:
 
 `until_successful_transcription`
 
-Ablauf:
-
-1. Audiochunk wird temporär gehalten.
-2. STT liefert erfolgreich ein finales Ergebnis.
-3. Finales Segment wird in SQLite persistiert.
-4. Zugehöriger Roh-Audiochunk wird gelöscht.
-5. Bei Fehler bleibt der Chunk nur für einen begrenzten Retry-Zeitraum; keine dauerhafte Audioarchivierung.
+Roh-Audio bleibt nur temporär für Verarbeitung/Retry im RAM bzw. kurzfristigen Puffer und wird nicht dauerhaft archiviert.
 
 ## Fehler- und Wiederanlaufregeln
 
-- Nachrichten besitzen eindeutige IDs.
-- finale Transkriptsegmente besitzen eindeutige Segment-IDs.
-- SQLite-Schreibvorgänge müssen idempotent gegen doppelte Segment-IDs sein.
-- WebSocket-Reconnect darf bereits gespeicherte Segmente nicht duplizieren.
-- Providerfehler führen zu Queue/Retry und sichtbarem Status, nicht zu stillem Verlust.
-- Discord-Reconnect und Foundry-Reconnect sind getrennte Zustände.
+- eindeutige Message-IDs
+- eindeutige Segment-IDs
+- idempotente SQLite-Schreibvorgänge für finale Segmente/Kandidaten
+- Reconnect darf gespeicherte Daten nicht duplizieren
+- Candidate-Review wird persistent als Status gespeichert
+- Providerfehler müssen sichtbar werden; kein stilles Verwerfen
+- Backpressure/Queue ist Segmentverlust vorzuziehen
 
-## Nicht Teil dieses TODOs
+## Aktueller Implementierungsstand
 
-Noch nicht implementiert:
+Bestätigt:
 
-- tatsächlicher Discord Bot
-- DAVE/libdave-Anbindung
-- echter STT-Provider
-- Live-Transkript-UI
-- KI-Extraktion
-- SQLite-Code
-- Session-Recap
+- Discord Voice/DAVE
+- Sprechertrennung
+- Deepgram STT
+- Live-Transkript
+- SQLite-Persistenz
+- provider-neutrale KI-Extraktion
+- Ollama/qwen3:4b End-to-End
+- qwen3:4b Qualitätsbenchmark 91,7 %
 
-Dieser Schritt definiert ausschließlich den stabilen Vertrag, auf dem diese Komponenten aufbauen.
+Implementiert, noch lokal zu bestätigen:
 
-## Nächster einzelner TODO
-
-**Foundry Live-Transkript V1 als Mock/Transport-Client implementieren.**
-
-Dabei soll das Cockpit bereits `transcript.segment`, `capture.status` und `npc.context` gegen simulierte Daten verarbeiten können, bevor Discord Voice oder ein kostenpflichtiger Cloud-Provider eingebaut wird.
+- `candidate.review`
+- `candidate.reviewed`
+- `candidates.list.request/result`
+- Foundry-Kandidaten-UI mit manuellem Annehmen/Verwerfen
