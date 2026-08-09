@@ -49,9 +49,7 @@
     "payload": { "type": "object" }
   },
   "$defs": {
-    "candidateStatus": {
-      "enum": ["pending", "accepted", "rejected"]
-    },
+    "candidateStatus": { "enum": ["pending", "accepted", "rejected"] },
     "speaker": {
       "type": "object",
       "required": ["discordUserId", "displayName"],
@@ -84,18 +82,11 @@
         "guildId": { "type": ["string", "null"] },
         "channelId": { "type": ["string", "null"] },
         "observedAt": { "type": "string", "format": "date-time" },
-        "participants": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/voiceParticipant" },
-          "maxItems": 100
-        }
+        "participants": { "type": "array", "items": { "$ref": "#/$defs/voiceParticipant" }, "maxItems": 100 }
       },
       "additionalProperties": false
     },
-    "voiceParticipantsRequest": {
-      "type": "object",
-      "additionalProperties": false
-    },
+    "voiceParticipantsRequest": { "type": "object", "additionalProperties": false },
     "playerCharacterMapping": {
       "type": "object",
       "required": ["discordUserId", "actorId", "characterName"],
@@ -116,20 +107,14 @@
         "worldId": { "type": "string", "minLength": 1 },
         "worldName": { "type": ["string", "null"] },
         "updatedAt": { "type": ["string", "null"], "format": "date-time" },
-        "mappings": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/playerCharacterMapping" },
-          "maxItems": 100
-        }
+        "mappings": { "type": "array", "items": { "$ref": "#/$defs/playerCharacterMapping" }, "maxItems": 100 }
       },
       "additionalProperties": false
     },
     "playerCharacterMappingRequest": {
       "type": "object",
       "required": ["worldId"],
-      "properties": {
-        "worldId": { "type": "string", "minLength": 1 }
-      },
+      "properties": { "worldId": { "type": "string", "minLength": 1 } },
       "additionalProperties": false
     },
     "playerCharacterMappingResult": {
@@ -138,11 +123,7 @@
       "properties": {
         "worldId": { "type": "string", "minLength": 1 },
         "worldName": { "type": ["string", "null"] },
-        "mappings": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/playerCharacterMapping" },
-          "maxItems": 100
-        }
+        "mappings": { "type": "array", "items": { "$ref": "#/$defs/playerCharacterMapping" }, "maxItems": 100 }
       },
       "additionalProperties": false
     },
@@ -157,11 +138,7 @@
         "active": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
-        "mappings": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/playerCharacterMapping" },
-          "maxItems": 100
-        }
+        "mappings": { "type": "array", "items": { "$ref": "#/$defs/playerCharacterMapping" }, "maxItems": 100 }
       },
       "additionalProperties": false
     },
@@ -174,20 +151,14 @@
         "worldName": { "type": ["string", "null"] },
         "name": { "type": "string", "minLength": 1, "maxLength": 80 },
         "kind": { "enum": ["campaign", "oneshot", "session"] },
-        "mappings": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/playerCharacterMapping" },
-          "maxItems": 100
-        }
+        "mappings": { "type": "array", "items": { "$ref": "#/$defs/playerCharacterMapping" }, "maxItems": 100 }
       },
       "additionalProperties": false
     },
     "identityProfileListRequest": {
       "type": "object",
       "required": ["worldId"],
-      "properties": {
-        "worldId": { "type": "string", "minLength": 1 }
-      },
+      "properties": { "worldId": { "type": "string", "minLength": 1 } },
       "additionalProperties": false
     },
     "identityProfileListResult": {
@@ -195,11 +166,7 @@
       "required": ["worldId", "profiles", "activeProfileId"],
       "properties": {
         "worldId": { "type": "string", "minLength": 1 },
-        "profiles": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/identityProfile" },
-          "maxItems": 100
-        },
+        "profiles": { "type": "array", "items": { "$ref": "#/$defs/identityProfile" }, "maxItems": 100 },
         "activeProfileId": { "type": ["string", "null"] }
       },
       "additionalProperties": false
@@ -207,15 +174,10 @@
     "identityProfileActivate": {
       "type": "object",
       "required": ["profileId"],
-      "properties": {
-        "profileId": { "type": "string", "minLength": 1 }
-      },
+      "properties": { "profileId": { "type": "string", "minLength": 1 } },
       "additionalProperties": false
     },
-    "emptyPayload": {
-      "type": "object",
-      "additionalProperties": false
-    },
+    "emptyPayload": { "type": "object", "additionalProperties": false },
     "nicknameOverride": {
       "type": "object",
       "required": ["guildId", "discordUserId", "profileId", "appliedNickname", "state", "createdAt", "updatedAt"],
@@ -225,7 +187,7 @@
         "profileId": { "type": "string", "minLength": 1 },
         "originalNickname": { "type": ["string", "null"] },
         "appliedNickname": { "type": "string", "minLength": 1, "maxLength": 32 },
-        "state": { "enum": ["prepared", "applied", "apply_failed", "restore_failed", "restore_conflict", "conflict_released", "restored"] },
+        "state": { "enum": ["prepared", "applied", "apply_failed", "restore_failed", "restore_conflict", "restored"] },
         "lastError": { "type": ["string", "null"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
@@ -237,26 +199,15 @@
       "type": "object",
       "required": ["activeProfile", "guildId", "nicknameOverrides", "nicknameStatus", "updatedAt"],
       "properties": {
-        "activeProfile": {
-          "oneOf": [
-            { "$ref": "#/$defs/identityProfile" },
-            { "type": "null" }
-          ]
-        },
+        "activeProfile": { "oneOf": [{ "$ref": "#/$defs/identityProfile" }, { "type": "null" }] },
         "guildId": { "type": ["string", "null"] },
-        "nicknameOverrides": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/nicknameOverride" },
-          "maxItems": 100
-        },
+        "nicknameOverrides": { "type": "array", "items": { "$ref": "#/$defs/nicknameOverride" }, "maxItems": 100 },
         "nicknameStatus": { "type": ["object", "null"] },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "additionalProperties": false
     },
-    "nicknameStatus": {
-      "type": "object"
-    },
+    "nicknameStatus": { "type": "object" },
     "transcriptSegment": {
       "type": "object",
       "required": ["segmentId", "discordUserId", "speakerName", "startedAt", "endedAt", "text", "final"],
@@ -299,15 +250,8 @@
         "actorId": { "type": "string", "minLength": 1 },
         "actorUuid": { "type": ["string", "null"] },
         "text": { "type": "string", "minLength": 1 },
-        "kind": {
-          "enum": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"]
-        },
-        "sourceSegmentIds": {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 1,
-          "uniqueItems": true
-        },
+        "kind": { "enum": ["statement", "knowledge", "action", "relationship", "promise", "lie", "deadline", "consequence", "other"] },
+        "sourceSegmentIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
         "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
         "createdAt": { "type": "string", "format": "date-time" },
         "provider": { "type": ["string", "null"] },
@@ -323,15 +267,8 @@
         "candidateId": { "type": "string", "minLength": 1 },
         "sessionId": { "type": ["string", "null"] },
         "text": { "type": "string", "minLength": 1 },
-        "kind": {
-          "enum": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"]
-        },
-        "sourceSegmentIds": {
-          "type": "array",
-          "items": { "type": "string" },
-          "minItems": 1,
-          "uniqueItems": true
-        },
+        "kind": { "enum": ["decision", "quest", "task", "loot", "reward", "open_question", "combat", "event", "other"] },
+        "sourceSegmentIds": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
         "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
         "createdAt": { "type": "string", "format": "date-time" },
         "provider": { "type": ["string", "null"] },
@@ -409,98 +346,29 @@
     }
   },
   "allOf": [
-    {
-      "if": { "properties": { "type": { "const": "transcript.segment" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/transcriptSegment" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "speaker.upserted" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/speaker" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "voice.participants" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipants" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "voice.participants.request" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipantsRequest" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "player.character.mapping.set" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingSet" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "player.character.mapping.request" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingRequest" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "player.character.mapping.result" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingResult" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.save" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileSave" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.list.request" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileListRequest" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.list.result" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileListResult" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.activate" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileActivate" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.deactivate" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.state.request" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "identity.profile.state" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileState" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "nickname.status" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/nicknameStatus" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "npc.context" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/npcContext" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "npc.memory.candidate" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/npcMemoryCandidate" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "session.event.candidate" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/sessionEventCandidate" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "candidate.review" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/candidateReview" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "candidate.reviewed" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/candidateReviewed" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "candidates.list.request" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/candidatesListRequest" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "candidates.list.result" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/candidatesListResult" } } }
-    },
-    {
-      "if": { "properties": { "type": { "const": "capture.status" } } },
-      "then": { "properties": { "payload": { "$ref": "#/$defs/captureStatus" } } }
-    }
+    { "if": { "properties": { "type": { "const": "transcript.segment" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/transcriptSegment" } } } },
+    { "if": { "properties": { "type": { "const": "speaker.upserted" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/speaker" } } } },
+    { "if": { "properties": { "type": { "const": "voice.participants" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipants" } } } },
+    { "if": { "properties": { "type": { "const": "voice.participants.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/voiceParticipantsRequest" } } } },
+    { "if": { "properties": { "type": { "const": "player.character.mapping.set" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingSet" } } } },
+    { "if": { "properties": { "type": { "const": "player.character.mapping.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingRequest" } } } },
+    { "if": { "properties": { "type": { "const": "player.character.mapping.result" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/playerCharacterMappingResult" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.save" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileSave" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.list.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileListRequest" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.list.result" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileListResult" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.activate" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileActivate" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.deactivate" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.state.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/emptyPayload" } } } },
+    { "if": { "properties": { "type": { "const": "identity.profile.state" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/identityProfileState" } } } },
+    { "if": { "properties": { "type": { "const": "nickname.status" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/nicknameStatus" } } } },
+    { "if": { "properties": { "type": { "const": "npc.context" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/npcContext" } } } },
+    { "if": { "properties": { "type": { "const": "npc.memory.candidate" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/npcMemoryCandidate" } } } },
+    { "if": { "properties": { "type": { "const": "session.event.candidate" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sessionEventCandidate" } } } },
+    { "if": { "properties": { "type": { "const": "candidate.review" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/candidateReview" } } } },
+    { "if": { "properties": { "type": { "const": "candidate.reviewed" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/candidateReviewed" } } } },
+    { "if": { "properties": { "type": { "const": "candidates.list.request" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/candidatesListRequest" } } } },
+    { "if": { "properties": { "type": { "const": "candidates.list.result" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/candidatesListResult" } } } },
+    { "if": { "properties": { "type": { "const": "capture.status" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/captureStatus" } } } }
   ],
   "additionalProperties": false
 }
