@@ -1,14 +1,16 @@
 import { randomUUID } from "node:crypto";
-import "./server.js";
+import { identityProfileStore, registerShutdownHandler } from "./server.js";
 import { AiExtractionService } from "./ai-extraction-service.js";
 import { DiscordAudioReceiver } from "./audio-receive.js";
 import { CompanionPublisher } from "./companion-publisher.js";
+import { DiscordNicknameManager } from "./discord-nickname-manager.js";
 import { DiscordVoiceController } from "./discord-voice.js";
 import { PlayerCharacterIdentityRegistry } from "./player-character-identity.js";
 import { SttService } from "./stt-service.js";
 
 let activeSessionId = null;
 let publisher = null;
+let nicknameManager = null;
 const npcContextBySession = new Map();
 const playerIdentity = new PlayerCharacterIdentityRegistry();
 const LATEST_NPC_CONTEXT_KEY = "__latest_npc_context__";
@@ -36,6 +38,15 @@ function handleProtocolBroadcast(message) {
     if (playerIdentity.replace(message.payload) && process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
       const snapshot = playerIdentity.snapshot();
       console.log(`[identity] ${snapshot.mappings.length} Spieler-/Charakterzuordnung(en) für Welt ${snapshot.worldId} aktiv.`);
+    }
+    return;
+  }
+
+  if (message?.type === "identity.profile.state") {
+    if (nicknameManager?.started) {
+      void nicknameManager.handleProfileState(message.payload).catch(error => {
+        console.warn("[nickname] Profilzustand konnte nicht abgeglichen werden:", error?.message ?? error);
+      });
     }
     return;
   }
@@ -165,6 +176,11 @@ const discordVoice = new DiscordVoiceController({
   },
   onParticipants: payload => {
     publisher.send("voice.participants", payload, activeSessionId);
+    if (nicknameManager?.started) {
+      void nicknameManager.handleParticipants(payload).catch(error => {
+        console.warn("[nickname] Teilnehmerzustand konnte nicht abgeglichen werden:", error?.message ?? error);
+      });
+    }
   },
   onStatus: status => {
     if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
@@ -172,6 +188,21 @@ const discordVoice = new DiscordVoiceController({
     }
   }
 });
+
+nicknameManager = new DiscordNicknameManager({
+  voice: discordVoice,
+  store: identityProfileStore,
+  onStatus: status => {
+    publisher.send("nickname.status", {
+      ...status,
+      updatedAt: new Date().toISOString()
+    }, activeSessionId);
+    if (process.env.DM_COCKPIT_DISCORD_DEBUG === "1") {
+      console.log("[nickname] Status:", JSON.stringify(status));
+    }
+  }
+});
+nicknameManager.start();
 
 let attachedVoiceConnection = null;
 const receiverWatch = setInterval(() => {
@@ -191,7 +222,8 @@ const receiverWatch = setInterval(() => {
           providers: {
             stt: stt.snapshot().provider,
             ai: aiExtraction.snapshot().provider
-          }
+          },
+          identityProfileId: identityProfileStore.activeProfile()?.profileId ?? null
         }, activeSessionId);
       }
 
@@ -240,6 +272,13 @@ void discordVoice.start().catch(error => {
 
 async function stopDiscordVoice() {
   clearInterval(receiverWatch);
+
+  try {
+    await nicknameManager?.shutdown();
+  } catch (error) {
+    console.warn("[nickname] Session-Nicknames konnten beim Shutdown nicht vollständig restauriert werden:", error?.message ?? error);
+  }
+
   audioReceiver.detach("Companion wird beendet");
   attachedVoiceConnection = null;
 
@@ -262,5 +301,4 @@ async function stopDiscordVoice() {
   publisher.stop();
 }
 
-process.once("SIGINT", () => void stopDiscordVoice());
-process.once("SIGTERM", () => void stopDiscordVoice());
+registerShutdownHandler(stopDiscordVoice);
