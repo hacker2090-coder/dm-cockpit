@@ -22,7 +22,11 @@ function errorText(error) {
 }
 
 export class DiscordVoiceController {
-  constructor({ onCaptureState = () => {}, onStatus = () => {} } = {}) {
+  constructor({
+    onCaptureState = () => {},
+    onStatus = () => {},
+    onParticipants = () => {}
+  } = {}) {
     this.token = env("DISCORD_BOT_TOKEN");
     this.guildId = env("DISCORD_GUILD_ID");
     this.gmUserId = env("DISCORD_GM_USER_ID");
@@ -30,6 +34,7 @@ export class DiscordVoiceController {
 
     this.onCaptureState = onCaptureState;
     this.onStatus = onStatus;
+    this.onParticipants = onParticipants;
 
     this.client = null;
     this.connection = null;
@@ -42,6 +47,7 @@ export class DiscordVoiceController {
     this.lastDaveTransitionId = null;
     this.boundConnections = new WeakSet();
     this.followQueue = Promise.resolve();
+    this.participantRefreshTimer = null;
   }
 
   missingConfiguration() {
@@ -66,7 +72,8 @@ export class DiscordVoiceController {
       followMode: "configured-gm",
       selfDeaf: false,
       selfMute: true,
-      audioCaptureImplemented: false,
+      audioCaptureImplemented: true,
+      participantTrackingImplemented: true,
       dave: {
         enabled: true,
         library: "@discordjs/voice",
@@ -92,6 +99,63 @@ export class DiscordVoiceController {
     if (this.debug && error?.stack) console.warn(error.stack);
     this.emitStatus();
     this.setCaptureState("error");
+  }
+
+  async participantSnapshot(channelId = this.channelId) {
+    const normalizedChannelId = String(channelId ?? "").trim() || null;
+    if (!this.client || !this.guildId || !normalizedChannelId) {
+      return {
+        guildId: this.guildId || null,
+        channelId: normalizedChannelId,
+        observedAt: new Date().toISOString(),
+        participants: []
+      };
+    }
+
+    const guild = await this.client.guilds.fetch(this.guildId);
+    const participants = [...guild.voiceStates.cache.values()]
+      .filter(state => state.channelId === normalizedChannelId)
+      .map(state => {
+        const member = state.member ?? null;
+        const user = member?.user ?? this.client?.users?.cache?.get(state.id) ?? null;
+        const displayName = user?.globalName
+          ?? user?.username
+          ?? member?.displayName
+          ?? String(state.id);
+        return {
+          discordUserId: String(state.id),
+          displayName: String(displayName),
+          globalName: user?.globalName ?? null,
+          serverNickname: member?.nickname ?? null,
+          isBot: Boolean(user?.bot),
+          channelId: normalizedChannelId
+        };
+      })
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, "de"));
+
+    return {
+      guildId: this.guildId,
+      channelId: normalizedChannelId,
+      observedAt: new Date().toISOString(),
+      participants
+    };
+  }
+
+  async emitParticipants(channelId = this.channelId) {
+    const payload = await this.participantSnapshot(channelId);
+    this.onParticipants(payload);
+    return payload;
+  }
+
+  queueParticipantRefresh(delayMs = 75) {
+    if (this.participantRefreshTimer) clearTimeout(this.participantRefreshTimer);
+    this.participantRefreshTimer = setTimeout(() => {
+      this.participantRefreshTimer = null;
+      void this.emitParticipants().catch(error => {
+        console.warn("[discord-voice] Voice-Teilnehmer konnten nicht aktualisiert werden:", errorText(error));
+      });
+    }, delayMs);
+    this.participantRefreshTimer.unref?.();
   }
 
   async start() {
@@ -123,9 +187,17 @@ export class DiscordVoiceController {
       this.queueFollowFromCurrentState();
     });
 
-    client.on(Events.VoiceStateUpdate, (_oldState, newState) => {
-      if (newState.guild.id !== this.guildId || newState.id !== this.gmUserId) return;
-      this.queueFollow(newState.channelId ?? null);
+    client.on(Events.VoiceStateUpdate, (oldState, newState) => {
+      if (newState.guild.id !== this.guildId) return;
+
+      if (newState.id === this.gmUserId) {
+        this.queueFollow(newState.channelId ?? null);
+        return;
+      }
+
+      if (this.channelId && (oldState.channelId === this.channelId || newState.channelId === this.channelId)) {
+        this.queueParticipantRefresh();
+      }
     });
 
     client.on(Events.Error, error => {
@@ -224,8 +296,9 @@ export class DiscordVoiceController {
     this.lastError = null;
     console.log(`[discord-voice] Folge GM in '${channel.name}' (${channelId}); DAVE aktiviert.`);
     this.emitStatus();
+    await this.emitParticipants(channelId);
 
-    // Audio-Capture kommt im nächsten Schritt. Bis dahin ist Voice verbunden, aber Aufnahme pausiert.
+    // Audio-Capture ist implementiert; der Receiver setzt den Status nach dem Anbinden auf listening.
     this.setCaptureState("paused");
   }
 
@@ -254,6 +327,7 @@ export class DiscordVoiceController {
         case VoiceConnectionStatus.Ready:
           this.voiceState = "ready";
           this.setCaptureState("paused");
+          this.queueParticipantRefresh();
           break;
         case VoiceConnectionStatus.Disconnected:
           this.voiceState = "disconnected";
@@ -288,11 +362,19 @@ export class DiscordVoiceController {
     }
 
     if (this.channelId) console.log(`[discord-voice] ${reason}.`);
+    if (this.participantRefreshTimer) clearTimeout(this.participantRefreshTimer);
+    this.participantRefreshTimer = null;
     this.channelId = null;
     this.voiceState = "idle";
     this.lastDaveTransitionId = null;
     this.emitStatus();
     this.setCaptureState("idle");
+    this.onParticipants({
+      guildId: this.guildId || null,
+      channelId: null,
+      observedAt: new Date().toISOString(),
+      participants: []
+    });
   }
 
   async stop() {
