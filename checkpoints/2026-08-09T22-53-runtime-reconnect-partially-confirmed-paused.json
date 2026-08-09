@@ -1,0 +1,121 @@
+{
+  "checkpoint_type": "dm_cockpit_runtime_pause",
+  "schema_version": "1.0",
+  "created_at": "2026-08-09T22:53:00+02:00",
+  "language": "de",
+  "project": {
+    "name": "DM Cockpit",
+    "repository": "hacker2090-coder/dm-cockpit",
+    "branch": "main",
+    "source_of_truth": "GitHub main",
+    "foundry_version": "0.9.30",
+    "companion_version": "0.14.0",
+    "main_before_checkpoint": "e87c6efaebeafd578410020fb5b6f287206e4b38"
+  },
+  "pause_reason": "Nutzer beendet den heutigen Runtime-Test bewusst und möchte später an exakt dieser Stelle fortsetzen.",
+  "runtime_bundle": {
+    "name": "discord_interventions_and_reconnect",
+    "status": "partially_local_confirmed",
+    "fully_confirmed": false,
+    "confirmed_today": [
+      {
+        "check": "lokales Repository aktualisiert",
+        "result": "git pull erfolgreich; lokaler Stand erreichte e87c6ef"
+      },
+      {
+        "check": "Companion 0.14.0 Start",
+        "result": "erfolgreich; Deepgram bereit; WebSocket/SQLite gestartet; Discord Bot DM Cockpit#0855 bereit; initial Capture idle"
+      },
+      {
+        "check": "Foundry 0.9.30 lädt",
+        "result": "vom Nutzer ohne sichtbare Fehler bestätigt"
+      },
+      {
+        "check": "Discord-Ausgabekanal auswählen",
+        "result": "Kanalübernahme erfolgreich"
+      },
+      {
+        "check": "Voice-Join startet keine logische Session",
+        "result": "/dm status zeigte Session aus/inaktiv"
+      },
+      {
+        "check": "/dm start",
+        "result": "erfolgreich",
+        "session_id": "voice_da888149-64c2-4194-bbde-176b59793bf6"
+      },
+      {
+        "check": "automatischer Transkriptionshinweis",
+        "result": "genau 1 Nachricht im Discord-Ausgabekanal",
+        "observed_text_summary": "DM Cockpit – Transkription aktiv; Runde test; Live-Transkription; Roh-Audio wird nicht dauerhaft gespeichert"
+      },
+      {
+        "check": "reales STT vor Reconnect",
+        "result": "gesprochener Testsatz erschien in Foundry"
+      },
+      {
+        "check": "Voice-Reconnect",
+        "result": "Bot wurde manuell aus Voice getrennt und kam selbständig in denselben Kanal zurück"
+      },
+      {
+        "check": "gleiche logische Session nach Reconnect",
+        "result": "bestätigt",
+        "session_id": "voice_da888149-64c2-4194-bbde-176b59793bf6",
+        "status_observed": {
+          "session": "aktiv",
+          "capture": "aktiv",
+          "discord_gateway": "ready",
+          "voice": "ready",
+          "voice_channel_id": "1533193854935761137",
+          "reconnect": "bereit",
+          "output_channel": "#test-channel"
+        }
+      },
+      {
+        "check": "kein doppelter Aufnahmehinweis nach Reconnect",
+        "result": "weiterhin genau 1 Hinweis"
+      },
+      {
+        "check": "reales STT nach Reconnect",
+        "result": "zweiter Testsatz erschien genau 1x in Foundry"
+      }
+    ],
+    "diagnostic_note": {
+      "observation": "Im Companion kann nach Voice Ready die interne Logzeile 'Capture-Status: paused' erscheinen.",
+      "runtime_truth": "/dm status zeigte Capture aktiv und ein neuer Satz wurde nach Reconnect genau 1x transkribiert.",
+      "classification": "missverständliche interne Status-/Log-Semantik; aktuell kein bestätigter Capture-Blocker"
+    },
+    "not_yet_confirmed": [
+      "/dm recap einschließlich bewusstem Discord-Posting bzw. korrekter Warnung ohne angenommene Session-Ereignisse",
+      "/dm stop",
+      "zweites /dm stop bzw. idempotentes Already-Idle-Verhalten",
+      "Presence-Zustände vollständig beobachten",
+      "diagnostic.state vollständig beobachten",
+      "Persistenz des gewählten Discord-Ausgabekanals über Neustart",
+      "gelöschter oder unbeschreibbarer Zielkanal falls praktikabel",
+      "abschließender gebündelter Runtime-/E2E-Abschluss"
+    ]
+  },
+  "resume": {
+    "do_not_repeat": [
+      "Reconnect-Grundfunktion ohne konkreten Regressionshinweis",
+      "STT vor/nach Reconnect ohne konkreten Regressionshinweis",
+      "Nachweis gleicher Session-ID nach Reconnect ohne konkreten Regressionshinweis",
+      "Nachweis des einmaligen automatischen Aufnahmehinweises ohne konkreten Regressionshinweis"
+    ],
+    "next_boundary": "restliche Runtime-Checks des 0.9.30/0.14.0-Bundles",
+    "next_test": "/dm recap",
+    "resume_note": "Falls Companion/Foundry/Discord bis dahin beendet wurden, nur die minimal nötigen Voraussetzungen neu starten. Nicht den gesamten bereits bestätigten Reconnect-Test wiederholen.",
+    "after_recap": [
+      "/dm stop testen",
+      "zweites /dm stop auf Idempotenz testen",
+      "Presence/Diagnose und ggf. Ausgabekanal-Persistenz prüfen",
+      "danach local_confirmed/fully_confirmed nur für tatsächlich beobachtete Punkte aktualisieren"
+    ]
+  },
+  "safety_and_truth": {
+    "raw_audio_permanent_storage": false,
+    "secrets_recorded": false,
+    "local_confirmed_is_partial_only": true,
+    "fully_confirmed": false
+  }
+}
