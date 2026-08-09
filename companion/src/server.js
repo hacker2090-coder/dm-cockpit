@@ -1,14 +1,17 @@
+import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { WebSocket, WebSocketServer } from "ws";
 import { CompanionStore } from "./store.js";
 
 const PROTOCOL_VERSION = "1.0";
 const SERVICE_VERSION = "0.1.0";
+const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
 const WS_PATH = process.env.DM_COCKPIT_WS_PATH?.trim() || "/v1";
-const DB_PATH = resolve(process.env.DM_COCKPIT_DB_PATH?.trim() || "./data/dm-cockpit.sqlite");
+const DB_PATH = resolve(process.env.DM_COCKPIT_DB_PATH?.trim() || resolve(APP_DIR, "data", "dm-cockpit.sqlite"));
 
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error(`Ungültiger DM_COCKPIT_PORT: ${process.env.DM_COCKPIT_PORT}`);
@@ -22,7 +25,7 @@ function now() {
 }
 
 function id(prefix = "msg") {
-  return `${prefix}_${crypto.randomUUID()}`;
+  return `${prefix}_${randomUUID()}`;
 }
 
 function envelope(type, payload = {}, sessionId = null) {
