@@ -1,0 +1,38 @@
+{
+  "checkpoint_type": "dm_cockpit_chat_working_rules",
+  "schema_version": "1.0",
+  "created_at": "2026-08-09T13:29:00+02:00",
+  "scope": "entire_current_chat",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "inherits_project_checkpoint": {
+    "path": "PROJECT-CHECKPOINT.json",
+    "known_blob_sha_before_this_rules_checkpoint": "6e75b34508eec2a32756dc23745bd9faddb939de"
+  },
+  "rules": {
+    "selection_questions": {
+      "required_format": "HTML-Datei",
+      "require_copyable_answer": true,
+      "description": "Fragen mit Auswahl, mit allem, werden über HTML-Dateien geführt, die mit einer Antwort, die mit einer Möglichkeit versehen sind, da der Nutzer das kopieren und in den Chat schicken kann."
+    },
+    "regular_checkpoints": {
+      "enabled": true,
+      "format": "JSON",
+      "description": "Regelmäßig Checkpoints in einer JSON-Datei erstellen, damit immer auf den letzten Stand zurückgegriffen werden kann."
+    },
+    "dual_checkpoint_storage": {
+      "chatgpt_library": true,
+      "github_dm_cockpit_repository": true,
+      "description": "Jeder Checkpoint wird einmal in der ChatGPT-Bibliothek abgelegt und zusätzlich im DM-Cockpit-Repository auf GitHub aktualisiert/gesichert."
+    },
+    "final_overview": {
+      "include_rules": true,
+      "description": "Diese Regeln im finalen Überblick ebenfalls wiedergeben, wenn der Nutzer den finalen Überblick anfordert."
+    }
+  },
+  "user_wording_verbatim": [
+    "Erstens, Fragen mit Auswahl, mit allem, werden über HTML-Dateien geführt, die mit einer Antwort, die mit einer Möglichkeit versehen sind, da ich das kopieren könnte und dir schicken kann.",
+    "Zweitens, du erstellst regelmäßig Checkpoints in einer JSON-Datei, damit man immer auf den letzten Stand zurückgreifen kann.",
+    "Diese JSON-Datei beziehungsweise diesen Checkpoint legst du einmal in die ChatGPT-Bibliothek und einmal aktualisierst du die Liste mit dem DM Cockpit Repository auf GitHub."
+  ]
+}
