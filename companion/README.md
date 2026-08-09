@@ -1,37 +1,39 @@
-# DM Cockpit Companion Service 0.7.0
+# DM Cockpit Companion Service 0.8.0
 
 Lokaler Dienst zwischen Foundry/DM Cockpit, Discord Voice, Speech-to-Text, SQLite und strukturierter KI-Extraktion.
 
-## Bestätigte Baseline: 0.6.0
+## Bestätigte Baseline
 
-Auf dem Nutzer-PC vollständig bestätigt:
+Auf dem Nutzer-PC bestätigt:
 
-- Discord Bot + DAVE/E2EE
-- Auto-Join/Follow beim konfigurierten GM
-- sprechergetrennter Opus-Empfang nur im RAM
-- Deepgram Nova-3 STT (`de`, EU-Endpunkt)
-- Protocol v1 → SQLite → Foundry-Live-Transkript
-- `npc.memory.candidate` Broadcast/Persistenz
-- `session.event.candidate` Broadcast/Persistenz
-- provider-neutrale `AiExtractionService`
-- deterministischer Mock-Provider
-- Final-only + Deduplizierung
-- NPC-Kontext + Latest-Context-Fallback
-- automatische Mock-Pipeline `transcript.segment → Kandidaten → Protocol v1 → SQLite`
+- Companion 0.5.0: Discord/DAVE/Audio/Deepgram/Protocol v1/Foundry sowie Candidate-Broadcast + SQLite
+- Companion 0.6.0: provider-neutrale AI-Extraction inklusive Mock-End-to-End-Pipeline
+- Companion 0.7.0: Syntaxprüfung und isolierter OpenAI-Adaptertest mit Fake-HTTP-Response
+
+Weiterhin gilt:
+
+- keine dauerhafte Roh-Audio-Speicherung
+- finale Transkriptsegmente werden dedupliziert
+- NPC-Zuordnung kommt ausschließlich aus Foundry `npc.context`
 - keine automatischen Actor-Writes
 
-## Neu in 0.7.0: realer OpenAI-Adapter
+## Neu in 0.8.0: lokale kostenlose KI mit Ollama
 
-Datei:
+Neuer Provider:
 
-- `src/ai-extraction-openai.js`
-
-Aktivierung erfolgt ausschließlich lokal über:
-
-```text
-AI_PROVIDER=openai
-OPENAI_API_KEY=...
-```
+- `src/ai-extraction-ollama.js`
+- Standardmodell `qwen3:4b`
+- lokale API `http://127.0.0.1:11434/api/chat`
+- kein API-Key erforderlich
+- `stream: false`
+- `think: false`
+- Structured Output per JSON-Schema
+- `temperature: 0`
+- fester Seed für reproduzierbarere Tests
+- Standard-Kontextfenster 8192 Tokens
+- Modell-Keep-Alive standardmäßig 10 Minuten
+- lokale Nachvalidierung der Kandidaten
+- ohne Foundry-NPC-Kontext werden NPC-Kandidaten verworfen
 
 Der sichere Standard bleibt:
 
@@ -39,123 +41,129 @@ Der sichere Standard bleibt:
 AI_PROVIDER=none
 ```
 
-Damit wird ohne ausdrückliche lokale Aktivierung **kein Transkript an einen LLM-Provider gesendet**.
-
-### Standardmodell
+Lokale KI wird nur durch folgende Einstellung aktiviert:
 
 ```text
-OPENAI_AI_MODEL=gpt-5.4-nano
+AI_PROVIDER=ollama
 ```
-
-Das Modell ist für kostensensitive, hochvolumige Klassifikation und Datenextraktion vorgesehen und unterstützt Structured Outputs.
-
-### API-Vertrag
-
-Der Adapter nutzt die OpenAI Responses API:
-
-```text
-https://api.openai.com/v1/responses
-```
-
-Schutzmaßnahmen:
-
-- `store: false`
-- Strict Structured Output per JSON Schema
-- maximal 8 NPC- und 8 Session-Kandidaten pro Segment
-- Kategorien ausschließlich aus den Protocol-v1-Enums
-- lokale Nachvalidierung nach der Modellantwort
-- ohne aktiven Foundry-NPC-Kontext werden alle NPC-Kandidaten verworfen
-- die Actor-ID wird **nie vom Modell bestimmt**; sie kommt ausschließlich aus `npc.context`
-- keine Actor-Writes
-- keine Tokens/API-Keys in GitHub oder Checkpoints
-
-An den Provider werden bei aktivierter OpenAI-Extraktion übertragen:
-
-- finales Transkriptsegment
-- Sprecher-Anzeigename
-- Session-ID
-- lesbarer NPC-Kontext, falls aktiv
-
-Roh-Audio wird nicht an den LLM-Adapter übergeben.
 
 ## Provider
 
 ```text
 AI_PROVIDER=none     # sicherer Standard
-AI_PROVIDER=mock     # deterministischer lokaler Testprovider
-AI_PROVIDER=openai   # realer OpenAI-Adapter
+AI_PROVIDER=mock     # deterministischer Testprovider
+AI_PROVIDER=ollama   # lokale kostenlose KI
+AI_PROVIDER=openai   # optionaler Cloud-Fallback
 ```
 
-## Tests
-
-Syntax/Grundprüfung:
-
-```powershell
-npm.cmd run check
-```
-
-Deterministische Mock-Extraktion:
-
-```powershell
-npm.cmd run test:ai
-```
-
-OpenAI-Adapter ohne echten API-Aufruf testen:
-
-```powershell
-npm.cmd run test:ai-openai
-```
-
-Dieser Test verwendet einen lokalen Fake-HTTP-Response und bestätigt:
-
-- Responses-API-Payload
-- `store=false`
-- Strict Structured Output
-- Actor-Zuordnung aus Foundry-Kontext
-- lokale Nachvalidierung
-- kein echter API-Key und keine Kosten
-
-Ende-zu-Ende Candidate-Pipeline:
-
-```powershell
-npm.cmd run test:ai-pipeline
-```
-
-Dieser Test funktioniert mit laufendem Companion sowohl für `AI_PROVIDER=mock` als auch für den späteren kontrollierten Realtest mit `AI_PROVIDER=openai`.
-
-## `.env`
-
-Secrets bleiben ausschließlich lokal in `companion/.env`.
+### Ollama-Konfiguration
 
 ```text
-DISCORD_BOT_TOKEN=...
-DISCORD_GUILD_ID=...
-DISCORD_GM_USER_ID=...
+OLLAMA_AI_MODEL=qwen3:4b
+OLLAMA_AI_ENDPOINT=http://127.0.0.1:11434/api/chat
+OLLAMA_AI_TIMEOUT_MS=60000
+OLLAMA_AI_NUM_CTX=8192
+OLLAMA_AI_KEEP_ALIVE=10m
+```
 
-STT_PROVIDER=deepgram
-DEEPGRAM_API_KEY=...
-DEEPGRAM_STT_ENDPOINT=wss://api.eu.deepgram.com/v1/listen
-DEEPGRAM_STT_MODEL=nova-3
-DEEPGRAM_STT_LANGUAGE=de
+Für den lokalen Standard-Endpunkt werden keine API-Schlüssel benötigt und die LLM-Auswertung bleibt auf dem Rechner. Wird `OLLAMA_AI_ENDPOINT` absichtlich auf einen anderen Host gesetzt, kennzeichnet der Provider dies in seinem Status als externe Datenübertragung.
 
-AI_PROVIDER=none
+## Ollama-Tests
+
+Adaptertest ohne installiertes Ollama oder echten Modelllauf:
+
+```powershell
+npm.cmd run test:ai-ollama
+```
+
+Dieser Test verwendet eine lokale Fake-HTTP-Antwort und bestätigt:
+
+- API-Payload an `/api/chat`
+- `qwen3:4b`
+- `think=false`
+- Structured Output
+- Temperatur 0
+- Kontextgröße 8192
+- Actor-Zuordnung aus Foundry-Kontext
+- keine API-Key-Pflicht
+
+Nicht-destruktiver Preflight gegen eine echte lokale Ollama-Installation:
+
+```powershell
+npm.cmd run test:ollama-preflight
+```
+
+Der Preflight lädt nichts herunter und verändert keine Modelle. Er prüft nur:
+
+- ist Ollama unter `127.0.0.1:11434` erreichbar?
+- ist `qwen3:4b` vorhanden?
+- falls verfügbar: Parametergröße und Quantisierung
+
+Falls das Modell fehlt, nennt der Test lediglich den manuellen Befehl:
+
+```powershell
+ollama pull qwen3:4b
+```
+
+Ende-zu-Ende-Test mit echtem lokalem Modell:
+
+```powershell
+npm.cmd run test:ai-pipeline-ollama
+```
+
+Dafür muss der Companion parallel mit `AI_PROVIDER=ollama` laufen. Der Test prüft:
+
+**npc.context + final transcript.segment → Ollama/Qwen3 → NPC-/Session-Kandidat → Protocol v1 → Broadcast → SQLite**
+
+## OpenAI-Fallback
+
+Der optionale Cloud-Adapter bleibt vorhanden, ist aber für den kostenlosen lokalen Pfad nicht erforderlich.
+
+```text
 OPENAI_API_KEY=
-OPENAI_AI_MODEL=gpt-5.4-nano
+OPENAI_AI_MODEL=gpt-5-nano
 OPENAI_AI_ENDPOINT=https://api.openai.com/v1/responses
 OPENAI_AI_TIMEOUT_MS=20000
 ```
 
+Beim OpenAI-Adapter bleibt `store: false` aktiv. Secrets gehören ausschließlich in die lokale `companion/.env`.
+
+## Speech-to-Text
+
+Der bestehende STT-Pfad bleibt unverändert. Aktuell real bestätigt ist Deepgram Nova-3 auf Deutsch. Die neue lokale Ollama-Integration ersetzt nur die LLM-Auswertung nach dem Transkript; sie ersetzt Deepgram noch nicht.
+
+## Tests
+
+```powershell
+npm.cmd run check
+npm.cmd run test:ai
+npm.cmd run test:ai-openai
+npm.cmd run test:ai-ollama
+npm.cmd run test:ollama-preflight
+npm.cmd run test:ai-pipeline
+npm.cmd run test:ai-pipeline-ollama
+```
+
 ## Noch nicht bestätigt / enthalten
 
-- echter OpenAI-API-Aufruf auf dem Nutzer-PC
-- Qualitätsevaluation an echten Session-Sätzen
-- Foundry Candidate UI
-- Annehmen/Verwerfen in Foundry
+- echter Ollama/Qwen3-Lauf auf dem Nutzer-PC
+- Qualitätsvergleich Qwen3 4B gegen 8B an realistischen deutschen Session-Sätzen
+- lokales Speech-to-Text als Ersatz für Deepgram
+- Foundry Candidate UI mit Annehmen/Verwerfen
 - automatische Actor-Memory-Änderungen
 - Undo-Ausführung
 - Transkript-Suche
 - Session-Recap / Discord-Kurzfassung
 
-## Nächster einzelner Schritt
+## Nächster einzelner externer Test
 
-0.7.0 lokal mit `npm.cmd run check` und `npm.cmd run test:ai-openai` bestätigen. Danach erst einen lokalen OpenAI API-Key setzen und einen kontrollierten echten Pipeline-Test ausführen.
+Wenn der Nutzer wieder am Rechner ist:
+
+1. Companion 0.8.0 per `git pull` holen.
+2. `npm.cmd run check` und `npm.cmd run test:ai-ollama` ausführen.
+3. Ollama installieren/starten, falls noch nicht vorhanden.
+4. `qwen3:4b` lokal laden.
+5. `npm.cmd run test:ollama-preflight` ausführen.
+6. Companion mit `AI_PROVIDER=ollama` starten und danach `npm.cmd run test:ai-pipeline-ollama` ausführen.
+
+Bis zu diesem echten lokalen Lauf ist 0.8.0 als **implementiert + isoliert getestet, echter Ollama-Test ausstehend** zu behandeln.
