@@ -45,7 +45,7 @@ final transcript.segment
 → SQLite + WebSocket-Broadcast
 ```
 
-`npc.context` wird pro Session verfolgt und der Extraktion als aktueller NPC-Kontext mitgegeben.
+`npc.context` wird pro Session verfolgt. Zusätzlich bleibt der zuletzt gemeldete NPC-Kontext als Fallback erhalten, damit eine NPC-Auswahl **vor** dem Voice-/Sessionstart nicht verloren geht.
 
 ### Sicherheitsregeln
 
@@ -71,21 +71,26 @@ Deterministischer Extraktionstest:
 npm.cmd run test:ai
 ```
 
-Der Test bestätigt:
-
-- NPC-Kandidat `promise`
-- Session-Kandidat `task`
-- NPC-Kontext-Zuordnung
-- Quellenbindung an `sourceSegmentIds`
-- Partials werden ignoriert
-- Duplikate werden ignoriert
-- Session-Entscheidung funktioniert auch ohne NPC-Kontext
+Dieser bestätigt Provider-Abstraktion, NPC-/Session-Kandidaten, Quellenbindung, Final-only und Deduplizierung.
 
 Candidate-Infrastruktur aus 0.5.0:
 
 ```powershell
 npm.cmd run test:candidates
 ```
+
+Automatischer 0.6.0-Ende-zu-Ende-Test, nachdem der Companion mit `AI_PROVIDER=mock` läuft:
+
+```powershell
+npm.cmd run test:ai-pipeline
+```
+
+Er sendet selbstständig `npc.context` und ein finales `transcript.segment` und erwartet danach:
+
+- `npc.memory.candidate` vom Mock-Provider
+- `session.event.candidate` vom Mock-Provider
+- beide Kandidaten als WebSocket-Broadcast
+- steigende Candidate-Zähler in `/health`/SQLite
 
 ## Lokales Update
 
@@ -103,8 +108,6 @@ npm.cmd run test:ai
 
 Secrets bleiben ausschließlich lokal in `companion/.env`.
 
-Beispiel:
-
 ```text
 DISCORD_BOT_TOKEN=...
 DISCORD_GUILD_ID=...
@@ -119,7 +122,7 @@ DEEPGRAM_STT_LANGUAGE=de
 AI_PROVIDER=none
 ```
 
-Für den späteren 0.6.0-Ende-zu-Ende-Mock-Test wird `AI_PROVIDER=mock` nur temporär aktiviert.
+Für den 0.6.0-Ende-zu-Ende-Mock-Test wird `AI_PROVIDER=mock` nur temporär aktiviert.
 
 ## Noch nicht enthalten
 
@@ -133,4 +136,4 @@ Für den späteren 0.6.0-Ende-zu-Ende-Mock-Test wird `AI_PROVIDER=mock` nur temp
 
 ## Nächster Schritt
 
-0.6.0 auf dem Nutzer-PC mit `npm.cmd run check` und `npm.cmd run test:ai` bestätigen. Danach automatische Protocol-Pipeline mit temporärem `AI_PROVIDER=mock` Ende-zu-Ende testen.
+0.6.0 auf dem Nutzer-PC mit `npm.cmd run check` und `npm.cmd run test:ai` bestätigen. Danach Companion temporär mit `AI_PROVIDER=mock` starten und `npm.cmd run test:ai-pipeline` ausführen.
