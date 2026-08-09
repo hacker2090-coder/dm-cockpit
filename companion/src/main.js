@@ -9,6 +9,7 @@ import { SttService } from "./stt-service.js";
 let activeSessionId = null;
 let publisher = null;
 const npcContextBySession = new Map();
+const LATEST_NPC_CONTEXT_KEY = "__latest_npc_context__";
 
 function contextKey(sessionId) {
   return String(sessionId ?? activeSessionId ?? "__no_session__");
@@ -30,20 +31,25 @@ function handleProtocolBroadcast(message) {
   const sessionId = message?.sessionId ?? activeSessionId ?? null;
 
   if (message?.type === "npc.context") {
-    const key = contextKey(sessionId);
     const payload = message.payload ?? null;
-    npcContextBySession.set(key, payload?.actorId ? payload : null);
+    const npcContext = payload?.actorId ? payload : null;
+    npcContextBySession.set(LATEST_NPC_CONTEXT_KEY, npcContext);
+    if (sessionId) npcContextBySession.set(contextKey(sessionId), npcContext);
     return;
   }
 
   if (message?.type === "session.ended") {
-    npcContextBySession.delete(contextKey(sessionId));
+    if (sessionId) npcContextBySession.delete(contextKey(sessionId));
     return;
   }
 
   if (message?.type !== "transcript.segment" || message.payload?.final !== true) return;
 
-  const npcContext = npcContextBySession.get(contextKey(sessionId)) ?? null;
+  const key = contextKey(sessionId);
+  const npcContext = npcContextBySession.has(key)
+    ? npcContextBySession.get(key)
+    : (npcContextBySession.get(LATEST_NPC_CONTEXT_KEY) ?? null);
+
   void aiExtraction.submit(message.payload, { sessionId, npcContext }).catch(error => {
     console.warn("[ai] Protocol-Segment konnte nicht verarbeitet werden:", error?.message ?? error);
   });
