@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.3",
+  "schema_version": "1.4",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T19:13:00+02:00",
+  "updated_at": "2026-08-09T19:15:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
@@ -23,14 +23,12 @@
       "companion_version": "0.11.0",
       "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27",
       "implemented": [
-        "Protocol und Datenmodell für Voice-Teilnehmer und Spieler-/Charakterzuordnung erweitert",
-        "Teilnehmer des relevanten Discord-Voice-Channels werden bereitgestellt",
-        "persistente Foundry-Welt-Zuordnung Discord-Mitglied -> Spielercharakter",
-        "Companion-SQLite-Spiegelung und additive Migration",
-        "Transkriptsegmente strukturiert um Spieler-/Charakteridentität ergänzt",
-        "bestätigte Identität wird an die KI-Extraktion weitergereicht",
+        "Voice-Teilnehmer des relevanten Discord-Calls",
         "Foundry-Cockpit-Karte Spieler & Charaktere",
-        "veraltete Audio-Capture-Statusangabe bereinigt"
+        "GM-bestätigte Discord-Mitglied-zu-Foundry-Actor-Zuordnung",
+        "weltbezogene Persistenz und Companion-SQLite-Spiegelung",
+        "strukturierte Sprecherattribution in finalen Transkriptsegmenten",
+        "bestätigte Charakteridentität als KI-Kontext ohne Actor-Raten"
       ],
       "runtime_pending": [
         "echte Voice-Teilnehmerliste in Foundry",
@@ -38,74 +36,81 @@
         "Live-Transkript mit realer Charakterattribution",
         "realer Call-Wechsel/Reconnect"
       ]
+    },
+    {
+      "name": "campaign_session_identity_and_nickname",
+      "status": "implemented_ci_validated_runtime_not_user_confirmed",
+      "foundry_version": "0.9.28",
+      "companion_version": "0.12.0",
+      "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28",
+      "implemented": [
+        "persistente Kampagnen-/One-Shot-/Sessionprofile",
+        "Profile als Snapshot der GM-bestätigten Spieler-/Charakterzuordnungen",
+        "Foundry-Cockpit-Karte Session-Identität",
+        "immer höchstens ein aktives Identitätsprofil",
+        "Nickname-Automatik nur nach ausdrücklicher Profil-Aktivierung",
+        "Session-Nickname mit Charaktername zuerst und maximal 32 Unicode-Zeichen",
+        "aktueller Discord-Anzeigename vor altem gespeicherten Spielerlabel",
+        "ursprünglicher Server-Nickname vor Mutation persistent gesichert",
+        "Join/Rejoin Apply und Call-Leave Restore",
+        "Profilwechsel/Deaktivierung Restore",
+        "geordneter Companion-Shutdown mit Restore vor Discord-/SQLite-Ende",
+        "persistenter Lease für Restart-/Crash-Recovery",
+        "Restore-Konfliktschutz für externe manuelle Namensänderungen",
+        "atomarer Rebase des Restore-Basisnamens nach Konflikt",
+        "Manage-Nicknames- und Rollen-Hierarchie-Prüfung",
+        "bestehende DAVE-Join-Konfiguration erhalten"
+      ],
+      "automated_validation": {
+        "isolated_local_smoke": "passed",
+        "main_ci_and_packaging": "passed",
+        "validated_build_commit": "5bc18698a0dad8bfd2bb1a914313888d9e000a20",
+        "covered": [
+          "Profil-Persistenz",
+          "ein aktives Profil",
+          "32-Zeichen-Nickname-Formatter",
+          "Join Apply",
+          "kein doppelter Write bei identischem Snapshot",
+          "Leave Restore",
+          "Restore-Konfliktschutz",
+          "atomarer Rejoin nach Konflikt",
+          "Profilwechsel",
+          "Deaktivierung",
+          "Restart-/Crash-Recovery",
+          "Foundry-/Companion-JS-Syntax",
+          "Protocol-/Scope-JSON",
+          "sauberer Foundry-Paketbuild"
+        ]
+      },
+      "runtime_pending": [
+        "Profil in echtem Foundry speichern/aktivieren",
+        "echte Discord-Nickname-Änderung",
+        "Leave/Rejoin mit echtem Voice-Call",
+        "realer Restore nach Companion-Neustart",
+        "Mapping -> Profil -> Nickname -> Live-Transkript End-to-End"
+      ]
     }
   ],
   "current_implementation_block": {
-    "name": "campaign_session_identity_and_nickname",
-    "status": "implemented_isolated_smoke_passed_main_ci_pending_runtime_not_user_confirmed",
-    "target_foundry_version": "0.9.28",
-    "target_companion_version": "0.12.0",
-    "implemented": [
-      "persistente Kampagnen-/One-Shot-/Sessionprofile",
-      "Profile enthalten Snapshots der GM-bestätigten Spieler-/Charakterzuordnungen",
-      "Foundry-Cockpit-Karte Session-Identität zum Speichern/Aktivieren/Deaktivieren",
-      "immer höchstens ein aktives Identitätsprofil",
-      "Nickname-Automatik arbeitet nur bei ausdrücklich aktiviertem Profil",
-      "Session-Nickname mit Charaktername zuerst und maximal 32 Unicode-Zeichen",
-      "ursprünglicher Server-Nickname wird vor Discord-Mutation persistent gesichert",
-      "Join/Rejoin wendet passenden Session-Nickname an",
-      "Call-Leave stellt vorherigen Server-Nickname wieder her",
-      "Profilwechsel restauriert alten Zustand vor Anwendung des neuen Profils",
-      "Profil-Deaktivierung restauriert aktive Session-Namen",
-      "sauberer Companion-Shutdown versucht Restore vor Discord-/SQLite-Ende",
-      "persistenter Lease ermöglicht Restart-/Crash-Recovery",
-      "manuelle externe Nickname-Änderung erzeugt Restore-Konflikt statt blindem Überschreiben",
-      "Discord Manage-Nicknames-Recht und Rollen-Hierarchie werden geprüft",
-      "bestehende DAVE-Join-Konfiguration bleibt erhalten"
-    ],
-    "automated_validation": {
-      "isolated_local_smoke": "passed",
-      "covered": [
-        "Profil-Persistenz",
-        "ein aktives Profil",
-        "32-Zeichen-Nickname-Formatter",
-        "Join Apply",
-        "kein doppelter Write bei identischem Snapshot",
-        "Leave Restore",
-        "Restore-Konfliktschutz",
-        "Rejoin nach Konflikt",
-        "Profilwechsel",
-        "Deaktivierung",
-        "Restart-/Crash-Recovery"
-      ],
-      "main_ci": "staging_review_complete_rebase_pending"
-    },
-    "runtime_pending": [
-      "Profil in echtem Foundry speichern/aktivieren",
-      "echte Discord-Nickname-Änderung",
-      "Leave/Rejoin mit echtem Voice-Call",
-      "realer Restore nach Companion-Neustart",
-      "Mapping -> Profil -> Nickname -> Live-Transkript End-to-End"
+    "name": "discord_output_channel_notice_and_recap_posting",
+    "status": "starting",
+    "order": [
+      "verfügbare Discord-Textkanäle mit tatsächlichem View-/Send-Zugriff bereitstellen",
+      "Zielkanal im Cockpit jederzeit neu auswählbar persistent speichern",
+      "Aufnahme-/Transkriptionshinweis bewusst an den Zielkanal senden",
+      "bestehende Discord-Kurzfassung nach bewusster GM-Aktion direkt posten",
+      "kein automatisches Recap-Posting"
     ],
     "explicitly_not_in_this_block": [
-      "frei wechselbarer Discord-Ausgabe-Textkanal",
-      "Aufnahmehinweis in Discord",
-      "Recap direkt posten",
       "Slash-Commands",
+      "manuelle Session-Steuerung",
       "mehrere GMs",
-      "Befehlsberechtigungen"
+      "Befehlsberechtigungsmodell"
     ]
   },
-  "next_implementation_block_after_ci": {
-    "name": "discord_output_channel_notice_and_recap_posting",
-    "status": "planned",
-    "order": [
-      "verfügbare Discord-Textkanäle für den GM sicher sichtbar machen",
-      "Zielkanal im Cockpit jederzeit neu auswählbar speichern",
-      "Aufnahme-/Transkriptionshinweis bewusst an den Zielkanal senden",
-      "bestehende Discord-Kurzfassung nach GM-Aktion direkt posten",
-      "keine automatische Recap-Veröffentlichung"
-    ]
+  "next_implementation_block_after_current": {
+    "name": "session_control_commands_presence_diagnostics_reconnect",
+    "status": "planned"
   },
   "identity_semantics": {
     "human_speaker_source_of_truth": "Discord User ID aus der sprechergetrennten Voice-Audiospur.",
@@ -123,23 +128,12 @@
     { "id": 6, "feature": "Robuster Reconnect bei Voice-Problemen", "decision": "Ja" },
     { "id": 7, "feature": "Recap direkt über den Bot an Discord senden", "decision": "Ja" },
     { "id": 8, "feature": "Session-Status in Discord anzeigen", "decision": "Ja" },
-    { "id": 9, "feature": "Discord-Spieler mit Foundry-Charakteren verknüpfen", "decision": "Ja", "details": "Zuordnung ist auch strukturierte Sprecheridentität für Transkript und KI." },
+    { "id": 9, "feature": "Discord-Spieler mit Foundry-Charakteren verknüpfen", "decision": "Ja" },
     { "id": 10, "feature": "Bot-Konfiguration stärker ins Cockpit holen", "decision": "Ja" },
     { "id": 11, "feature": "Verständlicher Fehler- und Diagnosemodus", "decision": "Ja" },
     { "id": 12, "feature": "Veraltete Discord-Code-Statusangaben bereinigen", "decision": "Ja" },
     { "id": 13, "feature": "Session-/Ausgabe-Textkanal festlegen", "decision": "Ja", "details": "GM kann den Zielkanal jederzeit neu auswählen." },
-    {
-      "id": 15,
-      "feature": "Call-Mitglieder mit Foundry-Charakteren zuordnen und Discord-Server-Nicknames anpassen",
-      "decision": "Ja",
-      "details": [
-        "Bot erkennt Mitglieder im relevanten Voice-Call.",
-        "GM ordnet im Cockpit Foundry-Spielercharaktere zu.",
-        "Bestätigte Zuordnung wird für Sprecherattribution genutzt.",
-        "Bei aktivem Sessionprofil darf der serverbezogene Discord-Nickname so angepasst werden, dass der Charaktername zuerst steht.",
-        "Beim Call-Leave oder Sessionende wird der vorherige Server-Nickname wiederhergestellt."
-      ]
-    }
+    { "id": 15, "feature": "Call-Mitglieder mit Foundry-Charakteren zuordnen und Discord-Server-Nicknames anpassen", "decision": "Ja" }
   ],
   "deferred": [
     { "id": 5, "feature": "Mehrere GMs unterstützen", "decision": "Später" },
