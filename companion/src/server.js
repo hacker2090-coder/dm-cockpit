@@ -15,7 +15,7 @@ import {
 } from "./change-record-runtime.js";
 
 const PROTOCOL_VERSION = "1.0";
-const SERVICE_VERSION = "0.13.0";
+const SERVICE_VERSION = "0.14.0";
 const APP_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = process.env.DM_COCKPIT_HOST?.trim() || "127.0.0.1";
 const PORT = Number.parseInt(process.env.DM_COCKPIT_PORT || "43170", 10);
