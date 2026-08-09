@@ -1,13 +1,29 @@
+import { EventEmitter } from "node:events";
 import assert from "node:assert/strict";
+import { Events } from "discord.js";
 import { DiscordCommandController } from "./discord-command-controller.js";
 
 const calls = [];
 const replies = [];
+const client = new EventEmitter();
+client.user = { setPresence: payload => calls.push(["presence", payload]) };
+client.guilds = {
+  fetch: async guildId => ({
+    id: guildId,
+    commands: {
+      set: async definitions => {
+        calls.push(["register", definitions]);
+        return definitions;
+      }
+    }
+  })
+};
+
 const voice = {
   guildId: "guild-1",
   gmUserId: "gm-1",
   gatewayState: "ready",
-  client: { user: { setPresence: payload => calls.push(["presence", payload]) } }
+  client
 };
 
 const controller = new DiscordCommandController({
@@ -27,8 +43,21 @@ const controller = new DiscordCommandController({
   onRecapCommand: async context => {
     calls.push(["recap", context]);
     return { content: "recap-ok" };
-  }
+  },
+  onDiagnostic: diagnostic => calls.push(["diagnostic", diagnostic])
 });
+
+await controller.start();
+assert.equal(controller.snapshot().registered, true);
+assert.equal(calls.some(([name]) => name === "register"), true);
+const registration = calls.find(([name]) => name === "register")?.[1] ?? [];
+assert.equal(registration.length, 1);
+assert.equal(registration[0]?.name, "dm");
+assert.deepEqual(
+  registration[0]?.options?.map(option => option.name),
+  ["status", "start", "stop", "recap"]
+);
+assert.equal(client.listenerCount(Events.InteractionCreate), 1);
 
 function interaction({ userId = "gm-1", subcommand }) {
   return {
@@ -69,4 +98,8 @@ controller.setPresence({ active: true, voiceReady: false }, { error: "Voice unte
 assert.equal(calls.filter(([name]) => name === "presence").length, 3);
 assert.equal(replies.length, 5);
 
-console.log("Discord-Command-Smoke-Test erfolgreich: /dm Routing -> GM-Guard -> Presence-Zustände bestätigt.");
+controller.stop();
+assert.equal(controller.snapshot().registered, false);
+assert.equal(client.listenerCount(Events.InteractionCreate), 0);
+
+console.log("Discord-Command-Smoke-Test erfolgreich: Registrierung -> /dm Routing -> GM-Guard -> Presence -> Listener-Cleanup bestätigt.");
