@@ -1,7 +1,7 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.25",
-  "created_at": "2026-08-09T17:09:00+02:00",
+  "schema_version": "3.26",
+  "created_at": "2026-08-09T17:17:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
@@ -9,20 +9,29 @@
     "branch": "main",
     "foundry_repository_version": "0.9.26",
     "foundry_last_fully_user_confirmed_version": "0.9.24",
-    "foundry_0_9_25_status": "implemented_ui_visible_runtime_recap_test_deferred_by_user",
-    "foundry_0_9_26_status": "implemented_clean_build_and_static_validation_confirmed_runtime_test_pending",
+    "foundry_last_visual_user_confirmed_version": "0.9.26",
     "companion_repository_version": "0.10.0",
     "companion_last_user_confirmed_version": "0.10.0",
     "local_repository_path": "$HOME\\Desktop\\dm-cockpit",
-    "pause_point": "Foundry 0.9.26 UI-/Layout-Umbau ist auf main implementiert. Die vorher fehlenden Kernquellen wurden aus dem bestätigten 0.9.25-Paket einmalig wiederhergestellt und sind jetzt normale versionierte Repository-Dateien. Der Release-Workflow verwendet das alte ZIP nicht mehr als Build-Eingang, validiert Manifest-Quellen und alle Foundry-JavaScript-Dateien und baut danach aus einem leeren Build-Verzeichnis. 0.9.26 wurde nach dieser Validierung erfolgreich gebaut. Der nächste sinnvolle externe Schritt ist ein gebündelter Foundry-Runtime-Smoke-Test des neuen Layouts; bestehende 0.9.24-Funktionstests sollen nicht komplett wiederholt werden."
+    "pause_point": "Repository ist für die Übergabe bereinigt und dokumentiert. Foundry 0.9.26 UI-/Layout-Umbau ist implementiert, statisch validiert, sauber gebaut und vom Nutzer in Foundry visuell positiv bestätigt ('Sieht super aus'). Diese Rückmeldung gilt nicht automatisch als vollständiger Interaktions-Smoke-Test für Drag/Persistenz/Resize/Filter. 0.9.25 Session-Recap + Discord-Kurzfassung bleibt implementiert; der eigentliche Inhalts-/Copy-Test wurde ausdrücklich auf später verschoben."
+  },
+  "repository_health": {
+    "checked_at": "2026-08-09T17:17:00+02:00",
+    "latest_checked_main_before_handoff": "2f39fb6e5d852b2ffc39b121904a1fa8b66acdf5 Build DM Cockpit v0.9.26",
+    "module_manifest": "0.9.26",
+    "readme": "updated_for_0.9.26_and_visual_confirmation",
+    "master_handoff": "updated_for_0.9.26",
+    "release_workflow": "clean_reproducible_source_only_build",
+    "source_of_truth": "healthy",
+    "known_blocking_repository_issue": null
   },
   "working_rules": {
     "github_source_of_truth": true,
     "check_main_before_changes": true,
     "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
     "user_test_cadence": "Zusammengehörige lokale Prüfungen als vollständigen Testblock bündeln; keine Bestätigung nach jedem Mikroschritt verlangen.",
-    "selection_questions_rule": "Strukturierte Auswahlfragen über bearbeitbare HTML-Dateien mit kopierbarer Zusammenfassung; maximal etwa 15 grobe Fragen.",
-    "ui_rule": "Normale Bedienfunktionen müssen über das Cockpit erreichbar sein; Entwicklerkonsole nur für tatsächliches Debugging, nicht als normaler Bedienweg.",
+    "selection_questions_rule": "Strukturierte Auswahlfragen bei Bedarf über bearbeitbare HTML-Dateien mit kopierbarer Zusammenfassung; maximal etwa 15 grobe Fragen.",
+    "ui_rule": "Normale Bedienfunktionen müssen über das Cockpit erreichbar sein; Entwicklerkonsole nur für tatsächliches Debugging.",
     "checkpoint_rule": "PROJECT-CHECKPOINT.json aktualisieren, historischen Snapshot unter checkpoints/ anlegen und regulären Checkpoint zusätzlich in ChatGPT Library /DM Cockpit/ speichern.",
     "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden.",
     "local_command_rule": "PowerShell: cd $HOME\\Desktop\\dm-cockpit; git pull; cd companion; npm.cmd ...; kein &&.",
@@ -33,35 +42,38 @@
   "confirmed": {
     "companion_0_10_0": "fully_user_confirmed",
     "foundry_0_9_24_npc_memory_undo": "fully_user_confirmed",
-    "ollama_qwen3_4b": "fully_user_confirmed; quality 11/12 = 91.7%"
+    "ollama_qwen3_4b": "fully_user_confirmed; quality 11/12 = 91.7%",
+    "foundry_0_9_26_visual_ui": "user_confirmed_positive_visual_runtime_feedback"
   },
-  "implemented_unconfirmed": {
+  "implemented_partially_confirmed": {
     "foundry_0_9_25_session_recap": {
-      "status": "implemented_static_check_passed_ui_visible_runtime_test_deferred_by_user",
+      "status": "implemented_static_check_passed_ui_visible_runtime_content_copy_test_deferred_by_user",
       "source_files": [
         "scripts/session-recap.js",
         "styles/session-recap.css",
         "module.json"
       ],
-      "data_source": "Nur session.event.candidate mit status accepted aus der vorhandenen Candidate-Review-Laufzeit.",
-      "runtime_test": "deferred_by_user",
-      "rule": "Nicht automatisch erneut anfordern; mit dem 0.9.26-Smoke-Test nur prüfen, dass die Karte weiterhin sichtbar/bedienbar ist. Der eigentliche Inhalts-/Copy-Test bleibt separat aufgeschoben."
+      "data_source": "Nur session.event.candidate mit status accepted.",
+      "runtime_content_copy_test": "deferred_by_user",
+      "rule": "Nicht automatisch erneut anfordern; erst wieder aufnehmen, wenn Nutzer es ausdrücklich möchte oder bevor die Funktion vollständig bestätigt werden soll."
     },
     "foundry_0_9_26_ui_redesign": {
-      "status": "implemented_clean_build_static_validation_passed_runtime_test_pending",
+      "status": "implemented_clean_build_static_validation_passed_visual_runtime_confirmed_interaction_smoke_not_fully_confirmed",
       "scope_document": "docs/UI-REDESIGN-SCOPE-V1.json",
       "source_files": [
         "scripts/ui-layout.js",
         "styles/ui-layout.css",
         "module.json",
         "README.md",
+        "PROJECT-HANDOFF.md",
         ".github/workflows/release.yml"
       ],
+      "visual_runtime_feedback": "Sieht super aus",
       "implemented": [
         "technisches modernes Dashboard-Design",
-        "feste visuelle Zonen Live/Spielleitung/Werkzeuge/Nachbereitung",
+        "Zonen Live/Spielleitung/Werkzeuge/Nachbereitung",
         "Live-Funktionen priorisiert",
-        "klare Haupt- und Seitenspalten",
+        "klare Haupt-/Seitenspalten",
         "kompaktere Karten und höhere Informationsdichte",
         "vereinheitlichte Typografie, Abstände, Icons, Buttons und Eingabefelder",
         "fixierte schnelle Bereichsnavigation",
@@ -70,87 +82,78 @@
         "persönliche Reihenfolge innerhalb einer Zone per Drag-Handle",
         "vertikal anpassbare Kartenhöhe mit lokaler Persistenz",
         "automatische Such-/Filterleiste bei größeren Listen",
-        "Tooltips aus vorhandenen Beschriftungen",
+        "Tooltips",
         "kartenbezogene Working-/Error-Zustände",
         "Shortcuts Alt+1/Alt+2 sowie Alt+Pfeil hoch/runter",
         "dezente Animationen mit prefers-reduced-motion-Fallback",
-        "leere Zustände optisch vereinheitlicht",
-        "vorhandene dynamische Karten Transkript/KI/Recap werden in dieselben Zonen integriert"
+        "dynamische Karten Transkript/KI/Recap in Zonen integriert"
+      ],
+      "interaction_smoke_not_explicitly_confirmed": [
+        "Persistenz nach Schließen/Neuöffnen",
+        "Drag-Reihenfolge nach Neuöffnen",
+        "Resize-Persistenz",
+        "Listenfilter in realer längerer Liste"
       ],
       "deferred_by_selection": [
         "Fokusmodus für einzelne Bereiche",
-        "zusätzlicher Scroll-Verhaltens-Umbau jenseits der Bereichsnavigation"
-      ],
-      "safety": "Der UI-Umbau ersetzt keine Domain-Logik und führt keine automatischen Actor-/Weltänderungen ein. NPC-Memory-Änderungen bleiben an manuelle GM-Aktion und vorhandenen Change-Record/Undo gebunden.",
-      "runtime_test": "pending_user_foundry_smoke_test"
+        "zusätzlicher Scroll-Verhaltens-Umbau"
+      ]
     }
   },
   "source_of_truth_cleanup": {
     "status": "implemented_and_build_validated",
-    "previous_problem": "Der alte Release-Workflow entpackte das bestehende dm-cockpit.zip und überlagerte Repository-Dateien. Dadurch konnten nicht versionierte oder gelöschte Runtime-Dateien im Paket weiterleben.",
     "recovered_versioned_sources": [
       "scripts/dm-cockpit.js",
       "styles/dm-cockpit.css",
       "templates/cockpit.hbs"
     ],
-    "recovery_commit": "db8eb8661d15099019f12920cca05aabd01730c1 Recover core sources and build DM Cockpit v0.9.25",
-    "final_workflow_commit": "6f8f38cef4df5ed1e60a0bdbfb4972141d30cd25 build: validate all Foundry scripts before packaging",
+    "recovery_commit": "db8eb8661d15099019f12920cca05aabd01730c1",
+    "final_workflow_commit": "6f8f38cef4df5ed1e60a0bdbfb4972141d30cd25",
     "current_build_behavior": [
       "kein Entpacken des vorherigen ZIPs",
       "Build beginnt in leerem build/dm-cockpit",
       "Manifest-referenzierte esmodules/styles müssen als Repository-Dateien existieren",
-      "templates/cockpit.hbs muss als Repository-Datei existieren",
-      "alle scripts/*.js werden vor Packaging mit node --check validiert",
+      "templates/cockpit.hbs muss existieren",
+      "alle Foundry-JS-Dateien werden mit node --check validiert",
       "ZIP wird vollständig aus versionierten Quellen neu erstellt"
     ],
-    "validated_build_commit": "15755c52c7aaf437f2fc7e656eb703f967c198ec Build DM Cockpit v0.9.26",
-    "result": "GitHub main ist wieder strukturell Source of Truth für den Foundry-Paketinhalt."
+    "latest_successful_build_after_handoff_docs": "2f39fb6e5d852b2ffc39b121904a1fa8b66acdf5 Build DM Cockpit v0.9.26",
+    "result": "GitHub main ist strukturell Source of Truth für den Foundry-Paketinhalt."
   },
-  "ui_scope_commits": [
-    "7a6bab084264c61c75c8cd6cb082d0d35ac50144 docs: record UI redesign scope v1",
-    "c3e93d1c0269918fd95743c39f1683435de00c8d feat(foundry): add persistent cockpit UI layout layer",
-    "e2a495471cbba121369c3bd695150b77d9724c7f style(foundry): add technical cockpit design system",
-    "af19e9a5acb8e0f208da11246f64bdb4984d254f chore(foundry): bump 0.9.26 for UI redesign",
-    "82d630eefad299b635f791a14266dca8ffb7723a fix(foundry): harden persistent UI interactions",
-    "6f8f38cef4df5ed1e60a0bdbfb4972141d30cd25 build: validate all Foundry scripts before packaging",
-    "15755c52c7aaf437f2fc7e656eb703f967c198ec Build DM Cockpit v0.9.26",
-    "488d34a42a378fd7e8a64ce389f175c9aaeeafdb docs: update project status for Foundry 0.9.26"
-  ],
+  "handoff_documents": {
+    "read_first": [
+      "README.md",
+      "PROJECT-HANDOFF.md",
+      "PROJECT-CHECKPOINT.json"
+    ],
+    "ui_scope_if_relevant": "docs/UI-REDESIGN-SCOPE-V1.json",
+    "protocol_if_relevant": [
+      "docs/DISCORD-AUDIO-AI-CONTRACT-V1.md",
+      "schemas/discord-audio-ai-v1.schema.json"
+    ]
+  },
   "do_not_repeat": [
     "Companion 0.10.0 npm.cmd run check",
     "Companion 0.10.0 npm.cmd run test:change-record",
     "Ollama Adapter/Preflight/E2E/Qualitätsbenchmark",
-    "Foundry 0.9.24 normaler NPC-Memory-Undo-E2E-Test",
+    "Deepgram Baseline E2E",
+    "Foundry 0.9.24 NPC-Memory-Undo-E2E-Test",
     "vollständiger alter 0.9.24 Funktionskatalog als Regressionstest",
     "Foundry 0.9.25 Recap-Inhalts-/Copy-Test solange der Nutzer ihn nicht wieder aufnehmen möchte"
   ],
-  "next_user_smoke_test": {
-    "status": "required_to_mark_0_9_26_runtime_confirmed",
-    "bundle": [
-      "lokales Repository einmal git pull",
-      "Foundry-Modul auf 0.9.26 aktualisieren bzw. Foundry neu laden",
-      "Cockpit öffnen und prüfen, dass Version 0.9.26 angezeigt wird",
-      "prüfen, dass die Zonen Live/Spielleitung/Werkzeuge/Nachbereitung sichtbar und sinnvoll angeordnet sind",
-      "mindestens einen Bereich ein-/ausklappen, Tab wechseln, Cockpit schließen/neu öffnen und prüfen, dass Zustand erhalten bleibt",
-      "eine Karte am Griff innerhalb ihrer Zone verschieben und prüfen, dass Reihenfolge erhalten bleibt",
-      "bei einer größeren vorhandenen Liste die Bereichssuche kurz prüfen",
-      "kurz prüfen, dass bestehende Kernkarten wie Transkript/KI-Kandidaten/Session-Recap weiterhin sichtbar sind und normale Hauptaktionen anklickbar bleiben"
-    ],
-    "expected_result": "Neues technisches Dashboard sichtbar; keine verschwundenen Kernfunktionen; Persistenz und Drag-/Filter-Grundfunktionen funktionieren.",
-    "not_required": "Keine Wiederholung des vollständigen 0.9.24 Undo-, Discord-, Deepgram- oder Ollama-E2E-Testprogramms."
-  },
-  "roadmap": [
-    "6: Change-Record/Undo für NPC Memory abgeschlossen und real bestätigt",
-    "9a: Session-Recap + Discord-Kurzfassung V1 implementiert; vollständiger Inhalts-/Copy-Runtime-Test weiterhin aufgeschoben",
-    "UI: Source-of-Truth/Packaging bereinigt und 0.9.26 UI-/Layout-Umbau implementiert/build-validiert; Foundry-Smoke-Test offen",
-    "8: dauerhaft durchsuchbares Transkript weiterhin offen/Vielleicht",
-    "7: optionale automatische NPC-Memory-Übernahme weiterhin offen/Vielleicht",
-    "10: optional lokales STT weiterhin offen/Vielleicht"
+  "official_open_work": [
+    "dauerhaft durchsuchbares Transkript",
+    "optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo",
+    "optional lokales STT",
+    "Performance-/Skalierungs-Hardening"
+  ],
+  "optional_pending_validation": [
+    "kleiner 0.9.26 Interaktions-Smoke-Test für Persistenz/Drag/Resize/Filter",
+    "aufgeschobener 0.9.25 Recap-Inhalts-/Copy-Test"
   ],
   "resume_instructions": {
-    "status": "foundry_0_9_26_runtime_smoke_test_pending",
-    "current_block_requires_more_user_testing": true,
-    "blocking_next_development": "0.9.26 sollte vor weiteren großen UI-/Funktionsänderungen einmal in Foundry per gebündeltem Smoke-Test bestätigt werden.",
-    "rule": "Nur den gebündelten 0.9.26-Smoke-Test anfordern. Keine alten bestätigten E2E-Tests wiederholen und den separat aufgeschobenen 0.9.25 Recap-Inhalts-/Copy-Test nicht erneut erzwingen."
+    "status": "handoff_ready",
+    "rule": "Neuer Chat muss zuerst aktuellen main prüfen und README.md, PROJECT-HANDOFF.md sowie PROJECT-CHECKPOINT.json lesen. Danach am aktuellen Nutzerauftrag oder einem ausdrücklich gewählten offenen offiziellen Block weiterarbeiten. Keine alten bestätigten Tests wiederholen. Aufgeschobene Tests nicht ungefragt erzwingen.",
+    "next_chat_can_continue_without_old_chat_context": true
   }
 }
