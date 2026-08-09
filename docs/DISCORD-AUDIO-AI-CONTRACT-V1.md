@@ -514,18 +514,13 @@ Bereits früher vollständig bestätigt und nicht ohne konkrete Regression zu wi
 
 ### Session Control / Commands / Presence / Diagnostics / Reconnect 0.9.30 / Companion 0.14.0
 
-Auf dem Staging-Branch implementiert:
+- implementiert und auf `main` integriert
+- automatisierte Syntax-/Protocol-/Scope-Prüfungen erfolgreich
+- `session-control-smoke-test.js` erfolgreich im Main-Workflow
+- `discord-command-controller-smoke-test.js` erfolgreich im Main-Workflow
+- `discord-voice-reconnect-smoke-test.js` erfolgreich im Main-Workflow
+- bestehender `discord-output-smoke-test.js` weiterhin erfolgreich
+- CI-validiert durch `90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30`
+- echter Discord-/Foundry-Runtime-Test noch offen
 
-- idempotente manuelle Session-State-Machine
-- `/dm status`, `/dm start`, `/dm stop`, `/dm recap`
-- konfigurierter-GM-Guard
-- Discord Presence
-- `diagnostic.state`
-- robuster Voice-Reconnect mit begrenztem Backoff
-- gleiche logische Session über Voice-Reconnect
-- Intentional-Leave-Reconnect-Sperre
-- Audiosegment-Deduplizierung
-- Foundry-Command-Bridge
-- Smoke-Tests für Session-Control, Discord-Commands und Voice-Reconnect
-
-Bis zum erfolgreichen Main-CI-/Paketlauf gilt dieser Block **nicht als CI-validiert**. Ein echter Discord-/Foundry-Runtime-Test bleibt danach zusätzlich offen.
+Damit gilt für 0.9.30/0.14.0: **implemented + automated_tested + ci_validated**, aber noch **nicht local_confirmed / fully_confirmed**.
