@@ -1,6 +1,6 @@
 # DM Cockpit – Master Handoff
 
-Stand: 2026-08-09 19:15 CEST
+Stand: 2026-08-09 20:20 CEST
 
 Dieses Dokument ist der menschlich/LLM-lesbare Einstiegspunkt. Für den neuesten maschinenlesbaren Status zusätzlich immer `PROJECT-CHECKPOINT.json` lesen. GitHub `main` ist Source of Truth.
 
@@ -10,8 +10,8 @@ Dieses Dokument ist der menschlich/LLM-lesbare Einstiegspunkt. Für den neuesten
 - Branch: `main`
 - lokales Repo: `$HOME\Desktop\dm-cockpit`
 - Foundry-Modul-ID: `dm-cockpit`
-- Foundry Repository-Version: `0.9.28`
-- Companion Repository-Version: `0.12.0`
+- Foundry Repository-Version: `0.9.29`
+- Companion Repository-Version: `0.13.0`
 - Companion WebSocket: `ws://127.0.0.1:43170/v1`
 - Health: `http://127.0.0.1:43170/health`
 - SQLite: `companion/data/dm-cockpit.sqlite`
@@ -19,23 +19,23 @@ Dieses Dokument ist der menschlich/LLM-lesbare Einstiegspunkt. Für den neuesten
 
 Letzter CI-validierter Paketbuild:
 
-`5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28`
+`10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29`
 
 ## 2. Arbeitsregeln
 
 1. Vor Änderungen aktuellen `main` prüfen.
 2. GitHub `main` ist technische Source of Truth.
-3. Implementiert, CI-validiert, lokal bestätigt und vollständig bestätigt strikt unterscheiden.
+3. Implementiert, automatisiert geprüft, CI-validiert, lokal bestätigt und vollständig bestätigt strikt unterscheiden.
 4. Nutzer-Tests bündeln; keine Bestätigung nach Mikroschritten.
 5. Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.
 6. Wenn Nutzeraktion nötig ist, Abschnitt exakt `Ich möchte von dir` verwenden.
-7. Nach sinnvollen Wiederaufnahmepunkten `PROJECT-CHECKPOINT.json`, historischen Snapshot unter `checkpoints/` und denselben JSON-Stand im Chat erzeugen.
+7. Nach sinnvollen Wiederaufnahmepunkten `PROJECT-CHECKPOINT.json` aktualisieren und einen unveränderlichen Snapshot unter `checkpoints/` anlegen.
 8. Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.
 9. Roh-Audio nicht dauerhaft speichern.
 10. Keine automatische Actor-/Weltänderung ohne Change-Record/Undo oder ausdrückliche GM-Bestätigung.
 11. Bereits bestätigte Tests nicht ohne konkrete Regression wiederholen.
 12. Aufgeschobene UI-/Recap-Tests nicht ungefragt wieder hervorholen.
-13. Größere autonome Blöcke auf einem temporären Branch bündeln; `main` erst nach Review einmalig fast-forwarden, um unnötige GitHub-Actions-Läufe/Fehlmails zu vermeiden.
+13. Größere autonome Blöcke auf einem temporären Staging-Branch bündeln; `main` erst nach Review möglichst einmalig aktualisieren.
 
 PowerShell-Regel:
 
@@ -67,140 +67,113 @@ Foundry 0.9.24 vollständig bestätigt:
 - persistenter Change-Record
 - konfliktgeschütztes Undo auf exakten vorherigen Zustand
 
-Aufgeschoben:
-
-- 0.9.25 Session-Recap Inhalts-/Copy-Test
-- 0.9.26 Drag/Persistenz/Resize/Filter-Interaktions-Smoke
-
-0.9.26 UI wurde visuell positiv bestätigt (`Sieht super aus`).
+0.9.26 UI wurde visuell positiv bestätigt. Andere nicht ausdrücklich bestätigte Interaktionen bleiben davon unberührt.
 
 ## 4. Discord Identity Core – 0.9.27 / Companion 0.11.0
 
-Status: **implementiert + CI-validiert, echter Discord-/Foundry-Runtime-Test noch offen.**
+Status: **implementiert + automatisiert geprüft + CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
 
 Validierter Build:
 
 `971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27`
 
-Implementiert:
+Kern:
 
-- Teilnehmer des relevanten Discord-Voice-Calls
+- Voice-Teilnehmer des relevanten Discord-Calls
 - Cockpit-Karte `Spieler & Charaktere`
-- GM-bestätigte Discord-Mitglied → Foundry-Actor-Zuordnung
-- weltbezogene Persistenz in Foundry + Companion-SQLite-Mirror
-- `playerName`, `actorId`, `actorUuid`, `characterName` in finalen Transkriptsegmenten
-- bestätigte Charakteridentität als Kontext für Ollama/OpenAI
-- keine KI-generierte Actor-/Spielerzuordnung
-- alte falsche `audioCaptureImplemented:false`-Angabe bereinigt
-
-Noch real lokal zu prüfen:
-
-- echte Teilnehmer erscheinen in Foundry
-- echte Mapping-Auswahl
-- Live-Transkript trägt richtige Charakteridentität
-- realer Call-Wechsel/Reconnect
+- ausschließlich GM-bestätigte Discord-Mitglied → Foundry-Actor-Zuordnung
+- weltbezogene Persistenz + Companion-SQLite-Mirror
+- Discord User ID bleibt Source of Truth der sprechenden Person
+- bestätigte Charakteridentität wird in Transkript und KI-Kontext ergänzt
+- KI darf Actor-ID oder Zuordnung niemals raten
 
 ## 5. Session-/Kampagnen-Identität – 0.9.28 / Companion 0.12.0
 
-Status: **implementiert + isoliert smoke-getestet + CI-validiert, echter Discord-/Foundry-Runtime-Test noch offen.**
+Status: **implementiert + automatisiert geprüft + CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
 
 Validierter Build:
 
 `5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28`
 
-Foundry:
+Kern:
 
-- neue Karte `Session-Identität`
-- Profile als `Kampagne`, `One-Shot` oder `Session`
-- Profil enthält Snapshot der aktuell GM-bestätigten Spieler-/Charakterzuordnungen
-- Profil speichern ≠ aktivieren
-- nur ein ausdrücklich aktiviertes Profil schaltet Nickname-Automatik scharf
+- persistente Kampagnen-/One-Shot-/Sessionprofile
+- höchstens ein aktives Identitätsprofil
+- Nickname-Automatik nur nach ausdrücklicher Profilaktivierung
+- serverbezogener Nickname `Charakter | Spieler`, maximal 32 Unicode-Zeichen
+- Original-Nickname vor Mutation persistent sichern
+- Join/Rejoin Apply
+- Leave/Profilewechsel/Deaktivierung/Shutdown Restore
+- Restart-/Crash-Recovery
+- Restore-Konfliktschutz bei externer manueller Namensänderung
+- `Manage Nicknames` und Rollen-Hierarchie werden geprüft
+- globaler Discord-Benutzername wird niemals verändert
 
-Companion:
+## 6. Discord-Ausgabe – 0.9.29 / Companion 0.13.0
 
-- persistente `identity_profiles`
-- persistente Profilmitglieder
-- persistente `discord_nickname_overrides`
-- reversibler Nickname-Manager
-- Session-Nickname standardmäßig `Charakter | Spieler`
-- maximal 32 Unicode-Zeichen; Charaktername hat Priorität
-- aktueller Discord-Anzeigename wird als Spieleranteil bevorzugt
-- ursprünglicher Server-Nickname wird **vor** Mutation persistent gesichert
-- Join/Rejoin → Session-Nickname anwenden
-- Call-Leave → Originalname restaurieren
-- Profilwechsel/Deaktivierung → alte Session-Namen restaurieren
-- sauberer Companion-Shutdown → Restore vor Discord-/SQLite-Ende
-- Restart-/Crash-Recovery über persistente Leases
-- externe manuelle Namensänderung → `restore_conflict`, kein blindes Überschreiben
-- späterer bewusster Rejoin kann den neuen manuellen Namen atomar als Restore-Basis übernehmen
-- `Manage Nicknames` + Discord-Rollenhierarchie werden geprüft
-- DAVE-Konfiguration im Voice-Join bleibt erhalten
+Status: **implementiert + automatisiert geprüft + CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+
+Validierter Build:
+
+`10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29`
+
+Implementiert:
+
+- Cockpit-Karte `Discord-Ausgabe`
+- nur Discord-Textkanäle mit aktuellem `View Channel` + `Send Messages`
+- Zielkanal frei auswählbar/wechselbar/entfernbar
+- Auswahl pro Guild persistent in SQLite
+- erneute Rechte-/Existenzprüfung vor Versand
+- automatischer Aufnahme-/Transkriptionshinweis beim Sessionstart
+- erfolgreicher Auto-Hinweis pro Session idempotent gegen Retry/Reconnect
+- `capture.status.noticeShown` erst nach erfolgreichem Versand
+- bewusster manueller Hinweis möglich
+- bestehender Session-Recap kann nach bewusster GM-Aktion direkt an Discord gesendet werden
+- kein automatisches Recap-Posting
+- `allowedMentions.parse = []`
+- Output-Audit speichert Metadaten, nicht den Nachrichtentext
+- erfolgreiche Request-IDs werden nicht doppelt gesendet
 
 Automatisiert geprüft:
 
-- Profil-Persistenz
-- nur ein aktives Profil
-- 32-Zeichen-Formatter
-- Join Apply
-- identischer Snapshot ohne Doppel-Write
-- Leave Restore
-- Restore-Konfliktschutz
-- Rejoin nach Konflikt
-- Profilwechsel
-- Deaktivierung
-- Restart-/Crash-Recovery
-- Foundry-/Companion-JS-Syntax
+- Foundry-/Companion-JavaScript-Syntax
 - Protocol-/Scope-JSON
-- sauberer Foundry-Paketbuild 0.9.28
+- Identity-Mapping-Smoke
+- Identity-Profile-Smoke
+- Discord-Output-Smoke: Kanalliste, Persistenz, Recap, Request-Idempotenz, Aufnahmehinweis, Reload, Clear
+- sauberer Foundry-Paketbuild 0.9.29
 
-Noch real lokal zu prüfen:
+CI-Fehler und Fix vom 2026-08-09:
 
-- Profil in echtem Foundry speichern/aktivieren
-- echte Discord-Nickname-Mutation
-- Leave/Rejoin im echten Call
-- Restore nach echtem Companion-Neustart
-- Mapping → Profil → Nickname → Live-Transkript End-to-End
+- Der neue `discord-output-smoke-test.js` importiert `discord.js`.
+- Der Release-Workflow installierte in einem frischen GitHub-Actions-Checkout vorher keine Companion-Abhängigkeiten.
+- Dadurch konnte der neue Smoke-Test im Main-Workflow nicht korrekt ausgeführt werden und `dm-cockpit.zip` blieb auf dem Blob des 0.9.28-Builds.
+- Fix: Release-Workflow installiert Companion-Abhängigkeiten vor der Companion-/Protocol-Validierung.
+- Kontrollierter README-Trigger führte danach erfolgreich zu `Build DM Cockpit v0.9.29`.
 
-## 6. Protocol v1 – aktuelle Discord-Erweiterungen
+Noch real gebündelt zu prüfen:
 
-Protocol bleibt `1.0` und wurde additiv erweitert.
-
-Identity Core:
-
-- `voice.participants`
-- `voice.participants.request`
-- `player.character.mapping.set`
-- `player.character.mapping.request`
-- `player.character.mapping.result`
-
-Session Identity:
-
-- `identity.profile.save`
-- `identity.profile.list.request`
-- `identity.profile.list.result`
-- `identity.profile.activate`
-- `identity.profile.deactivate`
-- `identity.profile.state.request`
-- `identity.profile.state`
-- `nickname.status`
-
-Vertrag/Schema:
-
-- `docs/DISCORD-AUDIO-AI-CONTRACT-V1.md`
-- `schemas/discord-audio-ai-v1.schema.json`
+- echte Discord-Kanalliste in Foundry
+- Zielkanal wählen/wechseln und Persistenz
+- realer Aufnahmehinweis
+- realer bewusster Recap-Versand
+- gelöschter Kanal / verlorene Senderechte
+- kein doppelter Hinweis bei realem Reconnect
 
 ## 7. CI-/Packaging-Status
 
-Frühere 0.9.27-Fehlermails wurden untersucht und behoben.
-
-Aktueller Workflow:
+Release-Workflow `.github/workflows/release.yml`:
 
 - `concurrency` + `cancel-in-progress`
-- Companion-/Protocol-/Scope-Änderungen werden validiert, erzeugen aber keinen unnötigen Foundry-ZIP-Build
+- installiert Companion-Abhängigkeiten vor den Companion-Smoke-Tests
+- validiert Foundry-Runtime-Quellen
+- validiert Companion-JavaScript sowie Protocol-/Scope-JSON
+- führt Identity-, Identity-Profile- und Discord-Output-Smoke-Tests aus
 - Foundry-ZIP nur bei Foundry-relevanten Änderungen bzw. manuellem Workflow
-- Identity-Mapping- und Identity-Profile-Smoke-Tests laufen in CI
-- größere autonome Blöcke werden auf Staging-Branch gebündelt
-- 0.9.27 und 0.9.28 wurden nach dem Fix sauber gebaut
+- Companion-/Protocol-/Scope-only Änderungen erzeugen kein unnötiges ZIP
+- Publish-Commit wird durch `github-actions[bot]` erzeugt
+
+0.9.29 ist auf CI-/Packaging-Ebene abgeschlossen.
 
 ## 8. Aktueller Discord-Bot-Scope
 
@@ -208,48 +181,45 @@ Verbindlich:
 
 `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json`
 
-Bereits auf Implementierungs-/CI-Ebene abgeschlossen:
+Abgeschlossen auf Implementierungs-/CI-Ebene:
 
-1. Voice-Teilnehmer → Spieler/Charakter-Mapping → Sprecherattribution
-2. Kampagnen-/Sessionprofil → reversible Discord-Server-Nicknames
+1. `0.9.27 / 0.11.0` – Spieler ↔ Charakter ↔ Sprecheridentität
+2. `0.9.28 / 0.12.0` – Session-/Kampagnenprofile + reversible Server-Nicknames
+3. `0.9.29 / 0.13.0` – Discord-Ausgabekanal + Aufnahmehinweis + bewusstes Recap-Posting
 
-Aktueller autonomer Block:
+Nächster autonomer Block:
 
-**Discord-Ausgabe-Textkanal + Aufnahme-/Transkriptionshinweis + bewusstes Recap-Posting**
+`session_control_commands_presence_diagnostics_reconnect`
 
-Ziel:
+Geplanter Scope:
 
-- verfügbare Discord-Textkanäle nur mit tatsächlichem Bot-Zugriff anzeigen
-- Zielkanal im Cockpit jederzeit neu auswählbar speichern
-- Aufnahme-/Transkriptionshinweis bewusst an Zielkanal senden
-- bestehende Discord-Kurzfassung nach ausdrücklicher GM-Aktion direkt posten
-- kein automatisches Recap-Posting
-
-Danach:
-
-- Session-Steuerung
-- Slash-Commands
-- Presence/Status
-- Diagnosemodus
-- Reconnect-Hardening
+- manuelle Session-Steuerung getrennt vom bloßen Voice-Join
+- `/dm status`
+- `/dm start`
+- `/dm stop`
+- `/dm recap`
+- sichtbarer Bot-Presence-/Sessionstatus
+- verständliche Diagnose- und Fehlerzustände
+- robuster Voice-Reconnect
+- Wiederherstellung des Sessionzustands nach Reconnect
+- keine doppelten Sessions
+- keine doppelten Aufnahmehinweise
+- keine doppelten Transkriptsegmente durch Reconnect
 
 Auf später verschoben:
 
 - mehrere GMs
-- Befehlsberechtigungsmodell
+- eigenes Befehlsberechtigungsmodell
 
-## 9. Weitere offene Repository-Arbeit
+## 9. Status-Semantik
 
-Unabhängig vom Discord-Bot-Ausbau:
+- `implementiert`: Code vorhanden und integriert.
+- `automatisiert geprüft`: relevante isolierte/syntaktische Tests erfolgreich.
+- `CI-validiert`: Main-Workflow bzw. kontrollierter Paketlauf erfolgreich.
+- `lokal bestätigt`: reale lokale/Discord-/Foundry-Ausführung durch Nutzer bestätigt.
+- `vollständig bestätigt`: der für den Block vorgesehene reale End-to-End-Nachweis ist abgeschlossen.
 
-- dauerhaft durchsuchbares Transkript
-- optionale automatische NPC-Memory-Übernahme nur mit sicherem Undo
-- optional lokales STT
-- Performance-/Skalierungs-Hardening
-
-Nicht blockierend dokumentarisch stale:
-
-- `docs/UI-REDESIGN-SCOPE-V1.json` enthält noch eine alte `source_of_truth_precondition` aus der Zeit vor der Packaging-Bereinigung.
+Für 0.9.27–0.9.29 gilt derzeit: **CI-validiert, aber nicht lokal/vollständig bestätigt.**
 
 ## 10. Wichtige Dateien
 
@@ -265,17 +235,17 @@ Nicht blockierend dokumentarisch stale:
 - `scripts/live-transcript.js`
 - `scripts/player-character-mapping.js`
 - `scripts/session-identity-profile.js`
-- `styles/player-character-mapping.css`
-- `styles/session-identity-profile.css`
+- `scripts/discord-output.js`
 - `companion/src/main.js`
 - `companion/src/server.js`
 - `companion/src/discord-voice.js`
 - `companion/src/player-character-identity.js`
 - `companion/src/identity-profile-store.js`
 - `companion/src/discord-nickname-manager.js`
-- `companion/src/identity-mapping-smoke-test.js`
-- `companion/src/identity-profile-smoke-test.js`
+- `companion/src/discord-output-store.js`
+- `companion/src/discord-output-controller.js`
+- `companion/src/discord-output-smoke-test.js`
 
 ## 11. Handoff-Regel
 
-Ein neuer Chat prüft zuerst den aktuellen GitHub-Stand und liest `README.md`, `PROJECT-HANDOFF.md`, `PROJECT-CHECKPOINT.json` sowie bei Discord-Arbeit `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json`. Bei Widerspruch gewinnt der reale Code auf `main`; danach Dokumentation/Checkpoint korrigieren. Chronologisch beim aktuellen Discord-Bot-Block fortsetzen und bestätigte alte Arbeit nicht erneut aufrollen.
+Ein neuer Chat prüft zuerst den aktuellen GitHub-Stand und liest `README.md`, `PROJECT-HANDOFF.md`, `PROJECT-CHECKPOINT.json`, `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json` und `.github/workflows/release.yml`. Bei Widerspruch gewinnt der reale Code auf `main`; danach Dokumentation/Checkpoint korrigieren. Chronologisch beim aktuellen Discord-Bot-Block fortsetzen und bestätigte alte Arbeit nicht erneut aufrollen.
