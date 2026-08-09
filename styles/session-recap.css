@@ -1,0 +1,79 @@
+#dm-session-recap .dm-session-recap-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+#dm-session-recap .dm-session-recap-meta {
+  color: var(--color-text-subtle, #aeb5c0);
+  font-size: 0.82rem;
+}
+
+#dm-session-recap .dm-session-recap-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#dm-session-recap .dm-session-recap-notice {
+  margin-bottom: 12px;
+}
+
+#dm-session-recap .dm-session-recap-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+#dm-session-recap .dm-session-recap-group {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+#dm-session-recap .dm-session-recap-group h4 {
+  margin: 0 0 7px;
+  font-size: 0.86rem;
+}
+
+#dm-session-recap .dm-session-recap-group ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+#dm-session-recap .dm-session-recap-group li + li {
+  margin-top: 5px;
+}
+
+#dm-session-recap .dm-session-discord-preview {
+  margin-top: 12px;
+}
+
+#dm-session-recap .dm-session-discord-preview > strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+}
+
+#dm-session-recap .dm-session-discord-preview pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.14);
+  font-family: inherit;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+#dm-session-recap .dm-session-recap-empty {
+  grid-column: 1 / -1;
+}
