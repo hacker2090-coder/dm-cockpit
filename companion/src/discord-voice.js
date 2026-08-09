@@ -85,8 +85,11 @@ export class DiscordVoiceController {
   }
 
   setError(error) {
-    this.lastError = errorText(error);
+    const message = errorText(error);
+    this.lastError = message;
     this.voiceState = "error";
+    console.warn(`[discord-voice] Fehler: ${message}`);
+    if (this.debug && error?.stack) console.warn(error.stack);
     this.emitStatus();
     this.setCaptureState("error");
   }
