@@ -22,38 +22,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: One-time source recovery if needed
-        shell: bash
-        run: |
-          set -euo pipefail
-          RECOVERED=0
-          if [ ! -f scripts/dm-cockpit.js ] || [ ! -f styles/dm-cockpit.css ] || [ ! -f templates/cockpit.hbs ]; then
-            test -f dm-cockpit.zip
-            rm -rf recover
-            mkdir -p recover
-            unzip -q dm-cockpit.zip -d recover
-            test -f recover/dm-cockpit/scripts/dm-cockpit.js
-            test -f recover/dm-cockpit/styles/dm-cockpit.css
-            test -f recover/dm-cockpit/templates/cockpit.hbs
-            mkdir -p scripts styles templates
-            cp recover/dm-cockpit/scripts/dm-cockpit.js scripts/dm-cockpit.js
-            cp recover/dm-cockpit/styles/dm-cockpit.css styles/dm-cockpit.css
-            cp recover/dm-cockpit/templates/cockpit.hbs templates/cockpit.hbs
-            rm -rf recover
-            RECOVERED=1
-          fi
-          echo "RECOVERED=$RECOVERED" >> "$GITHUB_ENV"
-
       - name: Validate versioned runtime sources
         shell: bash
         run: |
           set -euo pipefail
-          test -f scripts/dm-cockpit.js
-          test -f styles/dm-cockpit.css
-          test -f templates/cockpit.hbs
           while IFS= read -r path; do
             test -f "$path" || { echo "Missing manifest source: $path"; exit 1; }
           done < <(jq -r '.esmodules[], .styles[]' module.json)
+          test -f templates/cockpit.hbs
 
       - name: Build clean Foundry package
         shell: bash
@@ -76,20 +52,16 @@ jobs:
           cd ..
           rm -rf build
 
-      - name: Publish recovered sources and package
+      - name: Publish current package to main
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/dm-cockpit.js styles/dm-cockpit.css templates/cockpit.hbs dm-cockpit.zip
+          git add dm-cockpit.zip
           if git diff --cached --quiet; then
             echo "No package changes to publish."
           else
-            if [ "${RECOVERED}" = "1" ]; then
-              git commit -m "Recover core sources and build DM Cockpit v${VERSION}"
-            else
-              git commit -m "Build DM Cockpit v${VERSION}"
-            fi
+            git commit -m "Build DM Cockpit v${VERSION}"
             git push
           fi
