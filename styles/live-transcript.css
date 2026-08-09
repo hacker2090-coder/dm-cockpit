@@ -1,0 +1,140 @@
+#dm-live-transcript .dm-transcript-statusbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#dm-live-transcript .dm-transcript-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  line-height: 1;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+#dm-live-transcript .dm-transcript-status[data-state="connected"],
+#dm-live-transcript .dm-transcript-status[data-state="listening"] {
+  border-color: rgba(84, 205, 140, 0.55);
+}
+
+#dm-live-transcript .dm-transcript-status[data-state="error"] {
+  border-color: rgba(230, 86, 86, 0.7);
+}
+
+#dm-live-transcript .dm-transcript-npc {
+  margin-left: auto;
+}
+
+#dm-live-transcript .dm-transcript-npc small {
+  opacity: 0.7;
+}
+
+#dm-live-transcript .dm-transcript-connect-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#dm-live-transcript .dm-transcript-connect-row input {
+  min-width: 0;
+}
+
+#dm-live-transcript .dm-transcript-actions {
+  flex-wrap: wrap;
+}
+
+#dm-live-transcript .dm-transcript-notice {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 9px 10px;
+  margin: 10px 0;
+  border-left: 3px solid rgba(231, 184, 78, 0.8);
+  background: rgba(231, 184, 78, 0.08);
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+#dm-live-transcript .dm-transcript-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 3px;
+}
+
+#dm-live-transcript .dm-transcript-line {
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+#dm-live-transcript .dm-transcript-line.is-partial {
+  opacity: 0.62;
+}
+
+#dm-live-transcript .dm-transcript-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  opacity: 0.82;
+}
+
+#dm-live-transcript .dm-transcript-meta strong {
+  opacity: 1;
+}
+
+#dm-live-transcript .dm-transcript-line p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#dm-live-transcript .dm-transcript-confidence,
+#dm-live-transcript .dm-transcript-partial {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+}
+
+#dm-live-transcript .dm-transcript-empty {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-height: 62px;
+  padding: 12px;
+  opacity: 0.67;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+}
+
+#dm-live-transcript .dm-transcript-error {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-left: 3px solid rgba(230, 86, 86, 0.8);
+  background: rgba(230, 86, 86, 0.08);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 720px) {
+  #dm-live-transcript .dm-transcript-connect-row {
+    grid-template-columns: 1fr;
+  }
+
+  #dm-live-transcript .dm-transcript-npc {
+    margin-left: 0;
+  }
+}
