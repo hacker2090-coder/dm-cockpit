@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.8",
+  "schema_version": "1.9",
   "created_at": "2026-08-09T17:37:00+02:00",
-  "updated_at": "2026-08-09T22:06:00+02:00",
+  "updated_at": "2026-08-10T18:06:00+02:00",
   "project": "DM Cockpit",
   "repository": "hacker2090-coder/dm-cockpit",
   "branch": "main",
   "scope_id": "discord-bot-expansion-v1",
-  "status": "in_progress_runtime_confirmation_pending",
+  "status": "implementation_ci_complete_runtime_partial",
   "source": "user_checklist_selection_plus_identity_refinement",
   "implementation_rule": {
     "yes": "in den geplanten Ausbau aufnehmen",
@@ -18,21 +18,21 @@
   "completed_implementation_blocks": [
     {
       "name": "discord_identity_core",
-      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+      "status": "implemented_automated_tested_ci_validated_runtime_not_fully_confirmed",
       "foundry_version": "0.9.27",
       "companion_version": "0.11.0",
       "validated_build": "971662a063fe3bd2b97efd6d0174ec4119c036b2 Build DM Cockpit v0.9.27"
     },
     {
       "name": "campaign_session_identity_and_nickname",
-      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+      "status": "implemented_automated_tested_ci_validated_runtime_not_fully_confirmed",
       "foundry_version": "0.9.28",
       "companion_version": "0.12.0",
       "validated_build": "5bc18698a0dad8bfd2bb1a914313888d9e000a20 Build DM Cockpit v0.9.28"
     },
     {
       "name": "discord_output_channel_notice_and_recap_posting",
-      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+      "status": "implemented_automated_tested_ci_validated_runtime_partial",
       "foundry_version": "0.9.29",
       "companion_version": "0.13.0",
       "validated_build": "10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29",
@@ -50,19 +50,20 @@
         "Versand-Audit persistiert Metadaten, aber keinen Nachrichtentext",
         "erfolgreiche Request-IDs sind idempotent gegen doppelte Reconnect-/Retry-Ausgaben"
       ],
+      "runtime_confirmed": [
+        "echter Discord-Zielkanal konnte im Foundry-Cockpit ausgewählt und übernommen werden",
+        "realer automatischer Aufnahme-/Transkriptionshinweis wurde genau einmal bei Sessionstart gesendet",
+        "nach echtem Voice-Reconnect wurde kein zweiter automatischer Hinweis gesendet"
+      ],
       "runtime_pending": [
-        "echte Discord-Textkanalliste in Foundry",
-        "echten Zielkanal auswählen und nach Reload wiedersehen",
-        "realen automatischen Aufnahmehinweis im ausgewählten Kanal",
-        "Kanal während der Nutzung wechseln",
+        "Zielkanal-Persistenz über Neustart/Reload",
         "echtes bewusstes Recap-Posting",
-        "fehlende Senderechte / gelöschter Kanal im echten Discord",
-        "kein doppelter automatischer Hinweis bei realem Reconnect"
+        "fehlende Senderechte / gelöschter Kanal im echten Discord"
       ]
     },
     {
       "name": "session_control_commands_presence_diagnostics_reconnect",
-      "status": "implemented_automated_tested_ci_validated_runtime_not_user_confirmed",
+      "status": "implemented_automated_tested_ci_validated_runtime_partial",
       "foundry_version": "0.9.30",
       "companion_version": "0.14.0",
       "validated_build": "90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30",
@@ -95,24 +96,47 @@
         "Discord-Command-Smoke: Guild-Registrierung, Routing, GM-Guard, Presence, Listener-Cleanup",
         "Voice-Reconnect-Smoke: intentional leave ohne Retry, unerwartetes Destroyed mit Reconnect",
         "sauberer Foundry-Paketbuild 0.9.30"
+      ],
+      "runtime_confirmed": [
+        "Companion 0.14.0 startet; Deepgram und Discord Gateway bereit; initial Capture idle",
+        "Foundry 0.9.30 lädt ohne sichtbaren Fehler",
+        "Voice-Join startet keine logische Session automatisch",
+        "/dm start erfolgreich",
+        "Session-ID voice_da888149-64c2-4194-bbde-176b59793bf6 erzeugt",
+        "reales Sprachsegment erscheint in Foundry",
+        "manueller Bot-Disconnect führt zum automatischen Voice-Reconnect",
+        "Session-ID bleibt nach Reconnect identisch",
+        "/dm status nach Reconnect meldet Session aktiv, Capture aktiv, Gateway ready, Voice ready, Reconnect bereit und #test-channel",
+        "zweiter Testsatz nach Reconnect erscheint genau einmal in Foundry"
+      ],
+      "runtime_observation": "Die interne Logmeldung Capture-Status: paused nach Voice-Ready ist bisher kein bestätigter Funktionsfehler, da /dm status Capture aktiv meldete und STT nach Reconnect real weiterlief.",
+      "runtime_pending": [
+        "/dm recap",
+        "/dm stop",
+        "zweites /dm stop für Idempotenz",
+        "Presence-/Diagnosezustände abschließend beobachten",
+        "abschließender E2E-Abschluss"
       ]
     }
   ],
   "current_implementation_block": null,
-  "runtime_confirmation_pending": {
-    "status": "external_runtime_test_required_before_full_confirmation",
+  "runtime_confirmation": {
+    "status": "partially_local_confirmed_external_runtime_test_not_finished",
     "recommended_bundle": "discord_interventions_and_reconnect",
-    "covers": [
-      "echte Discord-Kanalliste und Zielkanal-Persistenz in Foundry",
-      "realer automatischer Aufnahme-/Transkriptionshinweis",
-      "Discord Slash Commands /dm status, start, stop, recap",
-      "sichtbare Presence-/Statuswechsel",
-      "echter Voice-Disconnect und automatischer Reconnect",
+    "resume_at": "/dm recap",
+    "do_not_repeat_without_regression": [
+      "Reconnect-Grundfunktion",
       "gleiche logische sessionId nach Reconnect",
-      "kein doppelter automatischer Aufnahmehinweis",
-      "keine doppelten Transkriptsegmente",
-      "bewusstes Recap-Posting",
-      "Fehlerfall fehlende Senderechte oder gelöschter Zielkanal"
+      "einmaliger automatischer Aufnahmehinweis",
+      "STT vor und nach Reconnect"
+    ],
+    "remaining": [
+      "/dm recap",
+      "/dm stop und zweites /dm stop",
+      "Presence-/Statuswechsel abschließend beobachten",
+      "Zielkanal-Persistenz über Neustart/Reload",
+      "Fehlerfall fehlende Senderechte oder gelöschter Zielkanal falls praktikabel",
+      "abschließender E2E-Abschluss"
     ]
   },
   "identity_semantics": {
