@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-08-10T18:06:00+02:00",
+  "project": "DM Cockpit",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "source_of_truth": "GitHub main",
+  "purpose": "Maschinenlesbarer Backlog fuer die Arbeit nach Abschluss des laufenden 0.9.30-Runtime-Bundles. Er trennt echte noch nicht implementierte Produktfunktionen von bereits implementierten, aber noch real zu bestaetigenden Funktionen.",
+  "rules": {
+    "finish_current_runtime_boundary_before_new_runtime_scope": true,
+    "do_not_reclassify_runtime_pending_as_missing_implementation": true,
+    "do_not_resurrect_explicitly_deferred_items_without_user_choice": true,
+    "prefer_staging_branch_for_large_blocks": true
+  },
+  "current_boundary": {
+    "foundry": "0.9.30",
+    "companion": "0.14.0",
+    "status": "implementation_ci_complete_runtime_partial",
+    "requires_user_runtime": [
+      "/dm recap",
+      "/dm stop",
+      "zweites /dm stop fuer Idempotenz",
+      "Presence-/Diagnosezustaende abschliessend beobachten",
+      "Discord-Ausgabekanal-Persistenz ueber Neustart",
+      "Fehlerfall geloeschter oder nicht beschreibbarer Zielkanal falls praktikabel",
+      "abschliessender E2E-Abschluss"
+    ]
+  },
+  "recommended_next_blocks": [
+    {
+      "priority": 1,
+      "candidate_version": "0.9.31",
+      "name": "flowchart_connections_and_status",
+      "status": "not_implemented_in_active_core",
+      "evidence": "scripts/dm-cockpit.js erhaelt edges nur zur Datenkompatibilitaet; Anzeige/Bearbeitung der Flowchart-Verbindungen ist explizit deaktiviert. Der aktive Kern verwaltet aktuell nur Knoten, Positionen und currentNodeId.",
+      "scope": [
+        "gerichtete Verbindungen zwischen Flowchart-Knoten",
+        "Verbindungen visuell darstellen und bearbeiten",
+        "Knotenstatus klar definieren und darstellen",
+        "bestehende Flow-Daten abwaertskompatibel erhalten",
+        "kein Single-Point-of-Failure fuer den Abenteuerablauf"
+      ],
+      "why_next": "Direkte Erweiterung eines bereits stabilen Kernfeatures; klar im Code als offen/deaktiviert markiert und ohne Abhaengigkeit vom Discord-Ausbau planbar."
+    },
+    {
+      "priority": 2,
+      "candidate_version": "0.9.32",
+      "name": "trigger_system_v1",
+      "status": "disabled_legacy_not_in_active_core",
+      "evidence": "Der aktive Grundkern nennt das Trigger-System ausdruecklich als deaktivierten Legacy-Bestand und laedt es nicht als aktive Funktion.",
+      "scope": [
+        "Triggerliste im Cockpit",
+        "Trigger aktivieren/deaktivieren",
+        "Trigger loeschen",
+        "robuste Zustandsanzeige",
+        "keine automatische Weltmutation ohne bestaetigten sicheren Pfad"
+      ],
+      "why_next": "Eigenstaendiger Funktionsblock und klar getrennt vom aktuellen Discord-Runtime-Test."
+    },
+    {
+      "priority": 3,
+      "candidate_version": "0.9.33",
+      "name": "scene_information_and_control_v1",
+      "status": "disabled_legacy_not_in_active_core",
+      "evidence": "DM-Szeneninfos sowie fruehere Foundry-Szenensteuerung/-Synchronisation sind im aktiven Kern nicht enthalten.",
+      "scope": [
+        "kompakte GM-Szeneninformationen",
+        "bewusste Szenensteuerung statt stiller Automatik",
+        "Synchronisationsstatus sichtbar machen",
+        "Fehler und fehlende Rechte lokal am betroffenen Bereich anzeigen"
+      ]
+    }
+  ],
+  "maintenance_findings": [
+    {
+      "name": "ui_scope_source_of_truth_precondition",
+      "status": "stale_documentation",
+      "detail": "docs/UI-REDESIGN-SCOPE-V1.json behauptet noch, zentrale Foundry-Kernquellen seien nicht vollstaendig auf main vorhanden. scripts/dm-cockpit.js, styles/dm-cockpit.css und templates/cockpit.hbs sind inzwischen versioniert und der Release-Workflow baut aus sauberen Repository-Quellen."
+    },
+    {
+      "name": "template_version_fallback",
+      "status": "cosmetic_stale_fallback",
+      "detail": "templates/cockpit.hbs enthaelt noch V0.9.9 als statischen Fallback. scripts/module-version-badge.js ueberschreibt ihn zur Laufzeit mit der echten Manifestversion; daher kein bestaetigter Runtime-Fehler, aber spaetere Bereinigung sinnvoll."
+    }
+  ],
+  "explicitly_deferred": [
+    "mehrere GMs",
+    "allgemeines rollenbasiertes Befehlsberechtigungs-Framework",
+    "UI-Fokusmodus",
+    "weiterer Scroll-Umbau",
+    "0.9.25 Recap-Inhalts-/Copy-Runtime-Test",
+    "0.9.26 Drag/Persistenz/Resize/Filter-Interaktions-Smoke"
+  ]
+}
