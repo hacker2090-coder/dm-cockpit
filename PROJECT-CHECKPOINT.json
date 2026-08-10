@@ -1,14 +1,14 @@
 {
   "checkpoint_type": "dm_cockpit_project_handoff",
-  "schema_version": "3.33",
-  "created_at": "2026-08-09T22:53:00+02:00",
+  "schema_version": "3.34",
+  "created_at": "2026-08-10T18:06:00+02:00",
   "language": "de",
   "project": {
     "name": "DM Cockpit",
     "repository": "hacker2090-coder/dm-cockpit",
     "branch": "main",
     "source_of_truth": "GitHub main",
-    "latest_checked_main_commit_before_canonical_update": "93994b7e385838ce36b2579d763dfe6e178afb5a",
+    "latest_checked_main_commit_before_maintenance": "a2d4a01ae9e23a771d7e3f86bda273191dab034a",
     "foundry_repository_version": "0.9.30",
     "companion_repository_version": "0.14.0",
     "foundry_last_fully_user_confirmed_version": "0.9.24",
@@ -17,8 +17,9 @@
   },
   "critical_resume_state": {
     "status": "session_control_runtime_partially_confirmed_paused_at_recap",
-    "summary": "0.9.30/0.14.0 bleibt implementiert, automatisiert getestet und CI-validiert. Am 2026-08-09 wurde der gebündelte reale Discord-/Foundry-Test begonnen. Sessionstart, einmaliger Aufnahmehinweis, reales STT, Voice-Reconnect, identische Session-ID nach Reconnect, kein doppelter Hinweis und genau ein STT-Segment nach Reconnect wurden real bestätigt. Der Test wurde auf Nutzerwunsch direkt vor /dm recap pausiert. local_confirmed ist deshalb nur partiell; fully_confirmed bleibt false.",
-    "immutable_checkpoint": "checkpoints/2026-08-09T22-53-runtime-reconnect-partially-confirmed-paused.json"
+    "summary": "0.9.30/0.14.0 bleibt implementiert, automatisiert getestet und CI-validiert. Der gebündelte reale Discord-/Foundry-Test ist teilweise bestätigt: Sessionstart, einmaliger Aufnahmehinweis, reales STT, Voice-Reconnect, identische Session-ID nach Reconnect, kein doppelter Hinweis und genau ein STT-Segment nach Reconnect wurden real bestätigt. Der nächste fachliche Runtime-Schritt bleibt /dm recap. Parallel wurde ein rein repositoryseitiger Wartungs-/Backlog-Block vorbereitet; Runtime-Code wurde dabei nicht verändert.",
+    "immutable_runtime_checkpoint": "checkpoints/2026-08-09T22-53-runtime-reconnect-partially-confirmed-paused.json",
+    "immutable_repository_audit": "checkpoints/2026-08-10T18-06-repository-audit-next-backlog.json"
   },
   "repository_health": {
     "module_manifest": "0.9.30",
@@ -27,12 +28,33 @@
     "latest_ci_validated_package_build": "e4ae4a5534762bbef4fe9e79c05647cc86b647a9 Build DM Cockpit v0.9.30",
     "blocking_issue": null
   },
+  "repository_audit": {
+    "status": "maintenance_staging_ready",
+    "staging_branch": "work/repository-consistency-0.9.30",
+    "runtime_code_changed": false,
+    "backlog_document": "docs/NEXT-IMPLEMENTATION-BACKLOG-V1.json",
+    "consistency_check": "tools/repository-consistency-check.mjs",
+    "ui_scope_source_of_truth_precondition": "resolved",
+    "findings": [
+      "Flowchart-Verbindungen/-Status sind im aktiven Grundkern noch nicht implementiert; edges werden nur kompatibel erhalten.",
+      "Trigger-System ist weiterhin deaktivierter Legacy-Bestand und nicht Teil des aktiven Grundkerns.",
+      "DM-Szeneninfos sowie frühere Foundry-Szenensteuerung/-Synchronisation sind nicht Teil des aktiven Grundkerns.",
+      "Mehrere GMs und allgemeines Befehlsberechtigungs-Framework bleiben ausdrücklich deferred.",
+      "Der statische Template-Fallback V0.9.9 ist kosmetisch veraltet, wird aber durch module-version-badge.js zur Laufzeit mit der echten Manifestversion überschrieben."
+    ],
+    "recommended_after_current_runtime_bundle": [
+      "0.9.31 Flowchart-Verbindungen und Knotenstatus",
+      "0.9.32 Trigger-System V1",
+      "0.9.33 DM-Szeneninfos und bewusste Szenensteuerung/-Synchronisation"
+    ]
+  },
   "working_rules": {
     "github_source_of_truth": true,
     "check_main_before_changes": true,
     "autonomy": "Möglichst autonom arbeiten; Nutzer nur für echte lokale/externe Tests, Secrets/Zugänge oder nicht sinnvoll ableitbare Entscheidungen einbeziehen.",
     "user_test_cadence": "Gebündelte reale Discord-/Foundry-Testblöcke; keine unnötigen Mikrotests nach jedem Commit.",
     "checkpoint_rule": "Nach sinnvollen Wiederaufnahmepunkten PROJECT-CHECKPOINT.json aktualisieren und historischen Snapshot unter checkpoints/ anlegen.",
+    "staging_rule": "Größere autonome Blöcke auf temporärem Branch bündeln; main erst nach Review möglichst einmalig aktualisieren.",
     "user_action_rule": "Wenn Nutzeraktion nötig ist, Abschnitt exakt 'Ich möchte von dir' verwenden und nur eine nötige Aktion auf einmal verlangen.",
     "powershell_rule": "PowerShell-Befehle getrennt; npm.cmd verwenden; kein &&.",
     "secret_rule": "Keine Tokens/API-Keys/Passwörter in Chat, GitHub oder Checkpoints.",
@@ -134,6 +156,7 @@
     "Danach /dm stop und ein zweites /dm stop für Idempotenz testen.",
     "Presence/diagnostic.state und ggf. Ausgabekanal-Persistenz prüfen.",
     "Nur konkrete Runtime-Regressionen beheben; bestätigte Reconnect-/STT-Baseline nicht unnötig wiederholen.",
-    "Danach local_confirmed/fully_confirmed ausschließlich anhand tatsächlich beobachteter Punkte aktualisieren."
+    "Danach local_confirmed/fully_confirmed ausschließlich anhand tatsächlich beobachteter Punkte aktualisieren.",
+    "Erst nach sauberem Abschluss des 0.9.30-Runtime-Bundles den nächsten Runtime-Funktionsblock aus docs/NEXT-IMPLEMENTATION-BACKLOG-V1.json starten; Priorität 1 ist Flowchart-Verbindungen/Knotenstatus."
   ]
 }
