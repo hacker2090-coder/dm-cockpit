@@ -1,0 +1,41 @@
+{
+  "checkpoint_type": "dm_cockpit_repository_maintenance_ci_validation",
+  "schema_version": "1.0",
+  "created_at": "2026-08-10T18:21:00+02:00",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "runtime_code_changed": false,
+  "release": {
+    "foundry": "0.9.30",
+    "companion": "0.14.0"
+  },
+  "maintenance": {
+    "backlog_document": "docs/NEXT-IMPLEMENTATION-BACKLOG-V1.json",
+    "consistency_check": "tools/repository-consistency-check.mjs",
+    "ui_scope_precondition": "resolved",
+    "readme_runtime_status": "partial_confirmation_recorded",
+    "handoff_runtime_status": "partial_confirmation_recorded",
+    "discord_scope_runtime_status": "partial_confirmation_recorded"
+  },
+  "ci_validation": {
+    "package_build_commit": "6e0fc00b24a07d4ee74dc7e01ee57d49256e02b1",
+    "message": "Build DM Cockpit v0.9.30",
+    "publisher": "github-actions[bot]",
+    "changed_files": ["dm-cockpit.zip"],
+    "meaning": "Der Main-Workflow erreichte den Publish-Schritt nach Repository-Konsistenzprüfung, bestehenden Syntaxprüfungen und Smoke-Tests."
+  },
+  "runtime_resume": {
+    "status": "partially_local_confirmed",
+    "next_test": "/dm recap",
+    "do_not_repeat_without_regression": [
+      "Voice-Reconnect",
+      "gleiche Session-ID über Reconnect",
+      "einmaliger Aufnahmehinweis",
+      "STT vor und nach Reconnect"
+    ]
+  },
+  "recommended_after_runtime_completion": [
+    "0.9.31 Flowchart-Verbindungen und Knotenstatus",
+    "0.9.32 Trigger-System V1",
+    "0.9.33 DM-Szeneninfos und bewusste Szenensteuerung/-Synchronisation"
+  ]
+}
