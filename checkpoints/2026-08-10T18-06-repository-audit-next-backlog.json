@@ -1,0 +1,42 @@
+{
+  "checkpoint_type": "dm_cockpit_repository_audit",
+  "schema_version": "1.0",
+  "created_at": "2026-08-10T18:06:00+02:00",
+  "repository": "hacker2090-coder/dm-cockpit",
+  "base_main_commit": "a2d4a01ae9e23a771d7e3f86bda273191dab034a",
+  "staging_branch": "work/repository-consistency-0.9.30",
+  "runtime_code_changed": false,
+  "current_release": {
+    "foundry": "0.9.30",
+    "companion": "0.14.0",
+    "runtime_status": "partially_local_confirmed",
+    "resume_at": "/dm recap"
+  },
+  "audit_findings": [
+    "Der aktuelle 0.9.30-Runtime-Block sollte vor einem neuen Runtime-Funktionsblock abgeschlossen werden, damit die Validierungsgrenze sauber bleibt.",
+    "Der UI-Redesign-Scope enthielt eine veraltete Source-of-Truth-Blockade; die zentralen Foundry-Kernquellen sind inzwischen normal versioniert und der Release-Workflow baut aus einem frischen build-Verzeichnis.",
+    "Flowchart-Verbindungen/-Status sind im aktiven Grundkern weiterhin nicht implementiert; edges werden nur kompatibel erhalten.",
+    "Das Trigger-System ist im aktiven Grundkern weiterhin deaktivierter Legacy-Bestand.",
+    "DM-Szeneninfos sowie fruehere Foundry-Szenensteuerung/-Synchronisation sind nicht Teil des aktiven Grundkerns.",
+    "Mehrere GMs und ein allgemeines Befehlsberechtigungs-Framework bleiben ausdruecklich auf spaeter verschoben.",
+    "Das Template enthaelt V0.9.9 als kosmetischen Fallback; module-version-badge.js setzt zur Laufzeit die echte Manifestversion."
+  ],
+  "maintenance_block": {
+    "backlog_document": "docs/NEXT-IMPLEMENTATION-BACKLOG-V1.json",
+    "consistency_check": "tools/repository-consistency-check.mjs",
+    "ui_scope_precondition": "resolved",
+    "release_workflow_extended": true,
+    "expected_runtime_effect": "none"
+  },
+  "recommended_after_runtime_completion": [
+    "0.9.31 Flowchart-Verbindungen und Knotenstatus",
+    "0.9.32 Trigger-System V1",
+    "0.9.33 DM-Szeneninfos und bewusste Szenensteuerung/-Synchronisation"
+  ],
+  "do_not_start_without_user_choice": [
+    "mehrere GMs",
+    "allgemeines rollenbasiertes Befehlsberechtigungs-Framework",
+    "UI-Fokusmodus",
+    "weiterer Scroll-Umbau"
+  ]
+}
