@@ -2,21 +2,26 @@
 
 Foundry-VTT-V14-Modul plus lokaler Companion Service für Discord Voice, Live-Transkript, NPC-Kontext, strukturierte KI-Kandidaten, sicheren Change-Record/Undo, Session-Recaps sowie Discord-Spieler-/Foundry-Charakter-Zuordnung mit Session-/Kampagnenprofilen, reversiblen Server-Nicknames, frei wählbarem Discord-Ausgabe-Textkanal und manueller Session-Steuerung über Discord/Foundry.
 
-> **Release-Status:** 0.9.30 / Companion 0.14.0 ist implementiert, automatisiert geprüft und CI-validiert. Der echte Discord-/Foundry-Runtime-Test dieses Ausbau-Blocks ist noch offen.
+> **Release-Status:** 0.9.30 / Companion 0.14.0 ist implementiert, automatisiert geprüft und CI-validiert. Der echte Discord-/Foundry-Runtime-Test ist **teilweise bestätigt**. Sessionstart, einmaliger Aufnahmehinweis, STT, Voice-Reconnect, gleiche Session-ID und Duplikatschutz nach Reconnect wurden real bestätigt. Fortsetzungspunkt ist `/dm recap`; `local_confirmed` und `fully_confirmed` bleiben bis zum Abschluss des Bundles ausdrücklich unvollständig.
 
 CI-Validierungsbuild des 0.9.30-Codeblocks:
 
 `90c63fdf1e299d0c5e092507226a7f72b7a98bc1 Build DM Cockpit v0.9.30`
 
+Letzter vollständig neu paketierter 0.9.30-Stand vor dem Repository-Wartungsblock:
+
+`e4ae4a5534762bbef4fe9e79c05647cc86b647a9 Build DM Cockpit v0.9.30`
+
 ## Für neue Chats / andere KIs
 
 Zuerst lesen:
 
-1. `PROJECT-HANDOFF.md` – Architektur und Projektüberblick.
-2. `PROJECT-CHECKPOINT.json` – kanonischer maschinenlesbarer Status.
+1. `PROJECT-CHECKPOINT.json` – kanonischer maschinenlesbarer Status und exakter Fortsetzungspunkt.
+2. `PROJECT-HANDOFF.md` – Architektur und Projektüberblick.
 3. `checkpoints/` – historische Snapshots.
-4. `docs/UI-REDESIGN-SCOPE-V1.json` – Scope des UI-Umbaus.
-5. `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json` – verbindlicher Scope des laufenden Discord-Bot-Ausbaus.
+4. `docs/DISCORD-BOT-EXPANSION-SCOPE-V1.json` – verbindlicher Discord-Bot-Scope.
+5. `docs/UI-REDESIGN-SCOPE-V1.json` – UI-Scope; die frühere Source-of-Truth-Blockade ist inzwischen aufgelöst.
+6. `docs/NEXT-IMPLEMENTATION-BACKLOG-V1.json` – getrennte Liste aus Runtime-Pending, echten noch nicht implementierten Funktionen und explizit aufgeschobenen Punkten.
 
 Bei Widerspruch zwischen Dokumentation und Code ist der aktuelle Repository-Code auf `main` technische Source of Truth. Der Checkpoint muss anschließend korrigiert werden.
 
@@ -65,9 +70,11 @@ Implementiert und als sauberes Paket gebaut. Der Nutzer hat das neue UI am 2026-
 - Such-/Filterleiste bei größeren Listen
 - Tooltips, Working-/Error-Zustände und Tastaturshortcuts
 
+Die frühere UI-Scope-Warnung, dass `scripts/dm-cockpit.js`, `styles/dm-cockpit.css` und `templates/cockpit.hbs` nicht sauber versioniert seien, ist erledigt: diese Kernquellen liegen auf `main` vor und der Release-Workflow baut aus einem frischen Build-Verzeichnis.
+
 ## 0.9.27 / Companion 0.11.0 – Spieler-/Charakter-Sprecheridentität
 
-Status: **implementiert und CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+Status: **implementiert und CI-validiert; der vollständige eigene Identity-Runtime-Block ist noch nicht separat abgeschlossen.**
 
 - Voice-Teilnehmer des relevanten Discord-Calls
 - Cockpit-Karte `Spieler & Charaktere`
@@ -83,7 +90,7 @@ CI-validierter Build:
 
 ## 0.9.28 / Companion 0.12.0 – Session-/Kampagnen-Identität
 
-Status: **implementiert und CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+Status: **implementiert und CI-validiert; der vollständige eigene Nickname-/Identity-Runtime-Block ist noch nicht separat abgeschlossen.**
 
 - persistente Profile `Kampagne`, `One-Shot`, `Session`
 - Cockpit-Karte `Session-Identität`
@@ -104,64 +111,42 @@ CI-validierter Build:
 
 ## 0.9.29 / Companion 0.13.0 – Discord-Ausgabe
 
-Status: **implementiert, automatisiert geprüft und CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+Status: **implementiert, automatisiert geprüft und CI-validiert; teilweise real bestätigt.**
 
 CI-validierter Build:
 
 `10a8aa21483aed55f187df3839aefc5d27bda14f Build DM Cockpit v0.9.29`
 
-### Frei wechselbarer Zielkanal
+### Implementiert
 
-- neue Cockpit-Karte `Discord-Ausgabe`
-- erreichbare Server-Textkanäle werden vom Companion über Discord ermittelt
-- angeboten werden nur Kanäle mit aktuellem `View Channel`- und `Send Messages`-Zugriff
-- Zielkanal kann jederzeit neu gewählt oder entfernt werden
-- Auswahl wird pro Discord-Guild in SQLite persistent gespeichert
-- vor jedem Versand wird der gespeicherte Kanal erneut validiert
+- Cockpit-Karte `Discord-Ausgabe`
+- nur erreichbare Textkanäle mit aktuellem `View Channel` + `Send Messages`
+- Zielkanal jederzeit wählbar/wechselbar/entfernbar
+- Auswahl pro Discord-Guild persistent in SQLite
+- erneute Rechte-/Existenzprüfung vor Versand
+- automatischer Aufnahme-/Transkriptionshinweis pro Session
+- erfolgreicher Auto-Hinweis idempotent gegen Retry/Reconnect
+- bewusster manueller Hinweis möglich
+- Recap nur nach bewusster GM-Aktion direkt an Discord
+- `allowedMentions.parse = []`
+- Output-Audit speichert Metadaten, nicht Nachrichtentext
+- erfolgreiche Request-IDs werden nicht doppelt gesendet
 
-### Aufnahme-/Transkriptionshinweis
+### Real bereits bestätigt
 
-- bei einer neu gestarteten Session versucht der Companion einen transparenten Hinweis in den ausgewählten Kanal zu senden
-- erfolgreicher automatischer Hinweis ist pro Session idempotent und wird bei Retry/Reconnect nicht doppelt gesendet
-- `capture.status.noticeShown` wird nur nach tatsächlich erfolgreichem Versand `true`
-- Hinweis kann im Cockpit zusätzlich bewusst erneut gesendet werden
-- Hinweis nennt einen aktiven Profilnamen, sofern vorhanden
-- Hinweis macht transparent, dass live transkribiert wird und Roh-Audio nicht dauerhaft gespeichert wird
+- echter Zielkanal konnte im Cockpit ausgewählt und übernommen werden
+- `/dm start` erzeugte genau einen automatischen Transkriptionshinweis im Zielkanal
+- nach echtem Voice-Reconnect blieb es bei genau diesem einen Hinweis
 
-### Recap direkt an Discord
+### Noch real offen
 
-Die bestehende Recap-Karte behält ihre Copy-Funktionen und besitzt zusätzlich:
-
-- `An Discord senden`
-
-Dabei gilt:
-
-- nur eine bewusste GM-Aktion löst den Versand aus
-- es gibt kein automatisches Recap-Posting
-- Grundlage bleibt die bestehende Discord-Kurzfassung aus ausschließlich angenommenen Session-Kandidaten
-- Kurzfassung bleibt auf 1800 Zeichen begrenzt
-
-### Sicherheit / Persistenz
-
-- `allowedMentions.parse = []` bei DM-Cockpit-Ausgaben
-- dadurch keine unbeabsichtigten `@everyone`, `@here`, Rollen- oder User-Pings aus Recap-/KI-Text
-- Versand-Audit speichert Request-ID, Art, Session/Kanal, Discord-Message-ID, Status, Textlänge und Fehler
-- der eigentliche Nachrichtentext wird nicht als Output-Audit gespeichert
-- erfolgreiche Request-IDs werden nicht erneut gesendet
-- isolierter `discord-output-smoke-test.js` prüft Kanalliste, Persistenz, Recap, Idempotenz, Aufnahmehinweis, Reload und Clear
-
-Noch real zu prüfen:
-
-- echte Kanalliste im Foundry-Cockpit
-- Zielkanal wählen/wechseln und Persistenz nach Reload
-- echter automatischer Aufnahmehinweis
+- Zielkanal-Persistenz über Neustart/Reload
 - echtes bewusstes Recap-Posting
 - Verhalten bei gelöschtem Kanal bzw. verlorenen Senderechten
-- kein doppelter automatischer Hinweis bei realem Reconnect
 
 ## 0.9.30 / Companion 0.14.0 – Session-Steuerung, Commands, Presence, Diagnose und Reconnect
 
-Status: **implementiert, automatisiert geprüft und CI-validiert; echter Discord-/Foundry-Runtime-Test noch offen.**
+Status: **implementiert, automatisiert geprüft und CI-validiert; Runtime teilweise bestätigt.**
 
 CI-Validierungsbuild:
 
@@ -169,13 +154,13 @@ CI-Validierungsbuild:
 
 ### Manuelle logische Session
 
-- Discord-Voice-Join allein startet keine DM-Cockpit-Session mehr
+- Discord-Voice-Join allein startet keine DM-Cockpit-Session
 - Session und Voice-Verbindung sind getrennte Zustände
 - Sessionstart setzt genau eine logische `sessionId`
 - doppelter Start ist idempotent und erzeugt keine zweite Session
 - doppelter Stop ist idempotent
 - Audio-Receiver wird nur bei aktiver Session und bereiter Voice-Verbindung angebunden
-- verspätete STT-Ergebnisse einer bereits beendeten/ersetzten Session werden nicht mehr veröffentlicht
+- verspätete STT-Ergebnisse einer bereits beendeten/ersetzten Session werden verworfen
 
 ### Discord Slash Commands
 
@@ -188,7 +173,7 @@ Registriert werden serverbezogen:
 
 Im aktuellen Ausbau sind die Befehle auf die konfigurierte GM-Discord-User-ID begrenzt. Ein allgemeines Rollen-/Berechtigungsframework bleibt bewusst ein späterer Scope-Punkt.
 
-`/dm recap` erzeugt keinen separaten KI-Recap. Der Befehl fordert in Foundry die bestehende, ausschließlich aus angenommenen Session-Ereignissen gebildete Discord-Kurzfassung an und nutzt den bereits vorhandenen bewussten Discord-Ausgabepfad.
+`/dm recap` erzeugt keinen separaten KI-Recap. Der Befehl fordert in Foundry die bestehende, ausschließlich aus angenommenen Session-Ereignissen gebildete Discord-Kurzfassung an und nutzt den vorhandenen bewussten Discord-Ausgabepfad.
 
 ### Bot Presence und Diagnose
 
@@ -200,33 +185,75 @@ Der Bot kann seinen Betriebszustand sichtbar machen:
 - Session pausiert / Voice-Reconnect
 - Diagnose nötig
 
-`/dm status` berichtet Session, Capture, Gateway, Voice, Reconnect und gewählten Ausgabekanal. `diagnostic.state` transportiert verständliche Gateway-/Voice-/Output-Fehlerzustände an Foundry.
+`/dm status` berichtet Session, Capture, Gateway, Voice, Reconnect und gewählten Ausgabekanal. `diagnostic.state` transportiert Gateway-/Voice-/Output-Fehlerzustände an Foundry.
 
 ### Robuster Voice-Reconnect
 
 - begrenzte Reconnect-Versuche mit Backoff
 - Reconnect verwendet denselben Ziel-Voice-Channel
-- eine laufende logische Session behält beim Voice-Reconnect dieselbe `sessionId`
+- laufende logische Session behält dieselbe `sessionId`
 - Reconnect startet keine zweite logische Session
-- bereits erfolgreich gesendeter automatischer Aufnahmehinweis bleibt über seine Session-Request-ID idempotent
+- automatischer Aufnahmehinweis bleibt idempotent
 - kurzlebige Audiosegment-Deduplizierung schützt zusätzlich gegen doppelte STT-Verarbeitung
-- absichtliches Voice-Verlassen deaktiviert Reconnect **vor** `connection.destroy()`, damit ein `Destroyed`-Event keinen unerwünschten Wiederbeitritt auslöst
+- absichtliches Voice-Verlassen deaktiviert Reconnect vor `connection.destroy()`
 
-### Automatisierte Absicherung für 0.9.30
+### Real bereits bestätigt
 
-Der Main-Workflow hat erfolgreich ausgeführt:
+- Companion 0.14.0 startet mit Deepgram und Discord Gateway bereit
+- Foundry 0.9.30 lädt ohne sichtbaren Fehler
+- Voice-Join startet keine logische Session automatisch
+- `/dm start` funktioniert
+- echte Session-ID wurde erzeugt
+- genau ein automatischer Aufnahmehinweis
+- echtes Sprachsegment erscheint in Foundry
+- manueller Bot-Disconnect führt zum automatischen Reconnect
+- dieselbe Session-ID bleibt nach Reconnect aktiv
+- `/dm status` meldet danach Session aktiv, Capture aktiv, Gateway ready, Voice ready und Reconnect bereit
+- kein zweiter Aufnahmehinweis nach Reconnect
+- neues Sprachsegment nach Reconnect erscheint genau einmal
 
-- Foundry- und Companion-JavaScript-Syntaxchecks
-- Protocol-/Scope-JSON-Parsing
-- `identity-mapping-smoke-test.js`
-- `identity-profile-smoke-test.js`
-- `discord-output-smoke-test.js`
-- `session-control-smoke-test.js`
-- `discord-command-controller-smoke-test.js`
-- `discord-voice-reconnect-smoke-test.js`
-- sauberen Paketbuild `Build DM Cockpit v0.9.30`
+Die interne Logmeldung `Capture-Status: paused` nach Voice-Ready ist derzeit nur eine missverständliche Controller-Statussemantik, kein bestätigter Funktionsfehler: `/dm status` meldete `Capture: aktiv` und STT arbeitete nach Reconnect weiter.
 
-Der Reconnect-Smoke prüft explizit den Unterschied zwischen absichtlichem Leave und unerwartetem `Destroyed`. Der Command-Smoke prüft zusätzlich Guild-Command-Registrierung, GM-Guard, Presence und Listener-Cleanup.
+### Noch real offen
+
+1. `/dm recap`
+2. `/dm stop`
+3. zweites `/dm stop` für Idempotenz
+4. Presence-/Diagnosezustände abschließend beobachten
+5. Ausgabekanal-Persistenz über Neustart
+6. gelöschter/unbeschreibbarer Zielkanal, falls praktikabel
+7. abschließender E2E-Abschluss
+
+Bereits bestätigte Reconnect-/STT-Punkte werden ohne konkreten Regressionshinweis nicht erneut getestet.
+
+## Was noch nicht im aktiven Produktkern ist
+
+Der maschinenlesbare Backlog steht in `docs/NEXT-IMPLEMENTATION-BACKLOG-V1.json`.
+
+Empfohlene Reihenfolge **nach Abschluss des 0.9.30-Runtime-Bundles**:
+
+1. **0.9.31 – Flowchart-Verbindungen und Knotenstatus**: `edges` werden aktuell nur datenkompatibel erhalten; Verbindungen sind im aktiven Grundkern nicht bearbeitbar/visualisiert.
+2. **0.9.32 – Trigger-System V1**: der alte Trigger-Code gehört weiterhin zum deaktivierten Legacy-Bestand und ist nicht Teil des aktiven Kerns.
+3. **0.9.33 – DM-Szeneninfos + bewusste Szenensteuerung/-Synchronisation**: frühere entsprechende Legacy-Funktionen sind im aktiven Grundkern nicht enthalten.
+
+Weiterhin ausdrücklich auf später verschoben:
+
+- mehrere GMs
+- allgemeines rollenbasiertes Befehlsberechtigungs-Framework
+- UI-Fokusmodus
+- weiterer Scroll-Umbau
+
+## Repository-Konsistenz
+
+`tools/repository-consistency-check.mjs` prüft im Release-Workflow unter anderem:
+
+- Foundry-/Companion-Version gegen `PROJECT-CHECKPOINT.json`
+- README-Hauptversion gegen `module.json`
+- vorhandene Manifest-/Runtime-Quellen
+- gültige Repository-/Branch-Angaben im Discord-Scope
+- dass die erledigte UI-Source-of-Truth-Blockade nicht wieder als offen dokumentiert wird
+
+Der statische Fallback `V0.9.9` in `templates/cockpit.hbs` ist kosmetisch veraltet. `scripts/module-version-badge.js` setzt im laufenden Foundry die echte Version aus `module.json`; der Konsistenzcheck meldet den Fallback deshalb nur als Warnung und nicht als Runtime-Fehler.
 
 ## Source of Truth / Packaging
 
@@ -236,12 +263,13 @@ Der Release-Workflow:
 
 - baut ausschließlich aus versionierten Repository-Quellen
 - validiert Manifest-referenzierte Skripte/Styles und alle Foundry-JavaScript-Dateien
-- installiert die Companion-Abhängigkeiten vor den Companion-Smoke-Tests
+- prüft Repository-/Checkpoint-/Scope-Konsistenz
+- installiert Companion-Abhängigkeiten vor Companion-Smoke-Tests
 - validiert Companion-JavaScript sowie Protocol-/Scope-JSON
 - führt Identity-, Identity-Profile-, Discord-Output-, Session-Control-, Discord-Command- und Voice-Reconnect-Smoke-Tests aus
 - serialisiert `main`-Runs per GitHub-Actions-`concurrency`
 - baut das Foundry-ZIP nur bei Foundry-relevanten Änderungen
-- Companion-/Protocol-/Scope-only Änderungen erzeugen kein unnötiges ZIP
+- Companion-/Protocol-/Scope-/Tool-only Änderungen erzeugen kein unnötiges ZIP
 
 Größere autonome Blöcke werden auf einem Staging-Branch gebündelt und `main` anschließend nach Review möglichst einmalig fast-forward aktualisiert.
 
